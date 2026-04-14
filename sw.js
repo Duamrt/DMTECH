@@ -1,28 +1,7 @@
-const CACHE = 'dmtech-v04141854';
-const STATIC = [
-  '/dmtechapp/',
-  '/dmtechapp/dashboard.html',
-  '/dmtechapp/kanban.html',
-  '/dmtechapp/minha-fila.html',
-  '/dmtechapp/clientes.html',
-  '/dmtechapp/os.html',
-  '/dmtechapp/orcamentos.html',
-  '/dmtechapp/catalogo.html',
-  '/dmtechapp/financeiro.html',
-  '/dmtechapp/folha.html',
-  '/dmtechapp/config.html',
-  '/dmtechapp/js/config.js',
-  '/dmtechapp/js/auth.js',
-  '/dmtechapp/css/styles.css',
-  '/dmtechapp/favicon.svg',
-  '/dmtechapp/icons/icon-192.png',
-  '/dmtechapp/icons/icon-512.png'
-];
+const CACHE = 'dmtech-v04141858';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
@@ -34,11 +13,21 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Supabase e APIs externas: sempre rede
-  if (e.request.url.includes('supabase.co') || e.request.url.includes('fonts.googleapis')) {
+  const url = e.request.url;
+  // Supabase, APIs externas e fontes: sempre rede, sem cache
+  if (url.includes('supabase.co') || url.includes('googleapis') || url.includes('gstatic') || url.includes('jsdelivr')) {
     return;
   }
+  // Arquivos locais: cache-first, atualiza em background
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.open(CACHE).then(cache =>
+      cache.match(e.request).then(cached => {
+        const network = fetch(e.request).then(res => {
+          if (res.ok) cache.put(e.request, res.clone());
+          return res;
+        }).catch(() => cached);
+        return cached || network;
+      })
+    )
   );
 });
