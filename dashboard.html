@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141402"></script>
-  <script src="js/auth.js?v=04141402"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141402">
+  <script src="js/config.js?v=04141406"></script>
+  <script src="js/auth.js?v=04141406"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141406">
 </head>
 <body>
   <div class="layout">
@@ -82,19 +82,19 @@
             <div class="kpi-sub">em andamento</div>
           </div>
           <div class="kpi-card">
+            <div class="kpi-label">Orçamentos em Aberto</div>
+            <div class="kpi-value" id="qtd-orc">—</div>
+            <div class="kpi-sub" id="val-orc">aguardando aprovação</div>
+          </div>
+          <div class="kpi-card">
             <div class="kpi-label">Faturamento do mês</div>
             <div class="kpi-value" id="fat-mes">—</div>
-            <div class="kpi-sub">mês atual</div>
+            <div class="kpi-sub">OS entregues este mês</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Clientes</div>
             <div class="kpi-value" id="qtd-clientes">—</div>
             <div class="kpi-sub">cadastrados</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">OS Concluídas</div>
-            <div class="kpi-value" id="qtd-concluidas">—</div>
-            <div class="kpi-sub">este mês</div>
           </div>
         </div>
 
@@ -124,6 +124,32 @@
           </div>
         </div>
 
+        <!-- Orçamentos em Aberto -->
+        <div class="section">
+          <div class="section-header">
+            <span class="section-title">Orçamentos em Aberto</span>
+            <a href="orcamentos.html" class="section-link">Ver todos →</a>
+          </div>
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Validade</th>
+                </tr>
+              </thead>
+              <tbody id="tabela-orc">
+                <tr>
+                  <td colspan="5" class="empty-state">Nenhum orçamento em aberto.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div><!-- /content -->
     </div><!-- /main -->
   </div><!-- /layout -->
@@ -147,16 +173,112 @@
       document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
     }
 
+    const fmt = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    function statusOsLabel(s) {
+      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' }[s] || s;
+    }
+    function statusOsBadge(s) {
+      const map = { aberta:'badge-orange', em_andamento:'badge-yellow', pronta:'badge-green', entregue:'badge-muted', aguardando_peca:'badge-red' };
+      return map[s] || '';
+    }
+    function statusOrcLabel(s) {
+      return { rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', reprovado:'Reprovado' }[s] || s;
+    }
+    function statusOrcBadge(s) {
+      return { rascunho:'badge-muted', enviado:'badge-orange', aprovado:'badge-green', reprovado:'badge-red' }[s] || '';
+    }
+    function fmtData(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('pt-BR');
+    }
+
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
 
       const nome    = APP.profile.name || APP.profile.email || '';
       const empresa = APP.company?.name || '';
+      const cid     = APP.company?.id;
 
       document.getElementById('titulo-boas-vindas').textContent = `Olá, ${nome}!`;
       document.getElementById('topbar-user').textContent        = nome;
       document.getElementById('nome-empresa').textContent       = empresa;
+
+      const agora   = new Date();
+      const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
+
+      // Busca paralela
+      const [
+        { data: osAbertas },
+        { data: osConcluidas },
+        { data: clientes },
+        { data: orcAbertos },
+        { data: osRecentes },
+        { data: orcRecentes }
+      ] = await Promise.all([
+        sb.from('ordens_servico').select('id')
+          .eq('company_id', cid)
+          .in('status', ['aberta','em_andamento','aguardando_peca','pronta']),
+        sb.from('ordens_servico').select('total')
+          .eq('company_id', cid)
+          .eq('status', 'entregue')
+          .gte('updated_at', inicioMes),
+        sb.from('clients').select('id')
+          .eq('company_id', cid),
+        sb.from('orcamentos').select('id,numero,total,status,validade,clients(name)')
+          .eq('company_id', cid)
+          .in('status', ['rascunho','enviado'])
+          .order('created_at', { ascending: false }),
+        sb.from('ordens_servico').select('id,numero,status,total,created_at,clients(name),items')
+          .eq('company_id', cid)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        sb.from('orcamentos').select('id,numero,status,total,validade,clients(name)')
+          .eq('company_id', cid)
+          .in('status', ['rascunho','enviado'])
+          .order('created_at', { ascending: false })
+          .limit(5)
+      ]);
+
+      // KPIs
+      document.getElementById('qtd-os').textContent       = osAbertas?.length ?? 0;
+      document.getElementById('qtd-clientes').textContent = clientes?.length ?? 0;
+
+      const totalOrc = (orcAbertos || []).reduce((a, o) => a + (o.total || 0), 0);
+      document.getElementById('qtd-orc').textContent = orcAbertos?.length ?? 0;
+      document.getElementById('val-orc').textContent = totalOrc > 0 ? fmt(totalOrc) + ' em aberto' : 'aguardando aprovação';
+
+      const fatMes = (osConcluidas || []).reduce((a, o) => a + (o.total || 0), 0);
+      document.getElementById('fat-mes').textContent = fmt(fatMes);
+
+      // Tabela OS Recentes
+      const tbOs = document.getElementById('tabela-os');
+      if (osRecentes?.length) {
+        tbOs.innerHTML = osRecentes.map(o => {
+          const itens = Array.isArray(o.items) ? o.items : (typeof o.items === 'string' ? JSON.parse(o.items || '[]') : []);
+          const servico = itens.find(i => i.type === 'service')?.description || itens[0]?.description || '—';
+          return `<tr>
+            <td>#${o.numero}</td>
+            <td>${o.clients?.name || '—'}</td>
+            <td>${servico}</td>
+            <td><span class="badge ${statusOsBadge(o.status)}">${statusOsLabel(o.status)}</span></td>
+            <td>${fmtData(o.created_at)}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      // Tabela Orçamentos em Aberto
+      const tbOrc = document.getElementById('tabela-orc');
+      if (orcRecentes?.length) {
+        tbOrc.innerHTML = orcRecentes.map(o => `<tr>
+          <td>#${o.numero}</td>
+          <td>${o.clients?.name || '—'}</td>
+          <td><span class="badge ${statusOrcBadge(o.status)}">${statusOrcLabel(o.status)}</span></td>
+          <td>${fmt(o.total)}</td>
+          <td>${fmtData(o.validade)}</td>
+        </tr>`).join('');
+      }
     })();
   </script>
 </body>
