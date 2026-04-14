@@ -493,6 +493,19 @@
       border-top: 1px solid var(--border2);
     }
 
+    /* ── NICHOS ── */
+    .nicho-tag {
+      display: inline-block;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      padding: 6px 14px;
+      letter-spacing: .02em;
+    }
+    .nicho-tag:not([style]) { border-color: var(--accent); color: var(--accent); }
+
     /* ── WHATSAPP FLUTUANTE ── */
     .wa-btn {
       position: fixed;
@@ -537,7 +550,7 @@
 
   <!-- WHATSAPP FLUTUANTE — substituir 5500000000000 pelo número com DDI+DDD sem espaços -->
   <a class="wa-btn" id="wa-float"
-     href="https://wa.me/5500000000000?text=Ol%C3%A1%2C+vi+o+DMTech+e+quero+saber+mais!"
+     href="https://wa.me/5587981456565?text=Ol%C3%A1%2C+vi+o+DMTech+e+quero+saber+mais!"
      target="_blank" rel="noopener" onclick="trackEvt('whatsapp_float')">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -561,9 +574,9 @@
   <!-- HERO -->
   <section class="hero">
     <div class="wrap">
-      <div class="hero-label">// gestão de OS para quem vai até o cliente</div>
+      <div class="hero-label">// sistema de OS para assistência técnica e serviços em campo</div>
       <h1>Chega de caderninho.</h1>
-      <p class="hero-sub">DMTech organiza suas ordens de serviço do orçamento ao recibo — para técnico que trabalha na rua.</p>
+      <p class="hero-sub">DMTech organiza orçamentos, ordens de serviço e financeiro da sua empresa — do agendamento ao recibo com QR PIX.</p>
       <div class="hero-btns">
         <a href="signup.html" class="btn-primary">Criar conta grátis →</a>
         <a href="#como-funciona" class="btn-secondary">Ver como funciona ↓</a>
@@ -638,6 +651,25 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NICHOS -->
+  <section style="border-bottom:1px solid var(--border2);background:#0f0f0f">
+    <div class="wrap" style="padding:32px 24px">
+      <div style="font-family:'Fira Code',monospace;font-size:11px;color:var(--text-dim);margin-bottom:16px">// para quem é o DMTech</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <span class="nicho-tag">Ar-condicionado</span>
+        <span class="nicho-tag">Elétrica residencial</span>
+        <span class="nicho-tag">Elétrica predial</span>
+        <span class="nicho-tag">Hidráulica</span>
+        <span class="nicho-tag">Assistência de celular</span>
+        <span class="nicho-tag">Informática</span>
+        <span class="nicho-tag">CFTV e alarmes</span>
+        <span class="nicho-tag">Refrigeração</span>
+        <span class="nicho-tag">Manutenção geral</span>
+        <span class="nicho-tag" style="color:var(--text-dim);border-color:var(--border)">+ qualquer serviço em campo</span>
       </div>
     </div>
   </section>
@@ -797,38 +829,38 @@
           <div class="plano-title">Gratuito</div>
           <div class="plano-price">R$ 0<span>/mês</span></div>
           <ul class="plano-features">
-            <li>1 usuário técnico</li>
-            <li>Até 20 OS por mês</li>
+            <li>1 técnico</li>
+            <li>Até 10 OS por mês</li>
             <li>Kanban e Orçamentos</li>
             <li>QR PIX no recibo</li>
           </ul>
-          <a href="signup.html" class="btn-primary btn-full">Criar conta grátis →</a>
+          <a href="signup.html" class="btn-primary btn-full" onclick="trackEvt('cta_signup_click',{location:'planos_free'})">Criar conta grátis →</a>
           <div class="plano-note">// sem cartão</div>
         </div>
         <div class="plano-card destaque">
           <div class="plano-tag">// mais popular</div>
-          <div class="plano-title">Pro</div>
-          <div class="plano-price">R$ 49<span>/mês</span></div>
+          <div class="plano-title">Profissional</div>
+          <div class="plano-price">R$ 97<span>/mês</span></div>
           <ul class="plano-features">
-            <li>Técnicos ilimitados</li>
+            <li>Até 5 técnicos</li>
             <li>OS ilimitadas</li>
             <li>Comissão automática</li>
             <li>Audit log</li>
-            <li>Suporte por e-mail</li>
+            <li>Suporte por WhatsApp</li>
           </ul>
-          <a href="signup.html" class="btn-primary btn-full">Assinar →</a>
+          <a href="signup.html" class="btn-primary btn-full" onclick="trackEvt('cta_signup_click',{location:'planos_pro'})">Começar agora →</a>
         </div>
         <div class="plano-card">
-          <div class="plano-title">Business</div>
-          <div class="plano-price">R$ 99<span>/mês</span></div>
+          <div class="plano-title">Empresarial</div>
+          <div class="plano-price">R$ 197<span>/mês</span></div>
           <ul class="plano-features">
-            <li>Tudo do Pro</li>
+            <li>Técnicos ilimitados</li>
             <li>Multi-filial</li>
             <li>Relatórios avançados</li>
             <li>Nota Fiscal integrada</li>
             <li>Suporte prioritário</li>
           </ul>
-          <a href="signup.html" class="btn-primary btn-full">Assinar →</a>
+          <a href="signup.html" class="btn-primary btn-full" onclick="trackEvt('cta_signup_click',{location:'planos_business'})">Começar agora →</a>
         </div>
       </div>
     </div>
