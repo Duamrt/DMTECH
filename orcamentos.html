@@ -10,10 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
-  <script src="js/config.js?v=04141736"></script>
-  <script src="js/auth.js?v=04141736"></script>
-  <script src="js/pdf-orc.js?v=04141736"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141736">
+  <script src="js/config.js?v=04141739"></script>
+  <script src="js/auth.js?v=04141739"></script>
+  <script src="js/pdf-orc.js?v=04141739"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141739">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -758,7 +758,7 @@
     function excluir() {
       const id = document.getElementById('orc-id').value;
       if (!id) return;
-      dmConfirm('Excluir este orçamento permanentemente?', async () => {
+      dmConfirm('Excluir este orçamento? Esta ação não pode ser desfeita.', async () => {
         await sb.from('orcamentos').delete().eq('id', id);
         fecharModal();
         await carregarOrc();

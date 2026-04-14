@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04141736"></script>
-  <script src="js/auth.js?v=04141736"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141736">
+  <script src="js/config.js?v=04141739"></script>
+  <script src="js/auth.js?v=04141739"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141739">
   <style>
     /* Board */
     .board-outer {
@@ -1026,12 +1026,14 @@
     }
 
     async function excluirItem(idx, itemId) {
-      const { error } = await sb.from('os_items').delete().eq('id', itemId);
-      if (error) { dmToast('Erro ao remover item', 'error'); return; }
-      itensPanel.splice(idx, 1);
-      renderItensPanel();
-      const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-      await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+      dmConfirm('Remover este item da OS? Esta ação não pode ser desfeita.', async () => {
+        const { error } = await sb.from('os_items').delete().eq('id', itemId);
+        if (error) { dmToast('Erro ao remover item', 'error'); return; }
+        itensPanel.splice(idx, 1);
+        renderItensPanel();
+        const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+        await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+      }, 'Remover', true);
     }
 
     function fecharPanel() {

@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141736"></script>
-  <script src="js/auth.js?v=04141736"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141736">
+  <script src="js/config.js?v=04141739"></script>
+  <script src="js/auth.js?v=04141739"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141739">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -842,7 +842,7 @@
     }
 
     function excluir() {
-      dmConfirm('Excluir este lançamento?', async () => {
+      dmConfirm('Excluir este lançamento? Esta ação não pode ser desfeita.', async () => {
         const { error } = await sb.from('caixa').delete().eq('id', editandoId).eq('company_id', APP.company.id);
         if (error) { dmToast('Erro: '+error.message,'error'); return; }
         dmToast('Lançamento excluído');
