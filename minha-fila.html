@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141748"></script>
-  <script src="js/auth.js?v=04141748"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141748">
+  <script src="js/config.js?v=04141749"></script>
+  <script src="js/auth.js?v=04141749"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141749">
   <style>
     .fila-header-info {
       font-size: 12px;
@@ -242,7 +242,7 @@
       }
 
       let query = sb.from('ordens_servico')
-        .select('id, numero, status, notes, created_at, clients(name), responsavel:profiles(id,name)')
+        .select('id, numero, status, notes, created_at, clients(name,address,city), responsavel:profiles(id,name)')
         .eq('company_id', cid)
         .neq('status', 'entregue')
         .order('created_at', { ascending: false });
@@ -280,7 +280,17 @@
         return;
       }
       el.innerHTML = lista.map(o => {
-        const desc = o.notes || '—';
+        const desc    = o.notes || '—';
+        const partes  = [o.clients?.address, o.clients?.city].filter(Boolean);
+        const mapsUrl = partes.length
+          ? 'https://maps.google.com/?q=' + encodeURIComponent(partes.join(', '))
+          : null;
+        const mapsBtn = mapsUrl
+          ? `<a href="${mapsUrl}" target="_blank" rel="noopener"
+               onclick="event.stopPropagation()"
+               style="font-size:11px;font-weight:700;color:#60a5fa;text-decoration:none;white-space:nowrap"
+               title="${esc(partes.join(', '))}">📍 Maps</a>`
+          : '';
         return `
           <div class="os-card" onclick="window.location.href='kanban.html?os=${o.id}'">
             <div class="os-numero">#${String(o.numero).padStart(3,'0')}</div>
@@ -290,6 +300,7 @@
               <div class="os-meta">
                 <span class="badge ${STATUS_BADGE[o.status] || ''}">${STATUS_LABEL[o.status] || o.status}</span>
                 <span class="os-data">${fmtData(o.created_at)}</span>
+                ${mapsBtn}
               </div>
             </div>
             <div class="os-ir">Abrir →</div>
