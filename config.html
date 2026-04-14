@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141509"></script>
-  <script src="js/auth.js?v=04141509"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141509">
+  <script src="js/config.js?v=04141516"></script>
+  <script src="js/auth.js?v=04141516"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141516">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -689,14 +689,14 @@
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">O WhatsApp dispara quando a OS fica pronta. Personalize a saudação e o fechamento.</div>
           <div class="cfg-field" style="margin-bottom:12px">
             <div class="cfg-label">Saudação</div>
-            <input class="cfg-input" id="msg-ab" value="${esc(c.msg_pronto_abertura||'Olá! Boas notícias!')}">
+            <input class="cfg-input" id="msg-ab" value="${esc(c.msg_pronto_abertura||'Olá! Temos uma boa notícia para você.')}">
           </div>
           <div style="padding:12px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.6">
-            <em>Seu serviço está pronto e disponível para retirada aqui na <strong style="color:var(--text)">${esc(c.name||'Empresa')}</strong>.</em>
+            <em>O serviço solicitado à <strong style="color:var(--text)">${esc(c.name||'Empresa')}</strong> foi concluído com sucesso.</em>
           </div>
           <div class="cfg-field">
             <div class="cfg-label">Fechamento</div>
-            <input class="cfg-input" id="msg-fe" value="${esc(c.msg_pronto_fechamento||'Quando pode vir buscar? Abraço!')}">
+            <input class="cfg-input" id="msg-fe" value="${esc(c.msg_pronto_fechamento||'Qualquer dúvida, estamos à disposição. Obrigado pela confiança!')}">
           </div>
         </div>
         <button class="cfg-btn" id="btn-salvar-msg" onclick="salvarMensagens()">Salvar Mensagem</button>`;
