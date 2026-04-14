@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141343"></script>
-  <script src="js/auth.js?v=04141343"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141343">
+  <script src="js/config.js?v=04141347"></script>
+  <script src="js/auth.js?v=04141347"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141347">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -58,7 +58,8 @@
     .items-table th { background:var(--surface-3); padding:7px 10px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); border-bottom:1px solid var(--border); }
     .items-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-muted); }
     .items-table tr:last-child td { border-bottom:none; }
-    .item-add-row { display:grid; grid-template-columns:1fr 90px 120px 100px; gap:8px; margin-top:8px; align-items:start; }
+    .item-add-row { display:grid; grid-template-columns:90px 1fr 80px 110px 90px; gap:8px; margin-top:8px; align-items:start; }
+    .tipo-select { font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; }
     .ac-wrap { position:relative; }
     .ac-drop { position:absolute; top:100%; left:0; right:0; background:var(--surface-3); border:1px solid var(--border); z-index:300; max-height:200px; overflow-y:auto; display:none; }
     .ac-item { padding:8px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); }
@@ -216,6 +217,10 @@
         </table>
 
         <div class="item-add-row">
+          <select class="form-input tipo-select" id="item-tipo" onchange="tipoItemAtual=this.value">
+            <option value="servico">Serviço</option>
+            <option value="produto">Peça</option>
+          </select>
           <div class="ac-wrap">
             <input class="form-input" type="text" id="item-desc" placeholder="Buscar catálogo ou digitar..."
               oninput="filtrarAc(this.value)" onblur="setTimeout(esconderAc,150)">
@@ -498,6 +503,7 @@
       document.getElementById('item-desc').value = item.name;
       document.getElementById('item-preco').value = item.price || '';
       tipoItemAtual = item.tipo;
+      document.getElementById('item-tipo').value = item.tipo;
       esconderAc();
       document.getElementById('item-qtd').focus();
     }
@@ -525,10 +531,12 @@
       const qtd   = parseFloat(document.getElementById('item-qtd').value)   || 0;
       const preco = parseFloat(document.getElementById('item-preco').value) || 0;
       if (!desc || qtd <= 0) return;
+      tipoItemAtual = document.getElementById('item-tipo').value;
       itensAtual.push({ tipo: tipoItemAtual, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal: qtd * preco });
       document.getElementById('item-desc').value  = '';
       document.getElementById('item-qtd').value   = '1';
       document.getElementById('item-preco').value = '';
+      document.getElementById('item-tipo').value  = 'servico';
       tipoItemAtual = 'servico';
       renderItens();
       document.getElementById('item-desc').focus();
