@@ -8,37 +8,142 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141443"></script>
-  <script src="js/auth.js?v=04141443"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141443">
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
   <style>
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 28px;
+    /* ── CONFIG LAYOUT ── */
+    .config-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 28px;
+      max-width: 960px;
     }
-    .tab-btn {
-      padding: 10px 22px;
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 700;
-      font-family: 'Manrope', sans-serif;
+    .cfg-nav { position: sticky; top: 0; }
+    .cfg-nav-item {
+      padding: 9px 14px;
       cursor: pointer;
-      transition: color .12s;
-      letter-spacing: .03em;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all .12s;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 3px solid transparent;
+      letter-spacing: .02em;
     }
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+    .cfg-nav-item:hover { color: var(--text); background: var(--surface-2); }
+    .cfg-nav-item.on {
+      color: var(--accent);
+      background: rgba(249,115,22,.06);
+      border-left-color: var(--accent);
+    }
 
-    /* Modal */
+    /* ── FORM ── */
+    .cfg-section { margin-bottom: 28px; }
+    .cfg-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cfg-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .cfg-field { display: flex; flex-direction: column; gap: 5px; }
+    .cfg-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+    }
+    .cfg-hint {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .cfg-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+
+    /* ── EQUIPE ── */
+    .eq-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+    .eq-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .eq-info { flex: 1; min-width: 0; }
+    .eq-nome { font-size: 13px; font-weight: 700; color: var(--text); }
+    .eq-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .eq-papel {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      flex-shrink: 0;
+    }
+    .eq-papel.dono { border-color: var(--accent); color: var(--accent); }
+
+    /* ── PERMISSÕES ── */
+    .perm-card {
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 14px;
+      background: var(--surface-2);
+    }
+    .perm-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .perm-nome { font-size: 14px; font-weight: 700; color: var(--text); }
+    .perm-role { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+    .perm-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .perm-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      background: var(--surface-3, var(--surface-2));
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      transition: border-color .12s;
+    }
+    .perm-label.on { border-color: var(--accent); color: var(--accent); }
+    .perm-label input { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
+
+    /* ── MODAL ── */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -55,119 +160,32 @@
       width: 100%;
       max-width: 480px;
       padding: 28px;
-      position: relative;
     }
-    .modal-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 20px;
-    }
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 24px;
-    }
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-row .form-group { margin-bottom: 0; }
-    .btn-danger {
-      background: none;
-      border: 1px solid var(--danger);
-      color: var(--danger);
-      padding: 9px 18px;
-      font-size: 13px;
-      font-weight: 700;
-      font-family: 'Manrope', sans-serif;
-      cursor: pointer;
-    }
-    .btn-danger:hover { background: var(--danger-dim); }
-
-    /* Equipe */
-    .equipe-lista { display: flex; flex-direction: column; gap: 10px; }
-    .equipe-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-    }
-    .equipe-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-      flex-shrink: 0;
-      text-transform: uppercase;
-    }
-    .equipe-info { flex: 1; min-width: 0; }
-    .equipe-nome {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .equipe-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .equipe-papel {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 9px;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      flex-shrink: 0;
-    }
-    .equipe-papel.dono { border-color: var(--accent); color: var(--accent); }
 
     /* Senha toggle */
-    .input-senha-wrap { position: relative; }
-    .input-senha-wrap .form-input { padding-right: 42px; }
+    .input-wrap { position: relative; }
+    .input-wrap .form-input { padding-right: 40px; }
     .btn-eye {
-      position: absolute;
-      right: 10px;
-      top: 50%;
+      position: absolute; right: 10px; top: 50%;
       transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 14px;
-      padding: 4px;
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px;
     }
 
     /* WA success */
-    .wa-success {
+    .wa-block {
       display: none;
-      background: rgba(37,211,102,.08);
+      background: rgba(37,211,102,.06);
       border: 1px solid #25d366;
-      padding: 16px;
+      padding: 14px;
       margin-top: 16px;
     }
-    .wa-success.show { display: block; }
-    .wa-success p {
-      font-size: 13px;
-      color: var(--text);
-      margin-bottom: 12px;
-      line-height: 1.5;
-    }
+    .wa-block.show { display: block; }
+    .wa-block p { font-size: 12px; color: var(--text); line-height: 1.6; margin-bottom: 12px; white-space: pre-wrap; }
     .btn-wa {
       display: inline-flex;
       align-items: center;
@@ -175,33 +193,20 @@
       background: #25d366;
       color: #fff;
       border: none;
-      padding: 10px 18px;
-      font-size: 13px;
+      padding: 9px 16px;
+      font-size: 12px;
       font-weight: 700;
       font-family: 'Manrope', sans-serif;
       cursor: pointer;
     }
     .btn-wa:hover { opacity: .88; }
 
-    /* Config section */
-    .config-section {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-    .config-section-title {
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text-dim);
-      margin-bottom: 18px;
-    }
-    .config-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 20px;
+    @media (max-width: 768px) {
+      .config-layout { grid-template-columns: 1fr; }
+      .cfg-nav { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+      .cfg-nav-item { border-left: none; border-bottom: 2px solid transparent; font-size: 11px; padding: 7px 10px; }
+      .cfg-nav-item.on { border-left: none; border-bottom-color: var(--accent); }
+      .cfg-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -216,43 +221,23 @@
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section">Principal</div>
-        <a href="dashboard.html" class="nav-item">
-          <span class="nav-icon">⊞</span> Dashboard
-        </a>
-        <a href="minha-fila.html" class="nav-item">
-          <span class="nav-icon">◫</span> Minha Fila
-        </a>
-        <a href="clientes.html" class="nav-item">
-          <span class="nav-icon">◎</span> Clientes
-        </a>
-        <a href="orcamentos.html" class="nav-item">
-          <span class="nav-icon">◨</span> Orçamentos
-        </a>
-        <a href="os.html" class="nav-item">
-          <span class="nav-icon">◈</span> Ordens de Serviço
-        </a>
-        <a href="kanban.html" class="nav-item">
-          <span class="nav-icon">▦</span> Kanban
-        </a>
-        <a href="catalogo.html" class="nav-item">
-          <span class="nav-icon">◧</span> Catálogo
-        </a>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="minha-fila.html" class="nav-item"><span class="nav-icon">◫</span> Minha Fila</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+        <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
         <div class="nav-section">Gestão</div>
-        <a href="financeiro.html" class="nav-item">
-          <span class="nav-icon">◉</span> Financeiro
-        </a>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Financeiro</a>
         <div class="nav-section">Sistema</div>
-        <a href="config.html" class="nav-item active">
-          <span class="nav-icon">⚙</span> Configurações
-        </a>
+        <a href="config.html" class="nav-item active"><span class="nav-icon">⚙</span> Configurações</a>
       </nav>
       <div class="sidebar-footer" id="versao-sidebar"></div>
     </aside>
 
     <!-- Main -->
     <div class="main">
-
-      <!-- Topbar -->
       <div class="topbar">
         <div class="topbar-title">Configurações</div>
         <div class="topbar-right">
@@ -262,70 +247,28 @@
         </div>
       </div>
 
-      <!-- Content -->
       <div class="content">
-
         <div class="page-header">
           <h2>Configurações</h2>
-          <p>Dados da empresa e gerenciamento da equipe.</p>
+          <p>Dados da empresa, equipe e permissões.</p>
         </div>
 
-        <!-- Tabs -->
-        <div class="tabs">
-          <button class="tab-btn active" onclick="trocarTab('empresa')">Empresa</button>
-          <button class="tab-btn" onclick="trocarTab('equipe')">Equipe</button>
-        </div>
-
-        <!-- Tab Empresa -->
-        <div class="tab-panel active" id="tab-empresa">
-
-          <div class="config-section">
-            <div class="config-section-title">Dados da empresa</div>
-            <div class="form-group">
-              <label class="form-label">Nome da empresa</label>
-              <input class="form-input" type="text" id="emp-name" placeholder="Nome da empresa">
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Telefone / WhatsApp</label>
-                <input class="form-input" type="tel" id="emp-phone" placeholder="(99) 99999-9999">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Chave PIX</label>
-                <input class="form-input" type="text" id="emp-pix" placeholder="CPF, CNPJ, e-mail ou chave aleatória">
-              </div>
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Endereço</label>
-              <input class="form-input" type="text" id="emp-address" placeholder="Rua, número, bairro — cidade/UF">
-            </div>
-            <div class="config-actions">
-              <button class="btn btn-primary" id="btn-salvar-emp" onclick="salvarEmpresa()">Salvar</button>
-            </div>
+        <div class="config-layout">
+          <!-- Sub-nav -->
+          <div class="cfg-nav" id="cfg-nav">
+            <div class="cfg-nav-item on"  onclick="ir('empresa', this)">Dados da Empresa</div>
+            <div class="cfg-nav-item"     onclick="ir('equipe', this)">Equipe</div>
+            <div class="cfg-nav-item"     onclick="ir('permissoes', this)" id="nav-permissoes" style="display:none">Permissões</div>
           </div>
-
-        </div>
-
-        <!-- Tab Equipe -->
-        <div class="tab-panel" id="tab-equipe">
-
-          <div class="section">
-            <div class="section-header">
-              <span class="section-title">Membros da equipe</span>
-              <button class="btn btn-primary" onclick="abrirModalMembro()">+ Adicionar técnico</button>
-            </div>
-            <div class="section-body" style="padding:16px">
-              <div class="equipe-lista" id="equipe-lista">
-                <div class="empty-state" style="padding:24px;text-align:center">Carregando...</div>
-              </div>
-            </div>
+          <!-- Conteúdo dinâmico -->
+          <div id="cfg-content">
+            <div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando...</div>
           </div>
-
         </div>
 
-      </div><!-- /content -->
-    </div><!-- /main -->
-  </div><!-- /layout -->
+      </div>
+    </div>
+  </div>
 
   <div class="versao" id="versao-rodape"></div>
 
@@ -333,7 +276,6 @@
   <div class="modal-overlay" id="modal-membro">
     <div class="modal">
       <div class="modal-title">Adicionar técnico</div>
-
       <div class="form-group">
         <label class="form-label">Nome completo *</label>
         <input class="form-input" type="text" id="m-nome" placeholder="João Silva">
@@ -350,18 +292,17 @@
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label">Senha temporária *</label>
-        <div class="input-senha-wrap">
+        <div class="input-wrap">
           <input class="form-input" type="password" id="m-senha" placeholder="Mínimo 6 caracteres">
           <button class="btn-eye" onclick="toggleSenha()" type="button" id="btn-eye">◉</button>
         </div>
       </div>
 
-      <!-- Após criação: mensagem WA -->
-      <div class="wa-success" id="wa-success">
+      <div class="wa-block" id="wa-block">
         <p id="wa-texto"></p>
-        <button class="btn-wa" id="btn-wa" onclick="abrirWA()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Enviar acesso pelo WhatsApp
+        <button class="btn-wa" onclick="abrirWA()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar pelo WhatsApp
         </button>
       </div>
 
@@ -387,16 +328,15 @@
       document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
     }
 
-    // ── Tabs ──
-    function trocarTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['empresa','equipe'][i] === tab);
-      });
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ── Init ──
+    let _aba = 'empresa';
+    let _novoMembroWA = null;
+
+    // ── INIT ──
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
@@ -406,104 +346,215 @@
       document.getElementById('topbar-user').textContent  = nome;
       document.getElementById('nome-empresa').textContent = empresa;
 
-      // Preencher dados da empresa
-      document.getElementById('emp-name').value    = APP.company?.name    || '';
-      document.getElementById('emp-phone').value   = APP.company?.phone   || '';
-      document.getElementById('emp-pix').value     = APP.company?.pix_key || '';
-      document.getElementById('emp-address').value = APP.company?.address || '';
+      // Permissões só para o dono
+      if (APP.profile.role === 'dono') {
+        document.getElementById('nav-permissoes').style.display = '';
+      }
 
-      await carregarEquipe();
+      renderAba();
     })();
 
-    // ── Empresa ──
+    // ── NAVEGAÇÃO ──
+    function ir(aba, el) {
+      _aba = aba;
+      document.querySelectorAll('.cfg-nav-item').forEach(n => n.classList.remove('on'));
+      if (el) el.classList.add('on');
+      renderAba();
+    }
+
+    function renderAba() {
+      const ct = document.getElementById('cfg-content');
+      if (_aba === 'empresa')    renderEmpresa(ct);
+      if (_aba === 'equipe')     renderEquipe(ct);
+      if (_aba === 'permissoes') renderPermissoes(ct);
+    }
+
+    // ══════════════════════════════════════
+    // EMPRESA
+    // ══════════════════════════════════════
+    function renderEmpresa(ct) {
+      const c = APP.company || {};
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Dados da empresa</div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <label class="cfg-label">Nome</label>
+              <input class="form-input" type="text" id="e-name" value="${esc(c.name||'')}" placeholder="Nome da empresa">
+            </div>
+            <div class="cfg-field">
+              <label class="cfg-label">Telefone / WhatsApp</label>
+              <input class="form-input" type="tel" id="e-phone" value="${esc(c.phone||'')}" placeholder="(99) 99999-9999">
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <label class="cfg-label">Chave PIX</label>
+              <input class="form-input" type="text" id="e-pix" value="${esc(c.pix_key||'')}" placeholder="CPF, CNPJ, e-mail ou chave aleatória">
+            </div>
+            <div class="cfg-field">
+              <label class="cfg-label">Endereço</label>
+              <input class="form-input" type="text" id="e-address" value="${esc(c.address||'')}" placeholder="Rua, número — cidade/UF">
+            </div>
+          </div>
+          <div class="cfg-actions">
+            <button class="btn btn-primary" id="btn-salvar-emp" onclick="salvarEmpresa()">Salvar</button>
+          </div>
+        </div>`;
+    }
+
     async function salvarEmpresa() {
       const btn = document.getElementById('btn-salvar-emp');
       btn.disabled = true; btn.textContent = 'Salvando...';
-
       const payload = {
-        name:    document.getElementById('emp-name').value.trim()    || null,
-        phone:   document.getElementById('emp-phone').value.trim()   || null,
-        pix_key: document.getElementById('emp-pix').value.trim()     || null,
-        address: document.getElementById('emp-address').value.trim() || null,
+        name:    document.getElementById('e-name').value.trim()    || null,
+        phone:   document.getElementById('e-phone').value.trim()   || null,
+        pix_key: document.getElementById('e-pix').value.trim()     || null,
+        address: document.getElementById('e-address').value.trim() || null,
       };
-
-      const { error } = await sb.from('companies')
-        .update(payload)
-        .eq('id', APP.company.id);
-
+      const { error } = await sb.from('companies').update(payload).eq('id', APP.company.id);
       btn.disabled = false; btn.textContent = 'Salvar';
-
       if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
-      // Atualiza cache local
       Object.assign(APP.company, payload);
       document.getElementById('nome-empresa').textContent = payload.name || '';
       dmToast('Dados salvos!');
     }
 
-    // ── Equipe ──
-    async function carregarEquipe() {
+    // ══════════════════════════════════════
+    // EQUIPE
+    // ══════════════════════════════════════
+    async function renderEquipe(ct) {
+      ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando equipe...</div>';
       const { data, error } = await sb.from('profiles')
         .select('id, name, email, whatsapp, role')
         .eq('company_id', APP.company.id)
         .order('name');
 
-      const lista = document.getElementById('equipe-lista');
       if (error || !data?.length) {
-        lista.innerHTML = '<div class="empty-state" style="padding:24px;text-align:center">Nenhum membro cadastrado.</div>';
+        ct.innerHTML = `
+          <div style="text-align:right;margin-bottom:16px;">
+            <button class="btn btn-primary" onclick="abrirModalMembro()">+ Adicionar técnico</button>
+          </div>
+          <div class="empty-state" style="padding:40px;text-align:center">Nenhum membro cadastrado.</div>`;
         return;
       }
 
-      lista.innerHTML = data.map(m => {
-        const primeiroNome = (m.name || m.email || '?').split(' ')[0];
-        const inicial      = primeiroNome[0].toUpperCase();
-        const isDono       = m.role === 'dono';
-        const subInfo      = [m.email, m.whatsapp ? formatarWA(m.whatsapp) : null].filter(Boolean).join(' · ');
-        return `
-          <div class="equipe-card">
-            <div class="equipe-avatar">${inicial}</div>
-            <div class="equipe-info">
-              <div class="equipe-nome">${esc(primeiroNome)}</div>
-              <div class="equipe-sub">${esc(subInfo)}</div>
+      ct.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="cfg-section-title" style="margin:0;border:none;padding:0">${data.length} membro${data.length !== 1 ? 's' : ''}</div>
+          <button class="btn btn-primary" onclick="abrirModalMembro()">+ Adicionar técnico</button>
+        </div>
+        ${data.map(m => {
+          const primeiro = (m.name || m.email || '?').split(' ')[0];
+          const inicial  = primeiro[0].toUpperCase();
+          const isDono   = m.role === 'dono';
+          const sub      = [m.email, m.whatsapp ? fmtWA(m.whatsapp) : null].filter(Boolean).join(' · ');
+          return `
+          <div class="eq-card">
+            <div class="eq-avatar">${inicial}</div>
+            <div class="eq-info">
+              <div class="eq-nome">${esc(primeiro)}</div>
+              <div class="eq-sub">${esc(sub)}</div>
             </div>
-            <span class="equipe-papel ${isDono ? 'dono' : ''}">${isDono ? 'Dono' : 'Técnico'}</span>
-            ${!isDono ? `<button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="removerMembro('${m.id}','${esc(primeiroNome)}')">Remover</button>` : ''}
-          </div>
-        `;
-      }).join('');
+            <span class="eq-papel ${isDono ? 'dono' : ''}">${isDono ? 'Dono' : 'Técnico'}</span>
+            ${!isDono ? `<button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="removerMembro('${m.id}','${esc(primeiro)}')">Remover</button>` : ''}
+          </div>`;
+        }).join('')}`;
     }
 
-    function formatarWA(n) {
+    function fmtWA(n) {
       const d = n.replace(/\D/g, '');
       if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
       return n;
     }
 
-    function esc(v) {
-      if (!v) return '';
-      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
     async function removerMembro(id, nome) {
-      dmConfirm(`Remover ${nome} da equipe? O acesso ao sistema será desativado.`, async () => {
-        // Apaga o profile (auth user continua mas sem company_id)
-        const { error } = await sb.from('profiles')
-          .update({ company_id: null })
-          .eq('id', id);
+      dmConfirm(`Remover ${nome} da equipe?`, async () => {
+        const { error } = await sb.from('profiles').update({ company_id: null }).eq('id', id);
         if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
         dmToast(`${nome} removido.`);
-        await carregarEquipe();
+        renderEquipe(document.getElementById('cfg-content'));
       }, 'Remover', true);
     }
 
-    // ── Modal novo membro ──
-    let _novoMembroWA = null;
+    // ══════════════════════════════════════
+    // PERMISSÕES
+    // ══════════════════════════════════════
+    const _MODULOS = [
+      { key: 'dashboard',   label: 'Dashboard (KPIs financeiros)' },
+      { key: 'orcamentos',  label: 'Orçamentos' },
+      { key: 'catalogo',    label: 'Catálogo (editar itens)' },
+      { key: 'financeiro',  label: 'Financeiro' },
+    ];
+    const _DEFAULTS = { dashboard: false, orcamentos: false, catalogo: false, financeiro: false };
 
+    async function renderPermissoes(ct) {
+      ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando...</div>';
+      const { data, error } = await sb.from('profiles')
+        .select('id, name, email, role, permissions')
+        .eq('company_id', APP.company.id)
+        .neq('role', 'dono')
+        .order('name');
+
+      if (error) { ct.innerHTML = `<div style="color:var(--danger);padding:12px">Erro: ${error.message}</div>`; return; }
+      if (!data?.length) {
+        ct.innerHTML = '<div class="empty-state" style="padding:40px;text-align:center">Nenhum técnico para configurar. Adicione membros na aba Equipe.</div>';
+        return;
+      }
+
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Permissões por técnico</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">
+            Minha Fila, Kanban, OS e Clientes são sempre visíveis.<br>
+            Configure abaixo o que cada técnico pode acessar além disso.
+          </p>
+          ${data.map(m => {
+            const primeiro = (m.name || m.email || '?').split(' ')[0];
+            const perms    = Object.assign({}, _DEFAULTS, m.permissions || {});
+            return `
+            <div class="perm-card">
+              <div class="perm-card-header">
+                <div>
+                  <span class="perm-nome">${esc(primeiro)}</span>
+                  <span class="perm-role">${esc(m.email || '')}</span>
+                </div>
+                <button class="btn btn-primary" style="font-size:11px;padding:6px 14px" onclick="salvarPermissoes('${m.id}')">Salvar</button>
+              </div>
+              <div class="perm-grid" id="perm-grid-${m.id}">
+                ${_MODULOS.map(mod => `
+                  <label class="perm-label ${perms[mod.key] ? 'on' : ''}" id="perm-lbl-${m.id}-${mod.key}">
+                    <input type="checkbox" data-uid="${m.id}" data-mod="${mod.key}"
+                      ${perms[mod.key] ? 'checked' : ''}
+                      onchange="togglePerm(this)">
+                    ${esc(mod.label)}
+                  </label>`).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function togglePerm(el) {
+      const lbl = document.getElementById(`perm-lbl-${el.dataset.uid}-${el.dataset.mod}`);
+      if (lbl) lbl.classList.toggle('on', el.checked);
+    }
+
+    async function salvarPermissoes(uid) {
+      const cbs = document.querySelectorAll(`input[data-uid="${uid}"]`);
+      const perms = {};
+      cbs.forEach(cb => { perms[cb.dataset.mod] = cb.checked; });
+      const { error } = await sb.from('profiles').update({ permissions: perms }).eq('id', uid);
+      if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+      dmToast('Permissões salvas!');
+    }
+
+    // ══════════════════════════════════════
+    // MODAL NOVO MEMBRO
+    // ══════════════════════════════════════
     function abrirModalMembro() {
-      document.getElementById('m-nome').value     = '';
-      document.getElementById('m-email').value    = '';
-      document.getElementById('m-whatsapp').value = '';
-      document.getElementById('m-senha').value    = '';
-      document.getElementById('wa-success').classList.remove('show');
+      ['m-nome','m-email','m-whatsapp','m-senha'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('wa-block').classList.remove('show');
       document.getElementById('modal-membro-actions').style.display = 'flex';
       document.getElementById('btn-criar-membro').disabled = false;
       document.getElementById('btn-criar-membro').textContent = 'Criar acesso';
@@ -514,7 +565,7 @@
 
     function fecharModalMembro() {
       document.getElementById('modal-membro').classList.remove('active');
-      if (_novoMembroWA) carregarEquipe(); // atualiza lista se criou alguém
+      if (_novoMembroWA) renderEquipe(document.getElementById('cfg-content'));
       _novoMembroWA = null;
     }
 
@@ -535,22 +586,19 @@
       const whatsapp = document.getElementById('m-whatsapp').value.trim();
       const senha    = document.getElementById('m-senha').value;
 
-      if (!nome || !email || !senha) {
-        dmToast('Preencha nome, e-mail e senha.', 'error'); return;
-      }
-      if (senha.length < 6) {
-        dmToast('Senha precisa ter pelo menos 6 caracteres.', 'error'); return;
-      }
+      if (!nome || !email || !senha) { dmToast('Nome, e-mail e senha são obrigatórios.', 'error'); return; }
+      if (senha.length < 6)          { dmToast('Senha mínima de 6 caracteres.', 'error'); return; }
 
       const btn = document.getElementById('btn-criar-membro');
       btn.disabled = true; btn.textContent = 'Criando...';
 
+      const session = (await sb.auth.getSession()).data.session;
       const res = await fetch(`${SUPABASE_URL}/functions/v1/criar-membro`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${(await sb.auth.getSession()).data.session?.access_token}`,
+          'Authorization': `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({ name: nome, email, whatsapp, password: senha, company_id: APP.company.id }),
       });
@@ -563,28 +611,26 @@
         return;
       }
 
-      // Sucesso — mostra bloco WA
-      const primeiroNome = nome.split(' ')[0];
-      const appUrl       = window.location.origin + '/login.html';
-      _novoMembroWA      = { nome: primeiroNome, email, senha, whatsapp };
-
-      const texto = `Olá ${primeiroNome}! Seu acesso ao sistema foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`;
+      // Sucesso
+      const primeiro = nome.split(' ')[0];
+      const appUrl   = window.location.origin + '/login.html';
+      const texto    = `Olá ${primeiro}! Seu acesso foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`;
       document.getElementById('wa-texto').textContent = texto;
-      document.getElementById('wa-success').classList.add('show');
+      document.getElementById('wa-block').classList.add('show');
       document.getElementById('modal-membro-actions').style.display = 'none';
 
-      dmToast(`Acesso de ${primeiroNome} criado!`);
+      _novoMembroWA = { primeiro, email, senha, whatsapp };
+      dmToast(`Acesso de ${primeiro} criado!`);
     }
 
     function abrirWA() {
       if (!_novoMembroWA) return;
-      const { nome, email, senha, whatsapp } = _novoMembroWA;
+      const { primeiro, email, senha, whatsapp } = _novoMembroWA;
       const appUrl = window.location.origin + '/login.html';
-      const msg = encodeURIComponent(
-        `Olá ${nome}! Seu acesso ao sistema foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`
-      );
-      const num = whatsapp.replace(/\D/g, '');
-      const waNum = num.length === 11 ? '55' + num : num;
+      const msg = encodeURIComponent(`Olá ${primeiro}! Seu acesso foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`);
+      const num  = whatsapp.replace(/\D/g, '');
+      const waNum = num.length === 11 ? '55' + num : num || '';
+      if (!waNum) { dmToast('WhatsApp não informado.', 'error'); return; }
       window.open(`https://wa.me/${waNum}?text=${msg}`, '_blank');
     }
   </script>
