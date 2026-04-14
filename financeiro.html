@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141618"></script>
-  <script src="js/auth.js?v=04141618"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141618">
+  <script src="js/config.js?v=04141626"></script>
+  <script src="js/auth.js?v=04141626"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141626">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -250,17 +250,19 @@
         <div id="pane-dre" style="display:none">
           <div class="dre-hero">
             <div class="dre-hero-card">
-              <div class="dre-hero-label">Receita Total</div>
-              <div class="dre-hero-val verde" id="dre-rec">—</div>
+              <div class="dre-hero-label">Faturamento Bruto</div>
+              <div class="dre-hero-val verde" id="dre-fat">—</div>
+              <div class="dre-hero-pct" id="dre-fat-os">— OS entregues</div>
             </div>
             <div class="dre-hero-card">
-              <div class="dre-hero-label">Despesas Totais</div>
-              <div class="dre-hero-val vermelho" id="dre-desp">—</div>
+              <div class="dre-hero-label">Margem Bruta</div>
+              <div class="dre-hero-val accent" id="dre-margem-bruta">—</div>
+              <div class="dre-hero-pct" id="dre-margem-bruta-pct">—%</div>
             </div>
             <div class="dre-hero-card">
               <div class="dre-hero-label">Resultado Líquido</div>
               <div class="dre-hero-val" id="dre-res">—</div>
-              <div class="dre-hero-pct" id="dre-margem">margem: —</div>
+              <div class="dre-hero-pct" id="dre-margem">margem final: —</div>
             </div>
           </div>
 
@@ -349,21 +351,18 @@
     }
 
     const CAT_RECEITA = ['os','servico','outros'];
-    const CAT_DESPESA = ['aluguel','insumos','fornecedor','vale','salario','servicos','outros'];
+    const CAT_DESPESA = ['fixo','taxa','pessoal','material_os','imposto','outros'];
     const CAT_LABEL   = {
-      os:'OS', servico:'Serviço', aluguel:'Aluguel', insumos:'Insumos',
-      fornecedor:'Fornecedor', vale:'Vale', salario:'Salário',
-      servicos:'Serviços', outros:'Outros'
-    };
-    // Agrupamentos para DRE
-    const CAT_DESP_GRUPOS = {
-      fornecedor: 'Fornecedores / Insumos',
-      insumos:    'Fornecedores / Insumos',
-      aluguel:    'Infraestrutura',
-      servicos:   'Infraestrutura',
-      salario:    'Folha de Pagamento',
-      vale:       'Folha de Pagamento',
-      outros:     'Outros'
+      // receitas
+      os:'OS', servico:'Serviço',
+      // despesas novas
+      fixo:'Custo Fixo', taxa:'Taxa Financeira', pessoal:'Pessoal / MO',
+      material_os:'Material OS', imposto:'Imposto',
+      // despesas antigas (compat display)
+      aluguel:'Aluguel', insumos:'Insumos', fornecedor:'Fornecedor',
+      vale:'Vale', salario:'Salário', servicos:'Serviços',
+      // comum
+      outros:'Outros'
     };
 
     let todosLanc = [], periodoAtivo = 'mes', tabAtiva = 'resumo', editandoId = null;
@@ -451,8 +450,8 @@
       }
       if (tabAtiva === 'receitas') renderTabelaTipo(entradas, 'tabela-receitas', 'entrada');
       if (tabAtiva === 'despesas') renderTabelaTipo(saidas, 'tabela-despesas', 'saida');
-      if (tabAtiva === 'dre')     renderDRE(lista);
-      if (tabAtiva === 'lucro')   carregarLucro();
+      if (tabAtiva === 'dre')     { dreCarregando = false; carregarDRE(); }
+      if (tabAtiva === 'lucro')   { lucroCarregando = false; carregarLucro(); }
     }
 
     /* ── Tabela Resumo ── */
@@ -503,76 +502,153 @@
     }
 
     /* ─────────────── DRE ─────────────── */
-    function renderDRE(lista) {
-      const entradas = lista.filter(l => l.tipo === 'entrada');
-      const saidas   = lista.filter(l => l.tipo === 'saida' && l.pago);
+    let dreCarregando = false;
 
-      const totalRec = entradas.reduce((s,l) => s+(l.valor||0), 0);
+    function _calcDataInicio() {
+      const agora = new Date();
+      if (periodoAtivo === 'mes')  return new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
+      if (periodoAtivo === '30')   { const d = new Date(agora); d.setDate(d.getDate()-30);  return d.toISOString(); }
+      if (periodoAtivo === '90')   { const d = new Date(agora); d.setDate(d.getDate()-90);  return d.toISOString(); }
+      if (periodoAtivo === 'ano')  return new Date(agora.getFullYear(), 0, 1).toISOString();
+      return null;
+    }
 
-      // Agrupamento de despesas
-      const grupos = {};
-      saidas.forEach(l => {
-        const g = CAT_DESP_GRUPOS[l.categoria] || 'Outros';
-        if (!grupos[g]) grupos[g] = 0;
-        grupos[g] += (l.valor||0);
-      });
-      const totalDesp = Object.values(grupos).reduce((s,v) => s+v, 0);
-      const resultado = totalRec - totalDesp;
-      const margem    = totalRec > 0 ? (resultado / totalRec * 100) : 0;
+    async function carregarDRE() {
+      if (dreCarregando) return;
+      dreCarregando = true;
+      document.getElementById('dre-tree').innerHTML =
+        '<div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Carregando...</div>';
 
-      // KPIs hero
-      document.getElementById('dre-rec').textContent    = fmtMoeda(totalRec);
-      document.getElementById('dre-desp').textContent   = fmtMoeda(totalDesp);
-      const resEl = document.getElementById('dre-res');
-      resEl.textContent = fmtMoeda(resultado);
-      resEl.className = 'dre-hero-val ' + (resultado >= 0 ? 'verde' : 'vermelho');
-      document.getElementById('dre-margem').textContent = `margem: ${margem.toFixed(1)}%`;
+      try {
+        const dataInicio = _calcDataInicio();
 
-      // Árvore DRE
-      const ordemGrupos = ['Fornecedores / Insumos','Folha de Pagamento','Infraestrutura','Outros'];
+        // 1. OS entregues no período
+        let qOS = sb.from('ordens_servico')
+          .select('id')
+          .eq('company_id', APP.company.id)
+          .eq('status', 'entregue');
+        if (dataInicio) qOS = qOS.gte('created_at', dataInicio);
+        const { data: osEntregues } = await qOS;
+        const osIds = (osEntregues || []).map(o => o.id);
 
-      let html = '';
+        // 2. Itens dessas OS
+        let itensOS = [];
+        if (osIds.length) {
+          const { data: itens } = await sb.from('os_items')
+            .select('tipo, descricao, quantidade, preco_unit, subtotal')
+            .in('os_id', osIds);
+          itensOS = itens || [];
+        }
 
-      // Receita
-      html += `<div class="dre-row"><span class="dre-label main">Receita Operacional</span><span class="dre-val pos">${fmtMoeda(totalRec)}</span></div>`;
-      const recPorCat = {};
-      entradas.forEach(l => {
-        const lbl = CAT_LABEL[l.categoria] || l.categoria;
-        recPorCat[lbl] = (recPorCat[lbl]||0) + (l.valor||0);
-      });
-      Object.entries(recPorCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,val]) => {
-        const pct = totalRec > 0 ? (val/totalRec*100).toFixed(0) : 0;
-        html += `<div class="dre-row"><span class="dre-label indent">${cat}</span><div style="display:flex;align-items:center"><span class="dre-val neu">${fmtMoeda(val)}</span><span class="dre-pct">${pct}%</span></div></div>`;
-      });
+        // 3. Faturamento Bruto = soma de todos os itens (venda ao cliente)
+        const faturamentoBruto = itensOS.reduce((s,i) => s + (parseFloat(i.subtotal)||0), 0);
 
-      html += `<div class="dre-sep"></div>`;
+        // 4. Impostos sobre Serviço (% configurável)
+        const impostoPct = parseFloat(APP.company?.imposto_pct || 0);
+        const impostos   = faturamentoBruto * impostoPct / 100;
+        const receitaLiquida = faturamentoBruto - impostos;
 
-      // Despesas
-      html += `<div class="dre-row"><span class="dre-label main">(−) Despesas Pagas</span><span class="dre-val neg">${fmtMoeda(totalDesp)}</span></div>`;
-      ordemGrupos.forEach(g => {
-        const val = grupos[g];
-        if (!val) return;
-        const pct = totalRec > 0 ? (val/totalRec*100).toFixed(0) : 0;
-        html += `<div class="dre-row"><span class="dre-label indent">${g}</span><div style="display:flex;align-items:center"><span class="dre-val neg">${fmtMoeda(val)}</span><span class="dre-pct">${pct}%</span></div></div>`;
-      });
+        // 5. Custo de Materiais: itens tipo='produto' × custo do catálogo
+        let custoMateriais = 0;
+        itensOS.filter(i => i.tipo === 'produto').forEach(i => {
+          const key = (i.descricao||'').toLowerCase().trim();
+          const custoUnit = produtosCusto[key] || 0;
+          custoMateriais += custoUnit * (parseFloat(i.quantidade)||0);
+        });
 
-      html += `<div class="dre-sep"></div>`;
+        const margemBruta    = receitaLiquida - custoMateriais;
+        const margemBrutaPct = receitaLiquida > 0 ? (margemBruta / receitaLiquida * 100) : 0;
 
-      // Resultado
-      const resCor = resultado >= 0 ? '#4ade80' : '#f87171';
-      html += `<div class="dre-row dre-result">
-        <span class="dre-label main" style="font-size:14px;color:var(--text)">Resultado Líquido</span>
-        <div style="display:flex;align-items:center">
-          <span class="dre-val" style="font-size:16px;color:${resCor}">${fmtMoeda(resultado)}</span>
-          <span class="dre-pct" style="font-size:12px">${margem.toFixed(1)}%</span>
-        </div>
-      </div>`;
+        // 6. Despesas do caixa (já filtradas por período em todosLanc)
+        const lista = filtrarPeriodo(todosLanc);
+        const sp = lista.filter(l => l.tipo === 'saida' && l.pago);
 
-      if (!lista.length) {
-        html = '<div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Nenhum lançamento no período.</div>';
+        const custoPessoal = sp
+          .filter(l => ['pessoal','salario','vale'].includes(l.categoria))
+          .reduce((s,l) => s+(l.valor||0), 0);
+
+        const custosFixos = sp
+          .filter(l => ['fixo','aluguel','servicos'].includes(l.categoria))
+          .reduce((s,l) => s+(l.valor||0), 0);
+
+        const taxasFinanceiras = sp
+          .filter(l => l.categoria === 'taxa')
+          .reduce((s,l) => s+(l.valor||0), 0);
+
+        const outrosCustos = sp
+          .filter(l => !['pessoal','salario','vale','fixo','aluguel','servicos','taxa'].includes(l.categoria))
+          .reduce((s,l) => s+(l.valor||0), 0);
+
+        const totalDespesas = custoPessoal + custosFixos + taxasFinanceiras + outrosCustos;
+        const resultadoLiquido = margemBruta - totalDespesas;
+        const margemFinal = faturamentoBruto > 0 ? (resultadoLiquido / faturamentoBruto * 100) : 0;
+
+        // KPI cards
+        document.getElementById('dre-fat').textContent         = fmtMoeda(faturamentoBruto);
+        document.getElementById('dre-fat-os').textContent      = `${osIds.length} OS entregues`;
+        document.getElementById('dre-margem-bruta').textContent = fmtMoeda(margemBruta);
+        document.getElementById('dre-margem-bruta-pct').textContent = `${margemBrutaPct.toFixed(1)}% da receita líquida`;
+        const resEl = document.getElementById('dre-res');
+        resEl.textContent = fmtMoeda(resultadoLiquido);
+        resEl.className   = 'dre-hero-val ' + (resultadoLiquido >= 0 ? 'verde' : 'vermelho');
+        document.getElementById('dre-margem').textContent = `margem final: ${margemFinal.toFixed(1)}%`;
+
+        // Árvore DRE
+        const f = faturamentoBruto;
+        function pct(v) { return f > 0 ? (v/f*100).toFixed(0)+'%' : '—'; }
+        function row(label, val, cls='neu', indent=false) {
+          const labelClass = 'dre-label' + (indent ? ' indent' : ' main');
+          return `<div class="dre-row">
+            <span class="${labelClass}">${label}</span>
+            <div style="display:flex;align-items:center">
+              <span class="dre-val ${cls}">${fmtMoeda(val)}</span>
+              <span class="dre-pct">${pct(val)}</span>
+            </div>
+          </div>`;
+        }
+        function rowResult(label, val) {
+          const cor = val >= 0 ? '#4ade80' : '#f87171';
+          return `<div class="dre-row dre-result">
+            <span class="dre-label main" style="font-size:14px;color:var(--text)">${label}</span>
+            <div style="display:flex;align-items:center">
+              <span class="dre-val" style="font-size:16px;color:${cor}">${fmtMoeda(val)}</span>
+              <span class="dre-pct" style="font-size:12px">${pct(val)}</span>
+            </div>
+          </div>`;
+        }
+
+        let html = '';
+        html += row('Faturamento Bruto', faturamentoBruto, 'pos');
+        if (impostoPct > 0)
+          html += row(`(−) Impostos / Simples (${impostoPct}%)`, impostos, 'neg', true);
+        html += row('(=) Receita Líquida', receitaLiquida, receitaLiquida >= 0 ? 'pos' : 'neg');
+        html += `<div class="dre-sep"></div>`;
+        html += row('(−) Custo de Materiais', custoMateriais, 'neg', true);
+        html += rowResult('(=) Margem Bruta', margemBruta);
+        html += `<div class="dre-sep"></div>`;
+        if (custoPessoal > 0)     html += row('(−) Custo de Pessoal', custoPessoal, 'neg', true);
+        if (custosFixos > 0)      html += row('(−) Custos Fixos', custosFixos, 'neg', true);
+        if (taxasFinanceiras > 0) html += row('(−) Taxas Financeiras', taxasFinanceiras, 'neg', true);
+        if (outrosCustos > 0)     html += row('(−) Outros Custos', outrosCustos, 'neg', true);
+        if (totalDespesas > 0) {
+          html += `<div class="dre-sep"></div>`;
+          html += row('Total Despesas Operacionais', totalDespesas, 'neg');
+        }
+        html += `<div class="dre-sep"></div>`;
+        html += rowResult('Resultado Líquido', resultadoLiquido);
+
+        if (!osIds.length && !sp.length) {
+          html = '<div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Nenhuma OS entregue no período.</div>';
+          ['dre-fat','dre-margem-bruta','dre-res'].forEach(id => document.getElementById(id).textContent = fmtMoeda(0));
+        }
+
+        document.getElementById('dre-tree').innerHTML = html;
+      } catch(e) {
+        document.getElementById('dre-tree').innerHTML =
+          `<div style="text-align:center;padding:32px;color:#f87171;font-size:13px">Erro: ${esc(e.message)}</div>`;
       }
 
-      document.getElementById('dre-tree').innerHTML = html;
+      dreCarregando = false;
     }
 
     /* ─────────────── LUCRO PEÇAS ─────────────── */
@@ -585,13 +661,7 @@
         '<tr><td colspan="6" class="empty-state">Carregando itens das OS...</td></tr>';
 
       try {
-        // Busca OS do período para filtrar
-        const agora = new Date();
-        let dataInicio = null;
-        if      (periodoAtivo === 'mes')  dataInicio = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
-        else if (periodoAtivo === '30')   { const d = new Date(agora); d.setDate(d.getDate()-30); dataInicio = d.toISOString(); }
-        else if (periodoAtivo === '90')   { const d = new Date(agora); d.setDate(d.getDate()-90); dataInicio = d.toISOString(); }
-        else if (periodoAtivo === 'ano')  dataInicio = new Date(agora.getFullYear(), 0, 1).toISOString();
+        const dataInicio = _calcDataInicio();
 
         let qOS = sb.from('ordens_servico').select('id').eq('company_id', APP.company.id);
         if (dataInicio) qOS = qOS.gte('created_at', dataInicio);
