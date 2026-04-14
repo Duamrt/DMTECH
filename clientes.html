@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141257"></script>
-  <script src="js/auth.js?v=04141257"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141257">
+  <script src="js/config.js?v=04141311"></script>
+  <script src="js/auth.js?v=04141311"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141311">
   <style>
     .search-bar {
       display: flex;
@@ -372,7 +372,7 @@
 
     async function salvar() {
       const id   = document.getElementById('cliente-id').value;
-      const name = document.getElementById('c-name').value.trim();
+      const name = document.getElementById('c-name').value.trim().toUpperCase();
       if (!name) { alert('Nome é obrigatório.'); return; }
 
       const payload = {
@@ -488,7 +488,7 @@
 
       const payload = validos.map(c => ({
         company_id: APP.company.id,
-        name:       c.name.trim(),
+        name:       c.name.trim().toUpperCase(),
         phone:      c.phone   || null,
         cpf_cnpj:   c.cpf_cnpj|| null,
         email:      c.email   || null,
