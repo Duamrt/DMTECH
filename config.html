@@ -8,212 +8,150 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/auth.js"></script>
-  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/config.js?v=04141600"></script>
+  <script src="js/auth.js?v=04141600"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141600">
   <style>
-    /* ── CONFIG LAYOUT ── */
-    .config-layout {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 28px;
-      max-width: 960px;
-    }
-    .cfg-nav { position: sticky; top: 0; }
+    .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
+    .cfg-nav { position:sticky; top:0; }
     .cfg-nav-item {
-      padding: 9px 14px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      transition: all .12s;
-      margin-bottom: 2px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-left: 3px solid transparent;
-      letter-spacing: .02em;
+      padding:9px 14px; cursor:pointer; font-size:12px; font-weight:700;
+      color:var(--text-muted); transition:all .12s; margin-bottom:2px;
+      display:flex; align-items:center; gap:8px;
+      border-left:3px solid transparent; letter-spacing:.02em;
     }
-    .cfg-nav-item:hover { color: var(--text); background: var(--surface-2); }
-    .cfg-nav-item.on {
-      color: var(--accent);
-      background: rgba(249,115,22,.06);
-      border-left-color: var(--accent);
-    }
+    .cfg-nav-item:hover { color:var(--text); background:var(--surface-2); }
+    .cfg-nav-item.on { color:var(--accent); background:rgba(249,115,22,.06); border-left-color:var(--accent); }
 
-    /* ── FORM ── */
-    .cfg-section { margin-bottom: 28px; }
-    .cfg-section-title {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      color: var(--text-dim);
-      margin-bottom: 14px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-    .cfg-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .cfg-field { display: flex; flex-direction: column; gap: 5px; }
-    .cfg-label {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text-muted);
-    }
-    .cfg-hint {
-      font-size: 10px;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
-    .cfg-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+    /* Seções */
+    .cfg-section { margin-bottom:28px; }
+    .cfg-section-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--text-dim); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .cfg-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .cfg-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px; }
+    .cfg-field { display:flex; flex-direction:column; gap:5px; }
+    .cfg-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); }
+    .cfg-hint { font-size:10px; color:var(--text-dim); margin-top:2px; }
+    .cfg-actions { display:flex; justify-content:flex-end; margin-top:20px; }
 
-    /* ── EQUIPE ── */
-    .eq-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      margin-bottom: 10px;
+    /* Input padrão config */
+    .cfg-input {
+      background:var(--surface-2); border:1px solid var(--border);
+      padding:9px 12px; font-size:13px; font-family:'Fira Code',monospace; font-weight:500;
+      color:var(--text); width:100%; outline:none; transition:border-color .12s;
     }
-    .eq-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 800;
-      color: #fff;
-      flex-shrink: 0;
-      text-transform: uppercase;
-    }
-    .eq-info { flex: 1; min-width: 0; }
-    .eq-nome { font-size: 13px; font-weight: 700; color: var(--text); }
-    .eq-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .eq-papel {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 3px 9px;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      flex-shrink: 0;
-    }
-    .eq-papel.dono { border-color: var(--accent); color: var(--accent); }
+    .cfg-input:focus { border-color:var(--accent); }
+    .cfg-input::placeholder { color:var(--text-dim); font-family:'Manrope',sans-serif; font-weight:400; font-size:12px; }
+    .cfg-input-big { font-size:20px; font-weight:800; text-align:center; padding:12px; }
+    select.cfg-input { cursor:pointer; }
 
-    /* ── PERMISSÕES ── */
-    .perm-card {
-      border: 1px solid var(--border);
-      padding: 16px;
-      margin-bottom: 14px;
-      background: var(--surface-2);
+    /* Botões config */
+    .cfg-btn {
+      padding:9px 20px; background:var(--accent); border:none; cursor:pointer;
+      font-family:'Manrope',sans-serif; font-size:12px; font-weight:800;
+      color:#fff; transition:opacity .12s; letter-spacing:.02em;
     }
-    .perm-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-    .perm-nome { font-size: 14px; font-weight: 700; color: var(--text); }
-    .perm-role { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
-    .perm-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .perm-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      background: var(--surface-3, var(--surface-2));
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      transition: border-color .12s;
-    }
-    .perm-label.on { border-color: var(--accent); color: var(--accent); }
-    .perm-label input { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
+    .cfg-btn:hover { opacity:.88; }
+    .cfg-btn:disabled { opacity:.5; cursor:default; }
+    .cfg-btn-sm { padding:6px 14px; font-size:11px; }
+    .cfg-btn-ghost { background:none; border:1px solid var(--border); color:var(--text-muted); }
+    .cfg-btn-ghost:hover { color:var(--text); }
+    .cfg-btn-danger { background:#ef4444; }
+    .cfg-btn-danger:hover { opacity:.88; }
 
-    /* ── MODAL ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.6);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      width: 100%;
-      max-width: 480px;
-      padding: 28px;
-    }
-    .modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-row .form-group { margin-bottom: 0; }
+    /* Toggle */
+    .cfg-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+    .cfg-toggle-label { font-size:13px; color:var(--text); }
+    .cfg-toggle-sub { font-size:10px; color:var(--text-dim); }
+    .cfg-toggle { width:40px; height:22px; border-radius:11px; background:var(--surface-2); border:1px solid var(--border); position:relative; cursor:pointer; transition:all .12s; flex-shrink:0; }
+    .cfg-toggle.on { background:rgba(74,222,128,.12); border-color:rgba(74,222,128,.3); }
+    .cfg-toggle::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--text-dim); transition:all .12s; }
+    .cfg-toggle.on::after { left:20px; background:#4ade80; }
 
-    /* Senha toggle */
-    .input-wrap { position: relative; }
-    .input-wrap .form-input { padding-right: 40px; }
-    .btn-eye {
-      position: absolute; right: 10px; top: 50%;
-      transform: translateY(-50%);
-      background: none; border: none;
-      color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px;
-    }
+    /* Horário */
+    .horario-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .horario-row.fechado { opacity:.4; }
+    .horario-dia { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); width:64px; flex-shrink:0; }
+    .horario-check { accent-color:var(--accent); cursor:pointer; width:15px; height:15px; flex-shrink:0; }
+    .horario-time { background:var(--surface-2); border:1px solid var(--border); padding:6px 8px; font-family:'Fira Code',monospace; font-size:12px; color:var(--text); outline:none; width:88px; }
+    .horario-time:focus { border-color:var(--accent); }
 
-    /* WA success */
-    .wa-block {
-      display: none;
-      background: rgba(37,211,102,.06);
-      border: 1px solid #25d366;
-      padding: 14px;
-      margin-top: 16px;
-    }
-    .wa-block.show { display: block; }
-    .wa-block p { font-size: 12px; color: var(--text); line-height: 1.6; margin-bottom: 12px; white-space: pre-wrap; }
-    .btn-wa {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #25d366;
-      color: #fff;
-      border: none;
-      padding: 9px 16px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: 'Manrope', sans-serif;
-      cursor: pointer;
-    }
-    .btn-wa:hover { opacity: .88; }
+    /* Maquininha */
+    .maq-card { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); margin-bottom:8px; }
+    .maq-info { flex:1; }
+    .maq-nome { font-size:13px; font-weight:700; color:var(--text); }
+    .maq-taxas { font-size:11px; color:var(--text-muted); font-family:'Fira Code',monospace; margin-top:3px; }
+    .maq-btns { display:flex; gap:6px; flex-shrink:0; }
 
-    @media (max-width: 768px) {
-      .config-layout { grid-template-columns: 1fr; }
-      .cfg-nav { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-      .cfg-nav-item { border-left: none; border-bottom: 2px solid transparent; font-size: 11px; padding: 7px 10px; }
-      .cfg-nav-item.on { border-left: none; border-bottom-color: var(--accent); }
-      .cfg-row { grid-template-columns: 1fr; }
+    /* Logo */
+    .logo-upload { display:flex; align-items:center; gap:16px; background:var(--surface-2); border:1px solid var(--border); padding:16px; margin-bottom:12px; }
+    .logo-preview { width:64px; height:64px; background:var(--surface-2); border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-dim); flex-shrink:0; overflow:hidden; }
+    .logo-preview img { width:100%; height:100%; object-fit:contain; }
+
+    /* Calculadora */
+    .calc-panel { background:var(--surface-2); border:1px solid var(--border); overflow:hidden; margin-bottom:20px; }
+    .calc-header { padding:12px 16px; border-bottom:1px solid var(--border); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); }
+    .calc-body { display:grid; grid-template-columns:1fr 1fr; }
+    .calc-result { padding:24px; text-align:center; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .calc-result-val { font-family:'Fira Code',monospace; font-size:36px; font-weight:800; color:#4ade80; letter-spacing:-2px; line-height:1; }
+    .calc-result-sub { font-size:11px; color:var(--text-muted); font-family:'Fira Code',monospace; margin-top:8px; }
+    .calc-status { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; padding:4px 12px; margin-top:10px; }
+    .calc-breakdown { padding:16px; }
+    .calc-line { display:flex; align-items:center; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border); }
+    .calc-line:last-child { border-bottom:none; }
+    .calc-line-lbl { font-size:12px; color:var(--text-muted); }
+    .calc-line-val { font-family:'Fira Code',monospace; font-size:12px; font-weight:700; }
+
+    /* Equipe */
+    .eq-card { display:flex; align-items:center; gap:14px; padding:14px 16px; background:var(--surface-2); border:1px solid var(--border); margin-bottom:10px; }
+    .eq-avatar { width:36px; height:36px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff; flex-shrink:0; text-transform:uppercase; }
+    .eq-info { flex:1; min-width:0; }
+    .eq-nome { font-size:13px; font-weight:700; color:var(--text); }
+    .eq-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .eq-papel { font-size:10px; font-weight:800; padding:3px 9px; border:1px solid var(--border); color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; flex-shrink:0; }
+    .eq-papel.dono { border-color:var(--accent); color:var(--accent); }
+
+    /* Permissões */
+    .perm-card { border:1px solid var(--border); padding:16px; margin-bottom:14px; background:var(--surface-2); }
+    .perm-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .perm-nome { font-size:14px; font-weight:700; color:var(--text); }
+    .perm-role { font-size:11px; color:var(--text-muted); margin-left:8px; }
+    .perm-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .perm-label { display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; background:var(--surface-2); padding:6px 10px; border:1px solid var(--border); transition:border-color .12s; }
+    .perm-label.on { border-color:var(--accent); color:var(--accent); }
+    .perm-label input { accent-color:var(--accent); width:13px; height:13px; cursor:pointer; }
+
+    /* Modal genérico */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:480px; padding:28px; max-height:80vh; overflow-y:auto; }
+    .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-row .form-group { margin-bottom:0; }
+
+    /* WA block */
+    .wa-block { display:none; background:rgba(37,211,102,.06); border:1px solid #25d366; padding:14px; margin-top:16px; }
+    .wa-block.show { display:block; }
+    .wa-block p { font-size:12px; color:var(--text); line-height:1.6; margin-bottom:12px; white-space:pre-wrap; }
+    .btn-wa { display:inline-flex; align-items:center; gap:8px; background:#25d366; color:#fff; border:none; padding:9px 16px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; }
+    .btn-wa:hover { opacity:.88; }
+    .input-wrap { position:relative; }
+    .input-wrap .form-input { padding-right:40px; }
+    .btn-eye { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:13px; padding:4px; }
+
+    @media (max-width:768px) {
+      .config-layout { grid-template-columns:1fr; }
+      .cfg-nav { display:flex; flex-wrap:wrap; gap:4px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+      .cfg-nav-item { border-left:none; border-bottom:2px solid transparent; font-size:11px; padding:7px 10px; }
+      .cfg-nav-item.on { border-left:none; border-bottom-color:var(--accent); }
+      .cfg-row, .cfg-row-3 { grid-template-columns:1fr; }
+      .calc-body { grid-template-columns:1fr; }
+      .calc-result { border-right:none; border-bottom:1px solid var(--border); }
     }
   </style>
 </head>
 <body>
   <div class="layout">
-
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-logo">
         <div class="logo-name">DMTech</div>
@@ -236,7 +174,6 @@
       <div class="sidebar-footer" id="versao-sidebar"></div>
     </aside>
 
-    <!-- Main -->
     <div class="main">
       <div class="topbar">
         <div class="topbar-title">Configurações</div>
@@ -250,37 +187,48 @@
       <div class="content">
         <div class="page-header">
           <h2>Configurações</h2>
-          <p>Dados da empresa, equipe e permissões.</p>
+          <p>Dados da empresa, equipe e configurações do sistema.</p>
         </div>
 
         <div class="config-layout">
-          <!-- Sub-nav -->
           <div class="cfg-nav" id="cfg-nav">
-            <div class="cfg-nav-item on"  onclick="ir('empresa', this)">Dados da Empresa</div>
-            <div class="cfg-nav-item"     onclick="ir('equipe', this)">Equipe</div>
-            <div class="cfg-nav-item"     onclick="ir('permissoes', this)" id="nav-permissoes" style="display:none">Permissões</div>
+            <div class="cfg-nav-item on"  onclick="ir('dados',this)">Dados da Empresa</div>
+            <div class="cfg-nav-item"     onclick="ir('valores',this)">Valores e Comissão</div>
+            <div class="cfg-nav-item"     onclick="ir('maquininhas',this)">Maquininhas</div>
+            <div class="cfg-nav-item"     onclick="ir('horario',this)">Horário</div>
+            <div class="cfg-nav-item"     onclick="ir('pix',this)">Chave PIX</div>
+            <div class="cfg-nav-item"     onclick="ir('mensagens',this)">Mensagens WhatsApp</div>
+            <div class="cfg-nav-item"     onclick="ir('logo',this)">Logo</div>
+            <div class="cfg-nav-item"     onclick="ir('calculadora',this)">Calculadora MO</div>
+            <div class="cfg-nav-item"     onclick="ir('plano',this)">Plano</div>
+            <div class="cfg-nav-item"     onclick="ir('tv',this)">Painel TV</div>
+            <div class="cfg-nav-item"     onclick="ir('equipe',this)">Equipe</div>
+            <div class="cfg-nav-item"     onclick="ir('permissoes',this)" id="nav-permissoes" style="display:none">Permissões</div>
           </div>
-          <!-- Conteúdo dinâmico -->
           <div id="cfg-content">
             <div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando...</div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
   <div class="versao" id="versao-rodape"></div>
 
+  <!-- Modal genérico (maquininhas, etc) -->
+  <div class="modal-overlay" id="modal-gen" onclick="if(event.target===this)fecharModal()">
+    <div class="modal" id="modal-gen-box"></div>
+  </div>
+
   <!-- Modal novo técnico -->
-  <div class="modal-overlay" id="modal-membro">
+  <div class="modal-overlay" id="modal-membro" onclick="if(event.target===this)fecharModalMembro()">
     <div class="modal">
       <div class="modal-title">Adicionar técnico</div>
       <div class="form-group">
         <label class="form-label">Nome completo *</label>
         <input class="form-input" type="text" id="m-nome" placeholder="João Silva">
       </div>
-      <div class="form-row">
+      <div class="form-row" style="margin-bottom:12px;">
         <div class="form-group">
           <label class="form-label">E-mail *</label>
           <input class="form-input" type="email" id="m-email" placeholder="joao@email.com">
@@ -297,7 +245,6 @@
           <button class="btn-eye" onclick="toggleSenha()" type="button" id="btn-eye">◉</button>
         </div>
       </div>
-
       <div class="wa-block" id="wa-block">
         <p id="wa-texto"></p>
         <button class="btn-wa" onclick="abrirWA()">
@@ -305,7 +252,6 @@
           Enviar pelo WhatsApp
         </button>
       </div>
-
       <div class="modal-actions" id="modal-membro-actions">
         <button class="btn btn-ghost" onclick="fecharModalMembro()">Cancelar</button>
         <button class="btn btn-primary" id="btn-criar-membro" onclick="criarMembro()">Criar acesso</button>
@@ -332,120 +278,716 @@
       if (!v) return '';
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+    function podeVer(key) {
+      if (APP.profile?.role === 'dono') return true;
+      return !!(APP.profile?.permissions?.[key]);
+    }
 
-    let _aba = 'empresa';
+    const _busy = {};
+    let _aba = 'dados';
     let _novoMembroWA = null;
+    let _calcEquipe = [];
 
     // ── INIT ──
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
 
-      const nome    = APP.profile.name || APP.profile.email || '';
-      const empresa = APP.company?.name || '';
-      document.getElementById('topbar-user').textContent  = nome;
-      document.getElementById('nome-empresa').textContent = empresa;
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
 
-      // Permissões só para o dono
       if (APP.profile.role === 'dono') {
         document.getElementById('nav-permissoes').style.display = '';
+      }
+
+      // Técnicos sem config_full só veem Painel TV
+      if (APP.profile.role !== 'dono' && !podeVer('config_full')) {
+        document.querySelectorAll('#cfg-nav .cfg-nav-item').forEach(n => {
+          if (!n.getAttribute('onclick')?.includes("'tv'")) n.style.display = 'none';
+        });
+        _aba = 'tv';
+        document.querySelector("#cfg-nav .cfg-nav-item[onclick*=\"'tv'\"]")?.classList.add('on');
+        document.querySelector("#cfg-nav .cfg-nav-item.on[onclick*=\"'dados'\"]")?.classList.remove('on');
       }
 
       renderAba();
     })();
 
-    // ── NAVEGAÇÃO ──
     function ir(aba, el) {
       _aba = aba;
       document.querySelectorAll('.cfg-nav-item').forEach(n => n.classList.remove('on'));
       if (el) el.classList.add('on');
       renderAba();
     }
-
     function renderAba() {
       const ct = document.getElementById('cfg-content');
-      if (_aba === 'empresa')    renderEmpresa(ct);
-      if (_aba === 'equipe')     renderEquipe(ct);
-      if (_aba === 'permissoes') renderPermissoes(ct);
+      switch (_aba) {
+        case 'dados':        renderDados(ct);        break;
+        case 'valores':      renderValores(ct);      break;
+        case 'maquininhas':  renderMaquininhas(ct);  break;
+        case 'horario':      renderHorario(ct);      break;
+        case 'pix':          renderPix(ct);          break;
+        case 'mensagens':    renderMensagens(ct);    break;
+        case 'logo':         renderLogo(ct);         break;
+        case 'calculadora':  renderCalculadora(ct);  break;
+        case 'plano':        renderPlano(ct);        break;
+        case 'tv':           renderTV(ct);           break;
+        case 'equipe':       renderEquipe(ct);       break;
+        case 'permissoes':   renderPermissoes(ct);   break;
+      }
     }
 
-    // ══════════════════════════════════════
-    // EMPRESA
-    // ══════════════════════════════════════
-    function renderEmpresa(ct) {
+    // ══════════════════════════════════════════
+    // DADOS DA EMPRESA
+    // ══════════════════════════════════════════
+    function renderDados(ct) {
       const c = APP.company || {};
       ct.innerHTML = `
         <div class="cfg-section">
-          <div class="cfg-section-title">Dados da empresa</div>
+          <div class="cfg-section-title">Informações</div>
           <div class="cfg-row">
-            <div class="cfg-field">
-              <label class="cfg-label">Nome</label>
-              <input class="form-input" type="text" id="e-name" value="${esc(c.name||'')}" placeholder="Nome da empresa">
-            </div>
-            <div class="cfg-field">
-              <label class="cfg-label">Telefone / WhatsApp</label>
-              <input class="form-input" type="tel" id="e-phone" value="${esc(c.phone||'')}" placeholder="(99) 99999-9999">
-            </div>
+            <div class="cfg-field"><div class="cfg-label">Nome</div><input class="cfg-input" id="d-nome" value="${esc(c.name||'')}"></div>
+            <div class="cfg-field"><div class="cfg-label">CNPJ</div><input class="cfg-input" id="d-cnpj" value="${esc(c.cnpj||'')}" maxlength="18" placeholder="00.000.000/0001-00"></div>
           </div>
           <div class="cfg-row">
+            <div class="cfg-field"><div class="cfg-label">Telefone</div><input class="cfg-input" id="d-telefone" value="${esc(c.phone||'')}" maxlength="15" placeholder="(99) 9999-9999"></div>
+            <div class="cfg-field"><div class="cfg-label">WhatsApp</div><input class="cfg-input" id="d-whatsapp" value="${esc(c.whatsapp||'')}" maxlength="15" placeholder="(99) 99999-9999"></div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-field"><div class="cfg-label">E-mail</div><input class="cfg-input" id="d-email" type="email" value="${esc(c.email||'')}" placeholder="contato@empresa.com"></div>
+          </div>
+        </div>
+        <div class="cfg-section">
+          <div class="cfg-section-title">Endereço</div>
+          <div class="cfg-row">
+            <div class="cfg-field"><div class="cfg-label">Endereço</div><input class="cfg-input" id="d-endereco" value="${esc(c.address||'')}" placeholder="Rua, Av..."></div>
+            <div class="cfg-field" style="max-width:120px"><div class="cfg-label">Número</div><input class="cfg-input" id="d-numero" value="${esc(c.numero||'')}"></div>
+          </div>
+          <div class="cfg-row-3">
+            <div class="cfg-field"><div class="cfg-label">Bairro</div><input class="cfg-input" id="d-bairro" value="${esc(c.bairro||'')}"></div>
+            <div class="cfg-field"><div class="cfg-label">Cidade</div><input class="cfg-input" id="d-cidade" value="${esc(c.cidade||'')}"></div>
+            <div class="cfg-field" style="max-width:80px"><div class="cfg-label">UF</div><input class="cfg-input" id="d-estado" value="${esc(c.estado||'')}" maxlength="2" style="text-transform:uppercase"></div>
+          </div>
+        </div>
+        <div class="cfg-section">
+          <div class="cfg-section-title">Capacidade</div>
+          <div class="cfg-row">
             <div class="cfg-field">
-              <label class="cfg-label">Chave PIX</label>
-              <input class="form-input" type="text" id="e-pix" value="${esc(c.pix_key||'')}" placeholder="CPF, CNPJ, e-mail ou chave aleatória">
-            </div>
-            <div class="cfg-field">
-              <label class="cfg-label">Endereço</label>
-              <input class="form-input" type="text" id="e-address" value="${esc(c.address||'')}" placeholder="Rua, número — cidade/UF">
+              <div class="cfg-label">Capacidade diária (atendimentos)</div>
+              <input class="cfg-input" id="d-cap" type="number" value="${c.capacidade_diaria||5}" min="1">
+              <div class="cfg-hint">Quantos clientes/OS a empresa atende por dia</div>
             </div>
           </div>
-          <div class="cfg-actions">
-            <button class="btn btn-primary" id="btn-salvar-emp" onclick="salvarEmpresa()">Salvar</button>
+        </div>
+        <button class="cfg-btn" id="btn-salvar-dados" onclick="salvarDados()">Salvar Dados</button>`;
+    }
+
+    async function salvarDados() {
+      if (_busy.dados) return; _busy.dados = true;
+      const btn = document.getElementById('btn-salvar-dados');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        const payload = {
+          name: document.getElementById('d-nome').value.trim(),
+          cnpj: document.getElementById('d-cnpj').value.trim() || null,
+          phone: document.getElementById('d-telefone').value.trim() || null,
+          whatsapp: document.getElementById('d-whatsapp').value.trim() || null,
+          email: document.getElementById('d-email').value.trim() || null,
+          address: document.getElementById('d-endereco').value.trim() || null,
+          numero: document.getElementById('d-numero').value.trim() || null,
+          bairro: document.getElementById('d-bairro').value.trim() || null,
+          cidade: document.getElementById('d-cidade').value.trim() || null,
+          estado: (document.getElementById('d-estado').value.trim() || '').toUpperCase() || null,
+          capacidade_diaria: parseInt(document.getElementById('d-cap').value)||5,
+        };
+        const { error } = await sb.from('companies').update(payload).eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        Object.assign(APP.company, payload);
+        document.getElementById('nome-empresa').textContent = payload.name || '';
+        dmToast('Dados salvos!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.dados = false; btn.disabled = false; btn.textContent = 'Salvar Dados'; }
+    }
+
+    // ══════════════════════════════════════════
+    // VALORES E COMISSÃO
+    // ══════════════════════════════════════════
+    function renderValores(ct) {
+      const c = APP.company || {};
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Valores Base</div>
+          <div class="cfg-row-3">
+            <div class="cfg-field">
+              <div class="cfg-label">Valor Hora MO (R$)</div>
+              <input class="cfg-input cfg-input-big" id="v-hora" type="number" value="${c.valor_hora||0}" min="0" step="5">
+            </div>
+            <div class="cfg-field">
+              <div class="cfg-label">Comissão Padrão (%)</div>
+              <input class="cfg-input cfg-input-big" id="v-comissao" type="number" value="${c.comissao_padrao||0}" min="0" max="100" step="0.5">
+              <div class="cfg-hint">Aplicado ao cadastrar novo técnico</div>
+            </div>
+            <div class="cfg-field">
+              <div class="cfg-label">Margem Peças (%)</div>
+              <input class="cfg-input cfg-input-big" id="v-margem" type="number" value="${c.margem_padrao||30}" min="0" max="500">
+              <div class="cfg-hint">Ex: 30% → peça R$100 vende R$130</div>
+            </div>
+          </div>
+        </div>
+        <button class="cfg-btn" id="btn-salvar-valores" onclick="salvarValores()">Salvar Valores</button>`;
+    }
+
+    async function salvarValores() {
+      if (_busy.valores) return; _busy.valores = true;
+      const btn = document.getElementById('btn-salvar-valores');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        const payload = {
+          valor_hora: parseFloat(document.getElementById('v-hora').value)||0,
+          comissao_padrao: parseFloat(document.getElementById('v-comissao').value)||0,
+          margem_padrao: parseFloat(document.getElementById('v-margem').value)||30,
+        };
+        const { error } = await sb.from('companies').update(payload).eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        Object.assign(APP.company, payload);
+        dmToast('Valores salvos!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.valores = false; btn.disabled = false; btn.textContent = 'Salvar Valores'; }
+    }
+
+    // ══════════════════════════════════════════
+    // MAQUININHAS
+    // ══════════════════════════════════════════
+    async function renderMaquininhas(ct) {
+      ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px">Carregando...</div>';
+      const { data } = await sb.from('maquininhas').select('*').eq('company_id', APP.company.id).eq('ativo', true).order('nome');
+      const maqs = data || [];
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="cfg-section-title" style="margin:0;border:none;padding:0">Maquininhas Cadastradas</div>
+        <button class="cfg-btn cfg-btn-sm" onclick="abrirNovaMaquininha()">+ Adicionar</button>
+      </div>`;
+      if (!maqs.length) {
+        html += '<div style="padding:24px;text-align:center;background:var(--surface-2);border:1px solid var(--border);font-size:13px;color:var(--text-muted)">Nenhuma maquininha. Clique em "+ Adicionar".</div>';
+      } else {
+        html += maqs.map(m => `
+          <div class="maq-card">
+            <div class="maq-info">
+              <div class="maq-nome">${esc(m.nome)}</div>
+              <div class="maq-taxas">Débito: ${m.taxa_debito}% · 1x: ${m.taxa_credito}% · 2-6x: ${m.taxa_parcelado_6||0}% · 7-12x: ${m.taxa_parcelado_12||0}%</div>
+            </div>
+            <div class="maq-btns">
+              <button class="cfg-btn cfg-btn-sm cfg-btn-ghost" onclick="abrirEditarMaquininha('${m.id}','${esc(m.nome)}',${m.taxa_debito},${m.taxa_credito},${m.taxa_parcelado_6||0},${m.taxa_parcelado_12||0})">Editar</button>
+              <button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="excluirMaquininha('${m.id}','${esc(m.nome)}')">×</button>
+            </div>
+          </div>`).join('');
+      }
+      html += `<div style="margin-top:14px;font-size:11px;color:var(--text-dim)">Na entrega da OS, o sistema pergunta qual maquininha foi usada e calcula a taxa automaticamente.</div>`;
+      ct.innerHTML = html;
+    }
+
+    function _htmlFormMaq(nome='', debito=1.99, credito=3.49, parc6=4.49, parc12=5.49) {
+      return `
+        <div class="cfg-field" style="margin-bottom:12px"><div class="cfg-label">Nome (ex: Stone, Cielo...)</div><input class="cfg-input" id="maq-nome" value="${esc(nome)}"></div>
+        <div class="cfg-row">
+          <div class="cfg-field"><div class="cfg-label">Taxa Débito (%)</div><input class="cfg-input" id="maq-debito" type="number" value="${debito}" min="0" max="20" step="0.01"></div>
+          <div class="cfg-field"><div class="cfg-label">Crédito 1x (%)</div><input class="cfg-input" id="maq-credito" type="number" value="${credito}" min="0" max="20" step="0.01"></div>
+        </div>
+        <div class="cfg-row">
+          <div class="cfg-field"><div class="cfg-label">Crédito 2-6x (%)</div><input class="cfg-input" id="maq-parc6" type="number" value="${parc6}" min="0" max="20" step="0.01"></div>
+          <div class="cfg-field"><div class="cfg-label">Crédito 7-12x (%)</div><input class="cfg-input" id="maq-parc12" type="number" value="${parc12}" min="0" max="20" step="0.01"></div>
+        </div>`;
+    }
+
+    function abrirNovaMaquininha() {
+      document.getElementById('modal-gen-box').innerHTML = `
+        <div class="modal-title">Nova Maquininha</div>
+        ${_htmlFormMaq()}
+        <div class="modal-actions">
+          <button class="cfg-btn cfg-btn-ghost" onclick="fecharModal()">Cancelar</button>
+          <button class="cfg-btn" onclick="salvarNovaMaquininha()">Salvar</button>
+        </div>`;
+      document.getElementById('modal-gen').classList.add('active');
+    }
+
+    async function salvarNovaMaquininha() {
+      const nome = document.getElementById('maq-nome').value.trim();
+      if (!nome) { dmToast('Preencha o nome', 'error'); return; }
+      if (_busy.novaMaq) return; _busy.novaMaq = true;
+      try {
+        const { error } = await sb.from('maquininhas').insert({
+          company_id: APP.company.id, nome,
+          taxa_debito: parseFloat(document.getElementById('maq-debito').value)||0,
+          taxa_credito: parseFloat(document.getElementById('maq-credito').value)||0,
+          taxa_parcelado_6: parseFloat(document.getElementById('maq-parc6').value)||0,
+          taxa_parcelado_12: parseFloat(document.getElementById('maq-parc12').value)||0,
+        });
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        fecharModal(); dmToast('Maquininha adicionada!');
+        renderMaquininhas(document.getElementById('cfg-content'));
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.novaMaq = false; }
+    }
+
+    function abrirEditarMaquininha(id, nome, debito, credito, parc6, parc12) {
+      document.getElementById('modal-gen-box').innerHTML = `
+        <div class="modal-title">Editar ${esc(nome)}</div>
+        ${_htmlFormMaq(nome, debito, credito, parc6, parc12)}
+        <div class="modal-actions">
+          <button class="cfg-btn cfg-btn-ghost" onclick="fecharModal()">Cancelar</button>
+          <button class="cfg-btn" onclick="atualizarMaquininha('${id}')">Salvar</button>
+        </div>`;
+      document.getElementById('modal-gen').classList.add('active');
+    }
+
+    async function atualizarMaquininha(id) {
+      const nome = document.getElementById('maq-nome').value.trim();
+      if (!nome) { dmToast('Preencha o nome', 'error'); return; }
+      if (_busy.attMaq) return; _busy.attMaq = true;
+      try {
+        const { error } = await sb.from('maquininhas').update({
+          nome,
+          taxa_debito: parseFloat(document.getElementById('maq-debito').value)||0,
+          taxa_credito: parseFloat(document.getElementById('maq-credito').value)||0,
+          taxa_parcelado_6: parseFloat(document.getElementById('maq-parc6').value)||0,
+          taxa_parcelado_12: parseFloat(document.getElementById('maq-parc12').value)||0,
+        }).eq('id', id).eq('company_id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        fecharModal(); dmToast('Maquininha atualizada!');
+        renderMaquininhas(document.getElementById('cfg-content'));
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.attMaq = false; }
+    }
+
+    async function excluirMaquininha(id, nome) {
+      dmConfirm(`Excluir maquininha ${nome}?`, async () => {
+        await sb.from('maquininhas').update({ ativo: false }).eq('id', id).eq('company_id', APP.company.id);
+        dmToast('Maquininha removida');
+        renderMaquininhas(document.getElementById('cfg-content'));
+      }, 'Excluir', true);
+    }
+
+    function abrirModal(html) {
+      document.getElementById('modal-gen-box').innerHTML = html;
+      document.getElementById('modal-gen').classList.add('active');
+    }
+    function fecharModal() {
+      document.getElementById('modal-gen').classList.remove('active');
+    }
+
+    // ══════════════════════════════════════════
+    // HORÁRIO
+    // ══════════════════════════════════════════
+    function renderHorario(ct) {
+      const h = APP.company?.horario || {};
+      const dias = [
+        {key:'seg',label:'Segunda'},{key:'ter',label:'Terça'},{key:'qua',label:'Quarta'},
+        {key:'qui',label:'Quinta'},{key:'sex',label:'Sexta'},{key:'sab',label:'Sábado'},{key:'dom',label:'Domingo'}
+      ];
+      let html = '<div class="cfg-section"><div class="cfg-section-title">Dias e Horários</div>';
+      dias.forEach((d, i) => {
+        const ativo = h[d.key]?.ativo !== false && i < 6;
+        const ab = h[d.key]?.abertura || (i < 6 ? '08:00' : '');
+        const fe = h[d.key]?.fechamento || (i < 5 ? '18:00' : i === 5 ? '12:00' : '');
+        html += `
+          <div class="horario-row ${ativo?'':'fechado'}" id="hr-row-${d.key}">
+            <input type="checkbox" class="horario-check h-ativo" data-dia="${d.key}" ${ativo?'checked':''}
+              onchange="document.getElementById('hr-row-${d.key}').classList.toggle('fechado',!this.checked)">
+            <div class="horario-dia">${d.label}</div>
+            <input type="time" class="horario-time h-ab" data-dia="${d.key}" value="${ab}">
+            <span style="color:var(--text-dim);font-size:12px">às</span>
+            <input type="time" class="horario-time h-fe" data-dia="${d.key}" value="${fe}">
+          </div>`;
+      });
+      html += '</div><button class="cfg-btn" id="btn-salvar-horario" onclick="salvarHorario()">Salvar Horários</button>';
+      ct.innerHTML = html;
+    }
+
+    async function salvarHorario() {
+      if (_busy.horario) return; _busy.horario = true;
+      const btn = document.getElementById('btn-salvar-horario');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        const horario = {};
+        ['seg','ter','qua','qui','sex','sab','dom'].forEach(dia => {
+          horario[dia] = {
+            ativo: document.querySelector(`.h-ativo[data-dia="${dia}"]`)?.checked || false,
+            abertura: document.querySelector(`.h-ab[data-dia="${dia}"]`)?.value || '',
+            fechamento: document.querySelector(`.h-fe[data-dia="${dia}"]`)?.value || '',
+          };
+        });
+        const { error } = await sb.from('companies').update({ horario }).eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        APP.company.horario = horario;
+        dmToast('Horários salvos!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.horario = false; btn.disabled = false; btn.textContent = 'Salvar Horários'; }
+    }
+
+    // ══════════════════════════════════════════
+    // CHAVE PIX
+    // ══════════════════════════════════════════
+    function renderPix(ct) {
+      const c = APP.company || {};
+      const tipos = [{v:'',l:'Nenhuma'},{v:'cpf',l:'CPF'},{v:'cnpj',l:'CNPJ'},{v:'telefone',l:'Telefone'},{v:'email',l:'E-mail'},{v:'aleatoria',l:'Chave aleatória'}];
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Dados PIX</div>
+          <div class="cfg-row">
+            <div class="cfg-field">
+              <div class="cfg-label">Tipo da Chave</div>
+              <select class="cfg-input" id="pix-tipo">
+                ${tipos.map(t=>`<option value="${t.v}" ${(c.pix_tipo||'')==t.v?'selected':''}>${t.l}</option>`).join('')}
+              </select>
+            </div>
+            <div class="cfg-field"><div class="cfg-label">Chave PIX</div><input class="cfg-input" id="pix-chave" value="${esc(c.pix_key||'')}"></div>
+          </div>
+          <div class="cfg-field" style="margin-bottom:12px">
+            <div class="cfg-label">Nome do beneficiário</div>
+            <input class="cfg-input" id="pix-nome" value="${esc(c.pix_nome||c.name||'')}">
+          </div>
+          <div class="cfg-hint">A chave PIX pode aparecer no recibo da OS para facilitar o pagamento do cliente.</div>
+        </div>
+        <button class="cfg-btn" id="btn-salvar-pix" onclick="salvarPix()">Salvar PIX</button>`;
+    }
+
+    async function salvarPix() {
+      if (_busy.pix) return; _busy.pix = true;
+      const btn = document.getElementById('btn-salvar-pix');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        const payload = {
+          pix_tipo: document.getElementById('pix-tipo').value || null,
+          pix_key: document.getElementById('pix-chave').value.trim() || null,
+          pix_nome: document.getElementById('pix-nome').value.trim() || null,
+        };
+        const { error } = await sb.from('companies').update(payload).eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        Object.assign(APP.company, payload);
+        dmToast('PIX salvo!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.pix = false; btn.disabled = false; btn.textContent = 'Salvar PIX'; }
+    }
+
+    // ══════════════════════════════════════════
+    // MENSAGENS WHATSAPP
+    // ══════════════════════════════════════════
+    function renderMensagens(ct) {
+      const c = APP.company || {};
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Mensagem — OS Pronta</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6">O WhatsApp dispara quando a OS fica pronta. Personalize a saudação e o fechamento.</div>
+          <div class="cfg-field" style="margin-bottom:12px">
+            <div class="cfg-label">Saudação</div>
+            <input class="cfg-input" id="msg-ab" value="${esc(c.msg_pronto_abertura||'Olá! Boas notícias!')}">
+          </div>
+          <div style="padding:12px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:12px;font-size:12px;color:var(--text-muted);line-height:1.6">
+            <em>Seu serviço está pronto e disponível para retirada aqui na <strong style="color:var(--text)">${esc(c.name||'Empresa')}</strong>.</em>
+          </div>
+          <div class="cfg-field">
+            <div class="cfg-label">Fechamento</div>
+            <input class="cfg-input" id="msg-fe" value="${esc(c.msg_pronto_fechamento||'Quando pode vir buscar? Abraço!')}">
+          </div>
+        </div>
+        <button class="cfg-btn" id="btn-salvar-msg" onclick="salvarMensagens()">Salvar Mensagem</button>`;
+    }
+
+    async function salvarMensagens() {
+      if (_busy.msg) return; _busy.msg = true;
+      const btn = document.getElementById('btn-salvar-msg');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      try {
+        const payload = {
+          msg_pronto_abertura: document.getElementById('msg-ab').value.trim(),
+          msg_pronto_fechamento: document.getElementById('msg-fe').value.trim(),
+        };
+        const { error } = await sb.from('companies').update(payload).eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        Object.assign(APP.company, payload);
+        dmToast('Mensagem salva!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.msg = false; btn.disabled = false; btn.textContent = 'Salvar Mensagem'; }
+    }
+
+    // ══════════════════════════════════════════
+    // LOGO
+    // ══════════════════════════════════════════
+    function renderLogo(ct) {
+      const c = APP.company || {};
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Logo da Empresa</div>
+          <div class="logo-upload">
+            <div class="logo-preview" id="logo-preview">
+              ${c.logo_url ? `<img src="${esc(c.logo_url)}">` : 'LOGO'}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:var(--text)">Logo da Empresa</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">PNG ou JPG, máx. 500KB. Aparece na sidebar e nos documentos gerados.</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="uploadLogo(this.files[0])">
+              <button class="cfg-btn cfg-btn-sm cfg-btn-ghost" onclick="document.getElementById('logo-file').click()">Alterar</button>
+              ${c.logo_url ? '<button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="removerLogo()">Remover</button>' : ''}
+            </div>
           </div>
         </div>`;
     }
 
-    async function salvarEmpresa() {
-      const btn = document.getElementById('btn-salvar-emp');
-      btn.disabled = true; btn.textContent = 'Salvando...';
-      const payload = {
-        name:    document.getElementById('e-name').value.trim()    || null,
-        phone:   document.getElementById('e-phone').value.trim()   || null,
-        pix_key: document.getElementById('e-pix').value.trim()     || null,
-        address: document.getElementById('e-address').value.trim() || null,
-      };
-      const { error } = await sb.from('companies').update(payload).eq('id', APP.company.id);
-      btn.disabled = false; btn.textContent = 'Salvar';
-      if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
-      Object.assign(APP.company, payload);
-      document.getElementById('nome-empresa').textContent = payload.name || '';
-      dmToast('Dados salvos!');
+    async function uploadLogo(file) {
+      if (!file) return;
+      if (file.size > 512000) { dmToast('Imagem muito grande. Máx 500KB.', 'error'); return; }
+      if (!file.type.startsWith('image/')) { dmToast('Selecione uma imagem.', 'error'); return; }
+      if (_busy.logo) return; _busy.logo = true;
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const path = `${APP.company.id}/logo.${ext}`;
+        await sb.storage.from('logos').remove([`${APP.company.id}/logo.png`,`${APP.company.id}/logo.jpg`,`${APP.company.id}/logo.jpeg`,`${APP.company.id}/logo.webp`]);
+        const { error: upErr } = await sb.storage.from('logos').upload(path, file, { upsert: true });
+        if (upErr) { dmToast('Erro no upload: '+upErr.message, 'error'); return; }
+        const { data: urlData } = sb.storage.from('logos').getPublicUrl(path);
+        const logoUrl = urlData.publicUrl + '?t=' + Date.now();
+        const { error } = await sb.from('companies').update({ logo_url: logoUrl }).eq('id', APP.company.id);
+        if (error) { dmToast('Erro ao salvar: '+error.message, 'error'); return; }
+        APP.company.logo_url = logoUrl;
+        dmToast('Logo atualizado!');
+        renderLogo(document.getElementById('cfg-content'));
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.logo = false; }
     }
 
-    // ══════════════════════════════════════
+    async function removerLogo() {
+      dmConfirm('Remover o logo da empresa?', async () => {
+        if (_busy.logo) return; _busy.logo = true;
+        try {
+          await sb.storage.from('logos').remove([`${APP.company.id}/logo.png`,`${APP.company.id}/logo.jpg`,`${APP.company.id}/logo.jpeg`,`${APP.company.id}/logo.webp`]);
+          await sb.from('companies').update({ logo_url: null }).eq('id', APP.company.id);
+          APP.company.logo_url = null;
+          dmToast('Logo removido');
+          renderLogo(document.getElementById('cfg-content'));
+        } catch(e) { dmToast('Erro inesperado', 'error'); }
+        finally { _busy.logo = false; }
+      }, 'Remover', true);
+    }
+
+    // ══════════════════════════════════════════
+    // CALCULADORA MO
+    // ══════════════════════════════════════════
+    async function renderCalculadora(ct) {
+      ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px">Carregando equipe...</div>';
+      const { data: membros } = await sb.from('profiles')
+        .select('id, name, role, salario_base, vale_refeicao')
+        .eq('company_id', APP.company.id)
+        .eq('ativo', true)
+        .order('name');
+      _calcEquipe = membros || [];
+      const roleLabel = { dono:'Dono', tecnico:'Técnico', admin:'Administrativo' };
+      const c = APP.company || {};
+
+      let equipHtml = '';
+      if (_calcEquipe.length) {
+        equipHtml = `<div class="cfg-section"><div class="cfg-section-title">Equipe (${_calcEquipe.length} ativos)</div>
+          ${_calcEquipe.map((m,i) => `
+            <div style="display:grid;grid-template-columns:1fr 140px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <span style="font-weight:700;font-size:13px">${esc((m.name||'').split(' ')[0])}</span>
+                <span style="font-size:11px;color:var(--text-dim);margin-left:6px">${roleLabel[m.role]||m.role}</span>
+              </div>
+              <input class="cfg-input calc-sal" data-idx="${i}" type="number" value="${m.salario_base||0}" min="0" step="50" oninput="calcularCusto()" style="padding:6px 8px;font-size:12px">
+            </div>`).join('')}
+          <button class="cfg-btn cfg-btn-sm" style="margin-top:8px" onclick="salvarSalarios()">Salvar salários</button>
+        </div>`;
+      } else {
+        equipHtml = '<div style="font-size:13px;color:var(--accent);margin-bottom:16px">Nenhum funcionário ativo. Cadastre na aba Equipe.</div>';
+      }
+
+      ct.innerHTML = `
+        ${equipHtml}
+        <div class="cfg-section">
+          <div class="cfg-section-title">Parâmetros</div>
+          <div class="cfg-row-3">
+            <div class="cfg-field"><div class="cfg-label">Custos fixos (R$/mês)</div><input class="cfg-input" id="calc-fixos" type="number" value="0" min="0" step="100" oninput="calcularCusto()"><div class="cfg-hint">Aluguel, luz, internet...</div></div>
+            <div class="cfg-field"><div class="cfg-label">Vagas/Atendimentos</div><input class="cfg-input" id="calc-vagas" type="number" value="${c.capacidade_diaria||3}" min="1" max="50" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Valor hora cobrado (R$)</div><input class="cfg-input" id="calc-cobrado" type="number" value="${c.valor_hora||120}" min="0" step="5" oninput="calcularCusto()"></div>
+          </div>
+          <div class="cfg-row-3">
+            <div class="cfg-field"><div class="cfg-label">Comissão técnicos (%)</div><input class="cfg-input" id="calc-comissao" type="number" value="${c.comissao_padrao||5}" min="0" max="30" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Impostos (%)</div><input class="cfg-input" id="calc-imposto" type="number" value="6" min="0" max="30" step="0.5" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Taxa média cartão (%)</div><input class="cfg-input" id="calc-taxa" type="number" value="3" min="0" max="15" step="0.5" oninput="calcularCusto()"></div>
+          </div>
+        </div>
+        <div class="calc-panel">
+          <div class="calc-header">Simulador de Lucratividade</div>
+          <div id="calc-resultado"></div>
+        </div>`;
+      calcularCusto();
+    }
+
+    function calcularCusto() {
+      let salarios = 0, vr = 0;
+      document.querySelectorAll('.calc-sal').forEach((input, i) => {
+        salarios += parseFloat(input.value)||0;
+        if (_calcEquipe[i]) vr += _calcEquipe[i].vale_refeicao||0;
+      });
+      const h = APP.company?.horario || {};
+      let diasSemana = 0, horasDia = 8;
+      ['seg','ter','qua','qui','sex','sab','dom'].forEach(dia => {
+        if (h[dia]?.ativo) {
+          diasSemana++;
+          const [hA,mA] = (h[dia].abertura||'08:00').split(':').map(Number);
+          const [hF,mF] = (h[dia].fechamento||'18:00').split(':').map(Number);
+          horasDia = (hF+mF/60)-(hA+mA/60);
+        }
+      });
+      if (!diasSemana) diasSemana = 6;
+      const diasMes = Math.round(diasSemana * 4.33);
+      const fixos   = parseFloat(document.getElementById('calc-fixos')?.value)||0;
+      const vagas   = parseInt(document.getElementById('calc-vagas')?.value)||3;
+      const cobrado = parseFloat(document.getElementById('calc-cobrado')?.value)||120;
+      const pctCom  = parseFloat(document.getElementById('calc-comissao')?.value)||5;
+      const pctImp  = parseFloat(document.getElementById('calc-imposto')?.value)||6;
+      const pctTaxa = parseFloat(document.getElementById('calc-taxa')?.value)||3;
+
+      const custoFixo = salarios + vr + fixos;
+      const horasFat  = vagas * horasDia * diasMes * 0.75;
+      const custoFixoH = horasFat > 0 ? custoFixo / horasFat : 0;
+      const custoVarH  = cobrado * (pctCom + pctImp + pctTaxa) / 100;
+      const lucroH = cobrado - custoFixoH - custoVarH;
+      const margem = cobrado > 0 ? (lucroH / cobrado * 100) : 0;
+      const prejuizo = lucroH <= 0;
+      const saudavel = lucroH > 0 && margem >= 40;
+
+      const statusStyle = prejuizo
+        ? 'color:#f87171;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)'
+        : (saudavel ? 'color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2)' : 'color:var(--accent);background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2)');
+      const statusTxt = prejuizo ? 'Prejuízo' : (saudavel ? 'Margem Saudável' : 'Atenção');
+
+      const el = document.getElementById('calc-resultado');
+      if (!el) return;
+      el.innerHTML = `
+        <div class="calc-body">
+          <div class="calc-result">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:8px">Lucro Real por Hora</div>
+            <div class="calc-result-val" style="${prejuizo?'color:#f87171':''}">R$ ${lucroH.toFixed(2)}</div>
+            <div class="calc-result-sub">De R$ ${cobrado.toFixed(2)} cobrados</div>
+            <div class="calc-status" style="${statusStyle}">${statusTxt}</div>
+          </div>
+          <div class="calc-breakdown">
+            <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:10px">Decomposição por Hora</div>
+            <div class="calc-line"><span class="calc-line-lbl">Valor cobrado</span><span class="calc-line-val">R$ ${cobrado.toFixed(2)}</span></div>
+            <div class="calc-line"><span class="calc-line-lbl">Salários (proporcional)</span><span class="calc-line-val" style="color:#f87171">-R$ ${custoFixoH.toFixed(2)}</span></div>
+            <div class="calc-line"><span class="calc-line-lbl">Impostos (${pctImp}%)</span><span class="calc-line-val" style="color:#f87171">-R$ ${(cobrado*pctImp/100).toFixed(2)}</span></div>
+            <div class="calc-line"><span class="calc-line-lbl">Comissão (${pctCom}%)</span><span class="calc-line-val" style="color:#f87171">-R$ ${(cobrado*pctCom/100).toFixed(2)}</span></div>
+            <div class="calc-line"><span class="calc-line-lbl">Taxa cartão (${pctTaxa}%)</span><span class="calc-line-val" style="color:#f87171">-R$ ${(cobrado*pctTaxa/100).toFixed(2)}</span></div>
+            <div style="height:1px;background:var(--border);margin:6px 0"></div>
+            <div class="calc-line"><span class="calc-line-lbl" style="font-weight:700;color:var(--text)">Lucro líquido</span><span class="calc-line-val" style="color:${prejuizo?'#f87171':'#4ade80'};font-size:14px">R$ ${lucroH.toFixed(2)}</span></div>
+            <div class="calc-line"><span class="calc-line-lbl">Margem efetiva</span><span class="calc-line-val" style="color:${prejuizo?'#f87171':'#4ade80'}">${margem.toFixed(1)}%</span></div>
+          </div>
+        </div>`;
+    }
+
+    async function salvarSalarios() {
+      if (_busy.salarios) return; _busy.salarios = true;
+      try {
+        const updates = [];
+        document.querySelectorAll('.calc-sal').forEach((input, i) => {
+          const m = _calcEquipe[i];
+          if (m) updates.push(sb.from('profiles').update({ salario_base: parseFloat(input.value)||0 }).eq('id', m.id).eq('company_id', APP.company.id));
+        });
+        await Promise.all(updates);
+        dmToast('Salários salvos!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.salarios = false; }
+    }
+
+    // ══════════════════════════════════════════
+    // PLANO
+    // ══════════════════════════════════════════
+    function renderPlano(ct) {
+      const c = APP.company || {};
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Seu Plano</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--surface-2);border:1px solid var(--border)">
+            <span style="font-size:14px;font-weight:800;color:#4ade80;text-transform:uppercase;letter-spacing:.05em;padding:6px 14px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2)">
+              ${esc(c.plano || 'Gratuito')}
+            </span>
+            ${c.trial_ate ? `<span style="font-size:13px;color:var(--text-muted)">Válido até ${new Date(c.trial_ate).toLocaleDateString('pt-BR')}</span>` : ''}
+          </div>
+          <div style="margin-top:14px;font-size:12px;color:var(--text-muted);line-height:1.6">
+            Para alterar seu plano, entre em contato com o suporte DMTech.
+          </div>
+        </div>`;
+    }
+
+    // ══════════════════════════════════════════
+    // PAINEL TV
+    // ══════════════════════════════════════════
+    function renderTV(ct) {
+      const c = APP.company || {};
+      if (!c.tv_token) {
+        ct.innerHTML = `
+          <div class="cfg-section">
+            <div class="cfg-section-title">Painel TV</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">Link para exibir o kanban em monitor/TV. Mostra o fluxo das OS em tempo real.</div>
+            <button class="cfg-btn" onclick="gerarTokenTV()">Gerar link do painel</button>
+          </div>`;
+        return;
+      }
+      const base = location.origin;
+      ct.innerHTML = `
+        <div class="cfg-section">
+          <div class="cfg-section-title">Painel TV</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">Abra em tela cheia (F11) numa TV ou monitor. Atualiza automaticamente.</div>
+          <div class="cfg-field" style="margin-bottom:12px">
+            <div class="cfg-label">Link do Painel</div>
+            <div style="display:flex;gap:8px">
+              <input class="cfg-input" readonly value="${base}/tv.html?t=${c.tv_token}" id="tv-link" onclick="this.select()" style="flex:1">
+              <button class="cfg-btn cfg-btn-sm cfg-btn-ghost" onclick="navigator.clipboard.writeText(document.getElementById('tv-link').value);dmToast('Link copiado!')">Copiar</button>
+              <button class="cfg-btn cfg-btn-sm cfg-btn-ghost" onclick="window.open(document.getElementById('tv-link').value,'_blank')">Abrir</button>
+            </div>
+          </div>
+          <button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="gerarTokenTV()">Gerar novo link</button>
+        </div>`;
+    }
+
+    async function gerarTokenTV() {
+      if (_busy.tv) return; _busy.tv = true;
+      try {
+        const token = crypto.randomUUID().replace(/-/g,'').slice(0,16);
+        const { error } = await sb.from('companies').update({ tv_token: token }).eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        APP.company.tv_token = token;
+        dmToast('Link gerado!');
+        renderTV(document.getElementById('cfg-content'));
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.tv = false; }
+    }
+
+    // ══════════════════════════════════════════
     // EQUIPE
-    // ══════════════════════════════════════
+    // ══════════════════════════════════════════
     async function renderEquipe(ct) {
-      ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando equipe...</div>';
+      ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando...</div>';
       const { data, error } = await sb.from('profiles')
         .select('id, name, email, whatsapp, role')
         .eq('company_id', APP.company.id)
         .order('name');
-
       if (error || !data?.length) {
         ct.innerHTML = `
-          <div style="text-align:right;margin-bottom:16px;">
-            <button class="btn btn-primary" onclick="abrirModalMembro()">+ Adicionar técnico</button>
+          <div style="text-align:right;margin-bottom:16px">
+            <button class="cfg-btn" onclick="abrirModalMembro()">+ Adicionar técnico</button>
           </div>
-          <div class="empty-state" style="padding:40px;text-align:center">Nenhum membro cadastrado.</div>`;
+          <div style="text-align:center;padding:40px;color:var(--text-dim)">Nenhum membro cadastrado.</div>`;
         return;
       }
-
       ct.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-          <div class="cfg-section-title" style="margin:0;border:none;padding:0">${data.length} membro${data.length !== 1 ? 's' : ''}</div>
-          <button class="btn btn-primary" onclick="abrirModalMembro()">+ Adicionar técnico</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="cfg-section-title" style="margin:0;border:none;padding:0">${data.length} membro${data.length!==1?'s':''}</div>
+          <button class="cfg-btn" onclick="abrirModalMembro()">+ Adicionar técnico</button>
         </div>
         ${data.map(m => {
-          const primeiro = (m.name || m.email || '?').split(' ')[0];
+          const primeiro = (m.name||m.email||'?').split(' ')[0];
           const inicial  = primeiro[0].toUpperCase();
           const isDono   = m.role === 'dono';
           const sub      = [m.email, m.whatsapp ? fmtWA(m.whatsapp) : null].filter(Boolean).join(' · ');
@@ -456,14 +998,14 @@
               <div class="eq-nome">${esc(primeiro)}</div>
               <div class="eq-sub">${esc(sub)}</div>
             </div>
-            <span class="eq-papel ${isDono ? 'dono' : ''}">${isDono ? 'Dono' : 'Técnico'}</span>
-            ${!isDono ? `<button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="removerMembro('${m.id}','${esc(primeiro)}')">Remover</button>` : ''}
+            <span class="eq-papel ${isDono?'dono':''}">${isDono?'Dono':'Técnico'}</span>
+            ${!isDono ? `<button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="removerMembro('${m.id}','${esc(primeiro)}')">Remover</button>` : ''}
           </div>`;
         }).join('')}`;
     }
 
     function fmtWA(n) {
-      const d = n.replace(/\D/g, '');
+      const d = n.replace(/\D/g,'');
       if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
       return n;
     }
@@ -471,22 +1013,24 @@
     async function removerMembro(id, nome) {
       dmConfirm(`Remover ${nome} da equipe?`, async () => {
         const { error } = await sb.from('profiles').update({ company_id: null }).eq('id', id);
-        if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
         dmToast(`${nome} removido.`);
         renderEquipe(document.getElementById('cfg-content'));
       }, 'Remover', true);
     }
 
-    // ══════════════════════════════════════
+    // ══════════════════════════════════════════
     // PERMISSÕES
-    // ══════════════════════════════════════
+    // ══════════════════════════════════════════
     const _MODULOS = [
-      { key: 'dashboard',   label: 'Dashboard (KPIs financeiros)' },
-      { key: 'orcamentos',  label: 'Orçamentos' },
-      { key: 'catalogo',    label: 'Catálogo (editar itens)' },
-      { key: 'financeiro',  label: 'Financeiro' },
+      { key:'dashboard',   label:'Dashboard (KPIs financeiros)' },
+      { key:'orcamentos',  label:'Orçamentos' },
+      { key:'catalogo',    label:'Catálogo (editar itens)' },
+      { key:'financeiro',  label:'Financeiro' },
+      { key:'config',      label:'Configurações (acesso à página)' },
+      { key:'config_full', label:'Configurações → todas as abas' },
     ];
-    const _DEFAULTS = { dashboard: false, orcamentos: false, catalogo: false, financeiro: false };
+    const _DEFAULTS = { dashboard:false, orcamentos:false, catalogo:false, financeiro:false, config:false, config_full:false };
 
     async function renderPermissoes(ct) {
       ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando...</div>';
@@ -495,37 +1039,34 @@
         .eq('company_id', APP.company.id)
         .neq('role', 'dono')
         .order('name');
-
-      if (error) { ct.innerHTML = `<div style="color:var(--danger);padding:12px">Erro: ${error.message}</div>`; return; }
+      if (error) { ct.innerHTML = `<div style="color:#f87171;padding:12px">Erro: ${error.message}</div>`; return; }
       if (!data?.length) {
-        ct.innerHTML = '<div class="empty-state" style="padding:40px;text-align:center">Nenhum técnico para configurar. Adicione membros na aba Equipe.</div>';
+        ct.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim)">Nenhum técnico. Adicione membros na aba Equipe.</div>';
         return;
       }
-
       ct.innerHTML = `
         <div class="cfg-section">
-          <div class="cfg-section-title">Permissões por técnico</div>
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">
-            Minha Fila, Kanban, OS e Clientes são sempre visíveis.<br>
-            Configure abaixo o que cada técnico pode acessar além disso.
+          <div class="cfg-section-title">Permissões por Técnico</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+            Minha Fila, Kanban, OS e Clientes são sempre visíveis. Configure abaixo o que cada técnico pode acessar além disso.
           </p>
           ${data.map(m => {
-            const primeiro = (m.name || m.email || '?').split(' ')[0];
-            const perms    = Object.assign({}, _DEFAULTS, m.permissions || {});
+            const primeiro = (m.name||m.email||'?').split(' ')[0];
+            const perms = Object.assign({}, _DEFAULTS, m.permissions||{});
             return `
             <div class="perm-card">
               <div class="perm-card-header">
                 <div>
                   <span class="perm-nome">${esc(primeiro)}</span>
-                  <span class="perm-role">${esc(m.email || '')}</span>
+                  <span class="perm-role">${esc(m.email||'')}</span>
                 </div>
-                <button class="btn btn-primary" style="font-size:11px;padding:6px 14px" onclick="salvarPermissoes('${m.id}')">Salvar</button>
+                <button class="cfg-btn cfg-btn-sm" onclick="salvarPermissoes('${m.id}')">Salvar</button>
               </div>
               <div class="perm-grid" id="perm-grid-${m.id}">
                 ${_MODULOS.map(mod => `
-                  <label class="perm-label ${perms[mod.key] ? 'on' : ''}" id="perm-lbl-${m.id}-${mod.key}">
+                  <label class="perm-label ${perms[mod.key]?'on':''}" id="perm-lbl-${m.id}-${mod.key}">
                     <input type="checkbox" data-uid="${m.id}" data-mod="${mod.key}"
-                      ${perms[mod.key] ? 'checked' : ''}
+                      ${perms[mod.key]?'checked':''}
                       onchange="togglePerm(this)">
                     ${esc(mod.label)}
                   </label>`).join('')}
@@ -539,21 +1080,20 @@
       const lbl = document.getElementById(`perm-lbl-${el.dataset.uid}-${el.dataset.mod}`);
       if (lbl) lbl.classList.toggle('on', el.checked);
     }
-
     async function salvarPermissoes(uid) {
       const cbs = document.querySelectorAll(`input[data-uid="${uid}"]`);
       const perms = {};
       cbs.forEach(cb => { perms[cb.dataset.mod] = cb.checked; });
       const { error } = await sb.from('profiles').update({ permissions: perms }).eq('id', uid);
-      if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+      if (error) { dmToast('Erro: '+error.message, 'error'); return; }
       dmToast('Permissões salvas!');
     }
 
-    // ══════════════════════════════════════
-    // MODAL NOVO MEMBRO
-    // ══════════════════════════════════════
+    // ══════════════════════════════════════════
+    // MODAL NOVO TÉCNICO
+    // ══════════════════════════════════════════
     function abrirModalMembro() {
-      ['m-nome','m-email','m-whatsapp','m-senha'].forEach(id => document.getElementById(id).value = '');
+      ['m-nome','m-email','m-whatsapp','m-senha'].forEach(id => document.getElementById(id).value='');
       document.getElementById('wa-block').classList.remove('show');
       document.getElementById('modal-membro-actions').style.display = 'flex';
       document.getElementById('btn-criar-membro').disabled = false;
@@ -562,74 +1102,53 @@
       document.getElementById('m-nome').focus();
       _novoMembroWA = null;
     }
-
     function fecharModalMembro() {
       document.getElementById('modal-membro').classList.remove('active');
       if (_novoMembroWA) renderEquipe(document.getElementById('cfg-content'));
       _novoMembroWA = null;
     }
-
-    document.getElementById('modal-membro').addEventListener('click', e => {
-      if (e.target === e.currentTarget) fecharModalMembro();
-    });
-
     function toggleSenha() {
       const inp = document.getElementById('m-senha');
       const btn = document.getElementById('btn-eye');
-      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '◎'; }
-      else { inp.type = 'password'; btn.textContent = '◉'; }
+      if (inp.type==='password') { inp.type='text'; btn.textContent='◎'; }
+      else { inp.type='password'; btn.textContent='◉'; }
     }
-
     async function criarMembro() {
       const nome     = document.getElementById('m-nome').value.trim();
       const email    = document.getElementById('m-email').value.trim();
       const whatsapp = document.getElementById('m-whatsapp').value.trim();
       const senha    = document.getElementById('m-senha').value;
-
-      if (!nome || !email || !senha) { dmToast('Nome, e-mail e senha são obrigatórios.', 'error'); return; }
-      if (senha.length < 6)          { dmToast('Senha mínima de 6 caracteres.', 'error'); return; }
-
+      if (!nome||!email||!senha) { dmToast('Nome, e-mail e senha são obrigatórios.', 'error'); return; }
+      if (senha.length < 6) { dmToast('Senha mínima de 6 caracteres.', 'error'); return; }
       const btn = document.getElementById('btn-criar-membro');
       btn.disabled = true; btn.textContent = 'Criando...';
-
       const session = (await sb.auth.getSession()).data.session;
       const res = await fetch(`${SUPABASE_URL}/functions/v1/criar-membro`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ name: nome, email, whatsapp, password: senha, company_id: APP.company.id }),
+        headers: { 'Content-Type':'application/json', 'apikey':SUPABASE_ANON_KEY, 'Authorization':`Bearer ${session?.access_token}` },
+        body: JSON.stringify({ name:nome, email, whatsapp, password:senha, company_id:APP.company.id }),
       });
-
       const data = await res.json();
-
       if (!res.ok || data.error) {
         btn.disabled = false; btn.textContent = 'Criar acesso';
-        dmToast('Erro: ' + (data.error || 'Falha ao criar.'), 'error');
-        return;
+        dmToast('Erro: '+(data.error||'Falha ao criar.'), 'error'); return;
       }
-
-      // Sucesso
       const primeiro = nome.split(' ')[0];
-      const appUrl   = window.location.origin + '/login.html';
-      const texto    = `Olá ${primeiro}! Seu acesso foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`;
+      const appUrl = window.location.origin + '/login.html';
+      const texto = `Olá ${primeiro}! Seu acesso foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`;
       document.getElementById('wa-texto').textContent = texto;
       document.getElementById('wa-block').classList.add('show');
       document.getElementById('modal-membro-actions').style.display = 'none';
-
       _novoMembroWA = { primeiro, email, senha, whatsapp };
       dmToast(`Acesso de ${primeiro} criado!`);
     }
-
     function abrirWA() {
       if (!_novoMembroWA) return;
       const { primeiro, email, senha, whatsapp } = _novoMembroWA;
       const appUrl = window.location.origin + '/login.html';
       const msg = encodeURIComponent(`Olá ${primeiro}! Seu acesso foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`);
-      const num  = whatsapp.replace(/\D/g, '');
-      const waNum = num.length === 11 ? '55' + num : num || '';
+      const num = whatsapp.replace(/\D/g,'');
+      const waNum = num.length===11 ? '55'+num : num||'';
       if (!waNum) { dmToast('WhatsApp não informado.', 'error'); return; }
       window.open(`https://wa.me/${waNum}?text=${msg}`, '_blank');
     }
