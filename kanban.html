@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141422"></script>
-  <script src="js/auth.js?v=04141422"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141422">
+  <script src="js/config.js?v=04141428"></script>
+  <script src="js/auth.js?v=04141428"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141428">
   <style>
     /* Board */
     .board-outer {
@@ -376,7 +376,7 @@
 
     .p-item-add {
       display: grid;
-      grid-template-columns: 30px 1fr 38px 58px 28px;
+      grid-template-columns: 30px 46px 1fr 38px 58px 28px;
       gap: 4px;
       margin-top: 8px;
       align-items: center;
@@ -403,6 +403,35 @@
       line-height: 1;
     }
     .p-add-btn:hover { opacity: .85; }
+    /* Autocomplete catálogo */
+    .p-ac-wrap { position: relative; }
+    .p-ac-lista {
+      position: fixed;
+      background: var(--surface-2);
+      border: 1px solid var(--accent);
+      z-index: 9999;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 12px;
+      display: none;
+      box-shadow: 0 6px 20px rgba(0,0,0,.5);
+    }
+    .p-ac-item {
+      padding: 7px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .p-ac-item:last-child { border-bottom: none; }
+    .p-ac-item:hover, .p-ac-item.ativo { background: var(--surface-3); }
+    .p-ac-badge { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 2px; flex-shrink: 0; }
+    .p-ac-code { color: var(--text-dim); font-family: 'Fira Code', monospace; font-size: 10px; flex-shrink: 0; }
+    .p-ac-nome { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .p-ac-preco { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+    .p-ac-criar { color: var(--accent); font-style: italic; }
     .p-itens-total-row {
       display: flex;
       justify-content: space-between;
@@ -605,7 +634,15 @@
             <option value="servico">S</option>
             <option value="produto">P</option>
           </select>
-          <input class="p-add-inp" id="p-add-desc" placeholder="Descrição..." type="text">
+          <input class="p-add-inp" id="p-add-codigo" placeholder="Cód." type="text" title="Código">
+          <div class="p-ac-wrap" style="position:relative">
+            <input class="p-add-inp" id="p-add-desc" placeholder="Descrição..." type="text"
+              autocomplete="off"
+              oninput="acBuscar()"
+              onkeydown="acKeyDown(event)"
+              onfocus="acBuscar()">
+            <div class="p-ac-lista" id="p-ac-lista"></div>
+          </div>
           <input class="p-add-inp" id="p-add-qtd"  placeholder="Qtd" type="number" value="1" min="0.01" step="any">
           <input class="p-add-inp" id="p-add-preco" placeholder="R$" type="number" value="0" min="0" step="any">
           <button class="p-add-btn" onclick="adicionarItem()" title="Adicionar">+</button>
@@ -670,6 +707,9 @@
     let statusSelecionado = null;
     let itensPanel        = [];
     let equipe            = [];
+    let catalogoCache     = [];   // services + products combinados
+    let acMatchesList     = [];   // resultados correntes do autocomplete
+    let acIdx             = -1;   // navegação por teclado
 
     const fmtMoeda = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const fmtN     = v => (v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
@@ -748,6 +788,9 @@
       selecionarStatus(osAtual.status);
       atualizarBotoesMover();
 
+      // Carrega catálogo (uma vez)
+      carregarCatalogo();
+
       // Carrega equipe (uma vez)
       if (!equipe.length) {
         const { data } = await sb.from('profiles').select('id, name, email').eq('company_id', APP.company.id);
@@ -779,42 +822,165 @@
         document.getElementById('p-itens-total').textContent = 'R$ 0,00';
         return;
       }
-      lista.innerHTML = itensPanel.map((it, idx) => `
-        <div class="p-item-row">
-          <span class="p-item-tipo" style="color:${it.tipo==='servico'?'#60a5fa':'#4ade80'}">${it.tipo==='servico'?'S':'P'}</span>
-          <span class="p-item-desc" title="${it.descricao}">${it.descricao}</span>
-          <span class="p-item-qtd">${fmtN(it.quantidade)}</span>
-          <span class="p-item-val">${fmtMoeda(it.subtotal)}</span>
-          <button class="p-item-del" onclick="excluirItem(${idx},'${it.id}')" title="Remover">×</button>
-        </div>
-      `).join('');
+      lista.innerHTML = itensPanel.map((it, idx) => {
+        const cor  = it.tipo === 'servico' ? '#60a5fa' : '#4ade80';
+        const tipo = it.tipo === 'servico' ? 'S' : 'P';
+        const cod  = it.codigo ? `<span style="font-family:'Fira Code',monospace;font-size:10px;color:var(--text-dim);margin-right:4px">${it.codigo}</span>` : '';
+        return `
+          <div class="p-item-row">
+            <span class="p-item-tipo" style="color:${cor}">${tipo}</span>
+            <span class="p-item-desc" title="${it.descricao}">${cod}${it.descricao}</span>
+            <span class="p-item-qtd">${fmtN(it.quantidade)}</span>
+            <span class="p-item-val">${fmtMoeda(it.subtotal)}</span>
+            <button class="p-item-del" onclick="excluirItem(${idx},'${it.id}')" title="Remover">×</button>
+          </div>
+        `;
+      }).join('');
       const total = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
       document.getElementById('p-itens-total').textContent = fmtMoeda(total);
     }
 
     async function adicionarItem() {
       if (!osAtual) return;
-      const tipo  = document.getElementById('p-add-tipo').value;
-      const desc  = document.getElementById('p-add-desc').value.trim();
-      const qtd   = parseFloat(document.getElementById('p-add-qtd').value) || 1;
-      const preco = parseFloat(document.getElementById('p-add-preco').value) || 0;
+      const tipo   = document.getElementById('p-add-tipo').value;
+      const desc   = document.getElementById('p-add-desc').value.trim();
+      const codigo = document.getElementById('p-add-codigo').value.trim() || null;
+      const qtd    = parseFloat(document.getElementById('p-add-qtd').value) || 1;
+      const preco  = parseFloat(document.getElementById('p-add-preco').value) || 0;
       if (!desc) { dmToast('Informe a descrição do item', 'info'); return; }
 
+      acFechar();
       const subtotal = qtd * preco;
       const { data, error } = await sb.from('os_items').insert({
-        os_id: osAtual.id, tipo, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal
+        os_id: osAtual.id, tipo, codigo, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal
       }).select().single();
       if (error) { dmToast('Erro ao adicionar item', 'error'); return; }
 
       itensPanel.push(data);
       renderItensPanel();
-      document.getElementById('p-add-desc').value  = '';
-      document.getElementById('p-add-qtd').value   = '1';
-      document.getElementById('p-add-preco').value = '0';
+      document.getElementById('p-add-desc').value   = '';
+      document.getElementById('p-add-codigo').value = '';
+      document.getElementById('p-add-qtd').value    = '1';
+      document.getElementById('p-add-preco').value  = '0';
 
       // Atualiza total na OS
       const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
       await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+    }
+
+    /* ── Autocomplete catálogo ── */
+    async function carregarCatalogo() {
+      if (catalogoCache.length) return;
+      const cid = APP.company.id;
+      const [{ data: servs }, { data: prods }] = await Promise.all([
+        sb.from('services').select('id,name,code,price').eq('company_id', cid).order('name'),
+        sb.from('products').select('id,name,code,price').eq('company_id', cid).order('name'),
+      ]);
+      catalogoCache = [
+        ...(servs || []).map(s => ({ ...s, _tipo: 'servico' })),
+        ...(prods || []).map(p => ({ ...p, _tipo: 'produto' })),
+      ];
+    }
+
+    function acBuscar() {
+      const q = document.getElementById('p-add-desc').value.trim().toLowerCase();
+      const lista = document.getElementById('p-ac-lista');
+      acIdx = -1;
+
+      if (!q) { acFechar(); return; }
+
+      const matches = catalogoCache.filter(c =>
+        c.name.toLowerCase().includes(q) || (c.code || '').toLowerCase().includes(q)
+      ).slice(0, 8);
+
+      acMatchesList = matches;
+
+      let html = matches.map((c, i) => {
+        const cor    = c._tipo === 'servico' ? '#60a5fa' : '#4ade80';
+        const badge  = c._tipo === 'servico' ? 'S' : 'P';
+        const code   = c.code ? `<span class="p-ac-code">${c.code}</span>` : '';
+        const preco  = fmtMoeda(c.price || 0);
+        return `<div class="p-ac-item" onmousedown="acSelecionar(${i})">
+          <span class="p-ac-badge" style="background:${cor}20;color:${cor}">${badge}</span>
+          ${code}
+          <span class="p-ac-nome">${c.name}</span>
+          <span class="p-ac-preco">${preco}</span>
+        </div>`;
+      }).join('');
+
+      const textoOriginal = document.getElementById('p-add-desc').value.trim();
+      html += `<div class="p-ac-item" onmousedown="acCriar()">
+        <span class="p-ac-criar">+ Criar "${textoOriginal}" no catálogo</span>
+      </div>`;
+
+      lista.innerHTML = html;
+
+      // Posicionar abaixo do input
+      const inp = document.getElementById('p-add-desc');
+      const r   = inp.getBoundingClientRect();
+      lista.style.left  = r.left + 'px';
+      lista.style.top   = (r.bottom + 2) + 'px';
+      lista.style.width = Math.max(240, r.width * 2) + 'px';
+      lista.style.display = 'block';
+    }
+
+    function acFechar() {
+      const lista = document.getElementById('p-ac-lista');
+      if (lista) { lista.style.display = 'none'; lista.innerHTML = ''; }
+      acMatchesList = [];
+      acIdx = -1;
+    }
+
+    function acSelecionar(i) {
+      const item = acMatchesList[i];
+      if (!item) return;
+      document.getElementById('p-add-tipo').value   = item._tipo;
+      document.getElementById('p-add-desc').value   = item.name;
+      document.getElementById('p-add-codigo').value = item.code || '';
+      document.getElementById('p-add-preco').value  = item.price || 0;
+      acFechar();
+      document.getElementById('p-add-qtd').focus();
+    }
+
+    async function acCriar() {
+      const nome = document.getElementById('p-add-desc').value.trim();
+      const tipo = document.getElementById('p-add-tipo').value;
+      const cod  = document.getElementById('p-add-codigo').value.trim() || null;
+      const prec = parseFloat(document.getElementById('p-add-preco').value) || 0;
+      if (!nome) return;
+      acFechar();
+      const tabela = tipo === 'servico' ? 'services' : 'products';
+      const { data, error } = await sb.from(tabela).insert({
+        company_id: APP.company.id, name: nome, code: cod || null, price: prec
+      }).select().single();
+      if (error) { dmToast('Erro ao criar no catálogo', 'error'); return; }
+      // Adiciona ao cache e seleciona
+      data._tipo = tipo;
+      catalogoCache.push(data);
+      document.getElementById('p-add-codigo').value = data.code || '';
+      dmToast(`"${nome}" criado no catálogo!`, 'success');
+    }
+
+    function acKeyDown(e) {
+      const lista = document.getElementById('p-ac-lista');
+      if (lista.style.display !== 'block') return;
+      const items = lista.querySelectorAll('.p-ac-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        acIdx = Math.min(acIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('ativo', i === acIdx));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        acIdx = Math.max(acIdx - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('ativo', i === acIdx));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (acIdx >= 0 && acIdx < acMatchesList.length) acSelecionar(acIdx);
+        else if (acIdx === acMatchesList.length) acCriar();
+        else adicionarItem();
+      } else if (e.key === 'Escape') {
+        acFechar();
+      }
     }
 
     async function excluirItem(idx, itemId) {
@@ -942,6 +1108,11 @@
       todasOS = data || [];
       renderBoard();
     }
+
+    // Fecha autocomplete ao clicar fora
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#p-add-desc') && !e.target.closest('#p-ac-lista')) acFechar();
+    });
 
     (async () => {
       const ok = await requireAuth();
