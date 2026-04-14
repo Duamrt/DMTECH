@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTech — Upgrade de Plano</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="js/config.js?v=04141841"></script>
+  <script src="js/auth.js?v=04141841"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141841">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    .up-wrap { width: 100%; max-width: 860px; }
+    .up-logo { text-align: center; margin-bottom: 32px; }
+    .up-logo .name { font-size: 26px; font-weight: 800; color: var(--accent); }
+    .up-logo .sub  { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+    .up-titulo {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .up-subtitulo {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+    .up-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    @media(max-width:600px){ .up-grid { grid-template-columns: 1fr; } }
+    .up-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .up-card:hover { border-color: var(--accent); }
+    .up-card.selecionado { border-color: var(--accent); background: rgba(249,115,22,.04); }
+    .up-card-nome { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .up-card-preco {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+    .up-card-preco span { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+    .up-card-items { list-style: none; flex: 1; }
+    .up-card-items li {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .up-card-items li:last-child { border-bottom: none; }
+    .up-card-items li::before { content: '✓'; color: #4ade80; font-weight: 800; flex-shrink: 0; }
+    .up-check {
+      display: none;
+      margin-top: 16px;
+      padding: 8px 14px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: .04em;
+    }
+    .up-card.selecionado .up-check { display: block; }
+
+    /* Painel PIX */
+    .pix-panel {
+      display: none;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .pix-panel.show { display: block; }
+    .pix-titulo {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pix-layout {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media(max-width:520px){ .pix-layout { grid-template-columns: 1fr; } }
+    #qr-canvas { display: block; }
+    .pix-info { }
+    .pix-row {
+      margin-bottom: 14px;
+    }
+    .pix-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .pix-valor {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .pix-copiar {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pix-copiar:hover { color: var(--accent); border-color: var(--accent); }
+    .pix-instrucao {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .pix-instrucao strong { color: var(--text); }
+
+    /* Botão já paguei */
+    .btn-paguei {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: opacity .12s;
+      letter-spacing: .02em;
+    }
+    .btn-paguei:hover { opacity: .88; }
+    .btn-paguei:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Confirmação */
+    .up-confirmacao {
+      display: none;
+      background: rgba(74,222,128,.06);
+      border: 1px solid rgba(74,222,128,.3);
+      padding: 28px;
+      text-align: center;
+    }
+    .up-confirmacao.show { display: block; }
+    .up-conf-icon { font-size: 28px; margin-bottom: 14px; }
+    .up-conf-titulo { font-size: 16px; font-weight: 800; color: #4ade80; margin-bottom: 8px; }
+    .up-conf-texto { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    .up-sair {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .up-sair a { color: var(--accent); text-decoration: none; font-weight: 700; cursor: pointer; }
+    .up-sair a:hover { opacity: .8; }
+  </style>
+</head>
+<body>
+  <div class="up-wrap">
+    <div class="up-logo">
+      <div class="name">DMTech</div>
+      <div class="sub">Gestão de ordens de serviço</div>
+    </div>
+
+    <div id="area-principal">
+      <div class="up-titulo" id="up-titulo">Seu trial expirou</div>
+      <div class="up-subtitulo">
+        Você aproveitou 14 dias grátis com tudo liberado.<br>
+        Escolha um plano para continuar usando o DMTech.
+      </div>
+
+      <div class="up-grid">
+        <div class="up-card" onclick="selecionarPlano('profissional')" id="card-pro">
+          <div class="up-card-nome">Profissional</div>
+          <div class="up-card-preco">R$ 250<span>/mês</span></div>
+          <ul class="up-card-items">
+            <li>OS e clientes ilimitados</li>
+            <li>Kanban completo</li>
+            <li>Orçamentos ilimitados</li>
+            <li>Financeiro / Caixa</li>
+            <li>Folha e comissão</li>
+            <li>Fornecedores e NF</li>
+            <li>Múltiplos técnicos</li>
+          </ul>
+          <div class="up-check">// plano selecionado</div>
+        </div>
+
+        <div class="up-card" onclick="selecionarPlano('empresarial')" id="card-emp">
+          <div class="up-card-nome">Empresarial</div>
+          <div class="up-card-preco">R$ 450<span>/mês</span></div>
+          <ul class="up-card-items">
+            <li>Tudo do Profissional</li>
+            <li>Técnicos ilimitados</li>
+            <li>Suporte prioritário</li>
+            <li>Atendimento via WhatsApp</li>
+            <li>Onboarding assistido</li>
+          </ul>
+          <div class="up-check">// plano selecionado</div>
+        </div>
+      </div>
+
+      <div class="pix-panel" id="pix-panel">
+        <div class="pix-titulo">
+          <span style="color:var(--accent);font-size:18px">◈</span>
+          Pague via PIX para ativar
+        </div>
+        <div class="pix-layout">
+          <canvas id="qr-canvas"></canvas>
+          <div class="pix-info">
+            <div class="pix-row">
+              <div class="pix-label">Valor</div>
+              <div class="pix-valor" id="pix-valor-display">—</div>
+            </div>
+            <div class="pix-row">
+              <div class="pix-label">Chave PIX (telefone)</div>
+              <div class="pix-valor">
+                <span>(87) 98145-6565</span>
+                <button class="pix-copiar" onclick="copiar('87981456565')">Copiar</button>
+              </div>
+            </div>
+            <div class="pix-row">
+              <div class="pix-label">Favorecido</div>
+              <div class="pix-valor">DUAM RODRIGUES TEIXEIRA</div>
+            </div>
+            <div class="pix-row">
+              <div class="pix-label">Banco</div>
+              <div class="pix-valor">BANCO C6</div>
+            </div>
+            <div class="pix-instrucao">
+              <strong>Como pagar:</strong><br>
+              Escaneie o QR Code ou copie a chave PIX acima.<br>
+              Após o pagamento, clique em <strong>"Já paguei"</strong> e nossa equipe ativará seu plano em até <strong>1 hora útil</strong>.
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:24px">
+          <button class="btn-paguei" id="btn-paguei" onclick="jaPaguei()" disabled>
+            Selecione um plano acima
+          </button>
+        </div>
+      </div>
+
+      <div class="up-confirmacao" id="up-confirmacao">
+        <div class="up-conf-icon">✓</div>
+        <div class="up-conf-titulo">Pagamento registrado!</div>
+        <div class="up-conf-texto">
+          Nossa equipe vai confirmar seu pagamento e ativar o plano <strong id="conf-plano-nome"></strong> em até <strong>1 hora útil</strong>.<br><br>
+          Quando ativado, você receberá uma mensagem e o acesso será liberado automaticamente.
+        </div>
+      </div>
+    </div>
+
+    <div class="up-sair">
+      <a onclick="signOut()">← Sair da conta</a>
+    </div>
+  </div>
+
+  <script>
+    const VERSION = 'v04141841';
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+
+    if (localStorage.getItem('dmtech-theme') === 'light') document.body.classList.add('light');
+
+    let planoSelecionado = null;
+
+    const PLANOS = {
+      profissional: { nome: 'Profissional', valor: 250.00, label: 'R$ 250,00' },
+      empresarial:  { nome: 'Empresarial',  valor: 450.00, label: 'R$ 450,00' }
+    };
+
+    // PIX payload (EMV)
+    function crc16(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+        }
+        crc &= 0xFFFF;
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function tlv(id, value) {
+      return id + String(value.length).padStart(2, '0') + value;
+    }
+
+    function gerarPixPayload(chave, nome, cidade, valor) {
+      const gui   = tlv('00', 'BR.GOV.BCB.PIX') + tlv('01', chave);
+      const ma    = tlv('26', gui);
+      const addl  = tlv('62', tlv('05', '***'));
+      let payload = tlv('00', '01') +
+                    ma +
+                    tlv('52', '0000') +
+                    tlv('53', '986') +
+                    tlv('54', valor.toFixed(2)) +
+                    tlv('58', 'BR') +
+                    tlv('59', nome.substring(0, 25)) +
+                    tlv('60', cidade.substring(0, 15)) +
+                    addl +
+                    '6304';
+      return payload + crc16(payload);
+    }
+
+    function selecionarPlano(plano) {
+      planoSelecionado = plano;
+      document.getElementById('card-pro').classList.toggle('selecionado', plano === 'profissional');
+      document.getElementById('card-emp').classList.toggle('selecionado', plano === 'empresarial');
+
+      const p = PLANOS[plano];
+      document.getElementById('pix-valor-display').textContent = p.label;
+      document.getElementById('pix-panel').classList.add('show');
+
+      const payload = gerarPixPayload('+5587981456565', 'DUAM RODRIGUES TEIXEIRA', 'JUPI', p.valor);
+      const canvas  = document.getElementById('qr-canvas');
+      QRCode.toCanvas(canvas, payload, { width: 160, margin: 1, color: { dark: '#f97316', light: '#0d0d0d' } });
+
+      const btn = document.getElementById('btn-paguei');
+      btn.disabled    = false;
+      btn.textContent = 'Já paguei — ativar plano ' + p.nome;
+    }
+
+    async function jaPaguei() {
+      if (!planoSelecionado) return;
+      const btn = document.getElementById('btn-paguei');
+      btn.disabled    = true;
+      btn.textContent = 'Registrando...';
+
+      await getProfile();
+      const companyId = APP.company?.id;
+      if (!companyId) { btn.disabled = false; btn.textContent = 'Já paguei'; return; }
+
+      const { error } = await sb.from('upgrade_requests').insert({
+        company_id:       companyId,
+        plano_solicitado: planoSelecionado,
+        email_contato:    APP.user?.email || ''
+      });
+
+      if (error) {
+        btn.disabled    = false;
+        btn.textContent = 'Erro — tente novamente';
+        return;
+      }
+
+      document.getElementById('area-principal').style.display = 'none';
+      document.getElementById('conf-plano-nome').textContent = PLANOS[planoSelecionado].nome;
+      document.getElementById('up-confirmacao').classList.add('show');
+    }
+
+    function copiar(txt) {
+      navigator.clipboard.writeText(txt).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = txt; document.body.appendChild(el);
+        el.select(); document.execCommand('copy');
+        document.body.removeChild(el);
+      });
+      dmToast('Copiado!');
+    }
+
+    // Verificar estado da conta ao carregar
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'login.html'; return; }
+      await getProfile();
+      if (APP.company?.plan === 'profissional' || APP.company?.plan === 'empresarial') {
+        window.location.href = 'dashboard.html';
+      }
+    })();
+  </script>
+</body>
+</html>

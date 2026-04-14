@@ -42,7 +42,43 @@ async function requireAuth(redirectTo = 'login.html') {
     window.location.href = redirectTo;
     return false;
   }
+
+  // Verificar plano (exceto páginas de acesso livre e admin)
+  const page = window.location.pathname.split('/').pop() || 'index.html';
+  const paginasExentas = ['upgrade.html', 'admin.html', 'login.html', 'signup.html', 'landing.html'];
+  if (!paginasExentas.includes(page) && !isPlatformAdmin()) {
+    if (!checkPlan()) return false;
+  }
+
   return true;
+}
+
+function checkPlan() {
+  const c = APP.company;
+  if (!c) return true;
+  const plan = c.plan || 'trial';
+  if (plan === 'admin' || plan === 'profissional' || plan === 'empresarial') return true;
+  if (plan === 'expirado') {
+    window.location.href = 'upgrade.html';
+    return false;
+  }
+  if (plan === 'trial') {
+    const trialEnd = c.trial_ends_at ? new Date(c.trial_ends_at) : null;
+    if (trialEnd && trialEnd < new Date()) {
+      // Marca como expirado no banco (silencioso)
+      sb.from('companies').update({ plan: 'expirado' }).eq('id', c.id).then(() => {});
+      window.location.href = 'upgrade.html';
+      return false;
+    }
+  }
+  return true;
+}
+
+// Retorna dias restantes do trial (null se não for trial)
+function trialDiasRestantes() {
+  const c = APP.company;
+  if (!c || c.plan !== 'trial' || !c.trial_ends_at) return null;
+  return Math.ceil((new Date(c.trial_ends_at) - new Date()) / 86400000);
 }
 
 async function signOut() {
