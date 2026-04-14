@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { color: #38bdf8; font-size: 18px; font-weight: 700; }
+    .empresa { color: #64748b; font-size: 13px; }
+    .btn-sair {
+      background: none;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all .2s;
+    }
+    .btn-sair:hover { border-color: #38bdf8; color: #38bdf8; }
+    .main {
+      padding: 32px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .boas-vindas {
+      margin-bottom: 32px;
+    }
+    .boas-vindas h2 { font-size: 22px; margin-bottom: 4px; }
+    .boas-vindas p { color: #64748b; font-size: 14px; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .card .icone { font-size: 28px; margin-bottom: 8px; }
+    .card h3 { font-size: 14px; color: #94a3b8; margin-bottom: 4px; }
+    .card .valor { font-size: 28px; font-weight: 700; color: #38bdf8; }
+    .versao {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      color: #334155;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>DMTechApp</h1>
+      <div class="empresa" id="nome-empresa"></div>
+    </div>
+    <button class="btn-sair" onclick="signOut()">Sair</button>
+  </header>
+
+  <div class="main">
+    <div class="boas-vindas">
+      <h2 id="saudacao">Olá!</h2>
+      <p>Bem-vindo ao painel de controle.</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="icone">📋</div>
+        <h3>OS Abertas</h3>
+        <div class="valor" id="qtd-os">—</div>
+      </div>
+      <div class="card">
+        <div class="icone">💰</div>
+        <h3>Faturamento do mês</h3>
+        <div class="valor" id="fat-mes">—</div>
+      </div>
+      <div class="card">
+        <div class="icone">👥</div>
+        <h3>Clientes</h3>
+        <div class="valor" id="qtd-clientes">—</div>
+      </div>
+      <div class="card">
+        <div class="icone">✅</div>
+        <h3>OS Concluídas</h3>
+        <div class="valor" id="qtd-concluidas">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0f172a;color:#38bdf8;font-weight:bold;border-radius:4px;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      document.getElementById('saudacao').textContent = `Olá, ${APP.profile.name}!`;
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+    })();
+  </script>
+</body>
+</html>
