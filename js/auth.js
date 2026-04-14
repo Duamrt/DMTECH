@@ -87,6 +87,18 @@ async function signOut() {
   window.location.href = 'login.html';
 }
 
+function toggleSidebar() {
+  document.querySelector('.sidebar')?.classList.toggle('open');
+  document.getElementById('sidebar-overlay')?.classList.toggle('show');
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    document.querySelector('.sidebar')?.classList.remove('open');
+    document.getElementById('sidebar-overlay')?.classList.remove('show');
+  }
+});
+
 function isPlatformAdmin() {
   return APP.profile?.role === 'dono' &&
     APP.profile?.company_id === 'aaaa0001-0000-0000-0000-000000000001';
