@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Minha Fila</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141443"></script>
+  <script src="js/auth.js?v=04141443"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141443">
+  <style>
+    .fila-header-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .os-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 18px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color .12s;
+    }
+    .os-card:hover { border-color: var(--accent); }
+    .os-numero {
+      font-size: 11px;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-dim);
+      width: 44px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .os-body { flex: 1; min-width: 0; }
+    .os-cliente {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .os-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .os-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .os-data {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .os-ir {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+      align-self: center;
+    }
+    .filtros {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filtro-btn {
+      padding: 6px 14px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: all .12s;
+    }
+    .filtro-btn:hover { color: var(--text); }
+    .filtro-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(249,115,22,.06); }
+    .vazio-fila {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-dim);
+    }
+    .vazio-fila .vazio-icon { font-size: 32px; margin-bottom: 12px; }
+    .vazio-fila p { font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="minha-fila.html" class="nav-item active">
+          <span class="nav-icon">◫</span> Minha Fila
+        </a>
+        <a href="clientes.html" class="nav-item">
+          <span class="nav-icon">◎</span> Clientes
+        </a>
+        <a href="orcamentos.html" class="nav-item">
+          <span class="nav-icon">◨</span> Orçamentos
+        </a>
+        <a href="os.html" class="nav-item">
+          <span class="nav-icon">◈</span> Ordens de Serviço
+        </a>
+        <a href="kanban.html" class="nav-item">
+          <span class="nav-icon">▦</span> Kanban
+        </a>
+        <a href="catalogo.html" class="nav-item">
+          <span class="nav-icon">◧</span> Catálogo
+        </a>
+        <div class="nav-section">Gestão</div>
+        <a href="financeiro.html" class="nav-item">
+          <span class="nav-icon">◉</span> Financeiro
+        </a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item">
+          <span class="nav-icon">⚙</span> Configurações
+        </a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-title">Minha Fila</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+
+        <div class="page-header">
+          <h2 id="titulo-fila">Minha Fila</h2>
+          <p class="fila-header-info" id="subtitulo-fila">Suas OS atribuídas.</p>
+        </div>
+
+        <!-- Filtros de status -->
+        <div class="filtros">
+          <button class="filtro-btn active" onclick="filtrarStatus(null, this)">Todas</button>
+          <button class="filtro-btn" onclick="filtrarStatus('aberta', this)">Abertas</button>
+          <button class="filtro-btn" onclick="filtrarStatus('em_andamento', this)">Em andamento</button>
+          <button class="filtro-btn" onclick="filtrarStatus('aguardando_peca', this)">Aguard. peça</button>
+          <button class="filtro-btn" onclick="filtrarStatus('pronta', this)">Prontas</button>
+        </div>
+
+        <div id="lista-os">
+          <div class="vazio-fila"><div class="vazio-icon">◫</div><p>Carregando...</p></div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /layout -->
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    const STATUS_LABEL = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' };
+    const STATUS_BADGE = { aberta:'badge-orange', em_andamento:'badge-yellow', pronta:'badge-green', entregue:'badge-muted', aguardando_peca:'badge-red' };
+
+    let todasOS = [];
+    let filtroAtivo = null;
+
+    function fmtData(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('pt-BR');
+    }
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      const nome    = APP.profile.name || APP.profile.email || '';
+      const empresa = APP.company?.name || '';
+      const isDono  = APP.profile.role === 'dono';
+      const cid     = APP.company.id;
+
+      document.getElementById('topbar-user').textContent  = nome;
+      document.getElementById('nome-empresa').textContent = empresa;
+
+      const primeiroNome = nome.split(' ')[0];
+
+      if (isDono) {
+        document.getElementById('titulo-fila').textContent   = 'Visão Geral — Todas as OS';
+        document.getElementById('subtitulo-fila').textContent = 'Você é o dono — vendo todas as OS da empresa.';
+      } else {
+        document.getElementById('titulo-fila').textContent   = `Fila de ${primeiroNome}`;
+        document.getElementById('subtitulo-fila').textContent = 'OS atribuídas a você.';
+      }
+
+      let query = sb.from('ordens_servico')
+        .select('id, numero, status, notes, created_at, clients(name), responsavel:profiles(id,name)')
+        .eq('company_id', cid)
+        .neq('status', 'entregue')
+        .order('created_at', { ascending: false });
+
+      if (!isDono) {
+        query = query.eq('responsavel_id', APP.user.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        document.getElementById('lista-os').innerHTML = '<div class="vazio-fila"><p>Erro ao carregar.</p></div>';
+        return;
+      }
+
+      todasOS = data || [];
+      renderLista(todasOS);
+    })();
+
+    function filtrarStatus(status, btn) {
+      filtroAtivo = status;
+      document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filtradas = status ? todasOS.filter(o => o.status === status) : todasOS;
+      renderLista(filtradas);
+    }
+
+    function renderLista(lista) {
+      const el = document.getElementById('lista-os');
+      if (!lista.length) {
+        el.innerHTML = `<div class="vazio-fila">
+          <div class="vazio-icon">◫</div>
+          <p>Nenhuma OS ${filtroAtivo ? 'com esse status' : 'atribuída a você'} no momento.</p>
+        </div>`;
+        return;
+      }
+      el.innerHTML = lista.map(o => {
+        const desc = o.notes || '—';
+        return `
+          <div class="os-card" onclick="window.location.href='kanban.html'">
+            <div class="os-numero">#${String(o.numero).padStart(3,'0')}</div>
+            <div class="os-body">
+              <div class="os-cliente">${esc(o.clients?.name || '—')}</div>
+              <div class="os-desc">${esc(desc)}</div>
+              <div class="os-meta">
+                <span class="badge ${STATUS_BADGE[o.status] || ''}">${STATUS_LABEL[o.status] || o.status}</span>
+                <span class="os-data">${fmtData(o.created_at)}</span>
+              </div>
+            </div>
+            <div class="os-ir">Abrir →</div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

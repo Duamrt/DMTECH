@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Configurações</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141443"></script>
+  <script src="js/auth.js?v=04141443"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141443">
+  <style>
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      padding: 10px 22px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: color .12s;
+      letter-spacing: .03em;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 480px;
+      padding: 28px;
+      position: relative;
+    }
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-row .form-group { margin-bottom: 0; }
+    .btn-danger {
+      background: none;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+    }
+    .btn-danger:hover { background: var(--danger-dim); }
+
+    /* Equipe */
+    .equipe-lista { display: flex; flex-direction: column; gap: 10px; }
+    .equipe-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+    .equipe-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .equipe-info { flex: 1; min-width: 0; }
+    .equipe-nome {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .equipe-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .equipe-papel {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      flex-shrink: 0;
+    }
+    .equipe-papel.dono { border-color: var(--accent); color: var(--accent); }
+
+    /* Senha toggle */
+    .input-senha-wrap { position: relative; }
+    .input-senha-wrap .form-input { padding-right: 42px; }
+    .btn-eye {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+    }
+
+    /* WA success */
+    .wa-success {
+      display: none;
+      background: rgba(37,211,102,.08);
+      border: 1px solid #25d366;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .wa-success.show { display: block; }
+    .wa-success p {
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .btn-wa {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #25d366;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+    }
+    .btn-wa:hover { opacity: .88; }
+
+    /* Config section */
+    .config-section {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .config-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+    .config-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="minha-fila.html" class="nav-item">
+          <span class="nav-icon">◫</span> Minha Fila
+        </a>
+        <a href="clientes.html" class="nav-item">
+          <span class="nav-icon">◎</span> Clientes
+        </a>
+        <a href="orcamentos.html" class="nav-item">
+          <span class="nav-icon">◨</span> Orçamentos
+        </a>
+        <a href="os.html" class="nav-item">
+          <span class="nav-icon">◈</span> Ordens de Serviço
+        </a>
+        <a href="kanban.html" class="nav-item">
+          <span class="nav-icon">▦</span> Kanban
+        </a>
+        <a href="catalogo.html" class="nav-item">
+          <span class="nav-icon">◧</span> Catálogo
+        </a>
+        <div class="nav-section">Gestão</div>
+        <a href="financeiro.html" class="nav-item">
+          <span class="nav-icon">◉</span> Financeiro
+        </a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item active">
+          <span class="nav-icon">⚙</span> Configurações
+        </a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-title">Configurações</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+
+        <div class="page-header">
+          <h2>Configurações</h2>
+          <p>Dados da empresa e gerenciamento da equipe.</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="trocarTab('empresa')">Empresa</button>
+          <button class="tab-btn" onclick="trocarTab('equipe')">Equipe</button>
+        </div>
+
+        <!-- Tab Empresa -->
+        <div class="tab-panel active" id="tab-empresa">
+
+          <div class="config-section">
+            <div class="config-section-title">Dados da empresa</div>
+            <div class="form-group">
+              <label class="form-label">Nome da empresa</label>
+              <input class="form-input" type="text" id="emp-name" placeholder="Nome da empresa">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Telefone / WhatsApp</label>
+                <input class="form-input" type="tel" id="emp-phone" placeholder="(99) 99999-9999">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Chave PIX</label>
+                <input class="form-input" type="text" id="emp-pix" placeholder="CPF, CNPJ, e-mail ou chave aleatória">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Endereço</label>
+              <input class="form-input" type="text" id="emp-address" placeholder="Rua, número, bairro — cidade/UF">
+            </div>
+            <div class="config-actions">
+              <button class="btn btn-primary" id="btn-salvar-emp" onclick="salvarEmpresa()">Salvar</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tab Equipe -->
+        <div class="tab-panel" id="tab-equipe">
+
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Membros da equipe</span>
+              <button class="btn btn-primary" onclick="abrirModalMembro()">+ Adicionar técnico</button>
+            </div>
+            <div class="section-body" style="padding:16px">
+              <div class="equipe-lista" id="equipe-lista">
+                <div class="empty-state" style="padding:24px;text-align:center">Carregando...</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /layout -->
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal novo técnico -->
+  <div class="modal-overlay" id="modal-membro">
+    <div class="modal">
+      <div class="modal-title">Adicionar técnico</div>
+
+      <div class="form-group">
+        <label class="form-label">Nome completo *</label>
+        <input class="form-input" type="text" id="m-nome" placeholder="João Silva">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">E-mail *</label>
+          <input class="form-input" type="email" id="m-email" placeholder="joao@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp</label>
+          <input class="form-input" type="tel" id="m-whatsapp" placeholder="(99) 99999-9999">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Senha temporária *</label>
+        <div class="input-senha-wrap">
+          <input class="form-input" type="password" id="m-senha" placeholder="Mínimo 6 caracteres">
+          <button class="btn-eye" onclick="toggleSenha()" type="button" id="btn-eye">◉</button>
+        </div>
+      </div>
+
+      <!-- Após criação: mensagem WA -->
+      <div class="wa-success" id="wa-success">
+        <p id="wa-texto"></p>
+        <button class="btn-wa" id="btn-wa" onclick="abrirWA()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar acesso pelo WhatsApp
+        </button>
+      </div>
+
+      <div class="modal-actions" id="modal-membro-actions">
+        <button class="btn btn-ghost" onclick="fecharModalMembro()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-criar-membro" onclick="criarMembro()">Criar acesso</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    // ── Tabs ──
+    function trocarTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', ['empresa','equipe'][i] === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ── Init ──
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      const nome    = APP.profile.name || APP.profile.email || '';
+      const empresa = APP.company?.name || '';
+      document.getElementById('topbar-user').textContent  = nome;
+      document.getElementById('nome-empresa').textContent = empresa;
+
+      // Preencher dados da empresa
+      document.getElementById('emp-name').value    = APP.company?.name    || '';
+      document.getElementById('emp-phone').value   = APP.company?.phone   || '';
+      document.getElementById('emp-pix').value     = APP.company?.pix_key || '';
+      document.getElementById('emp-address').value = APP.company?.address || '';
+
+      await carregarEquipe();
+    })();
+
+    // ── Empresa ──
+    async function salvarEmpresa() {
+      const btn = document.getElementById('btn-salvar-emp');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      const payload = {
+        name:    document.getElementById('emp-name').value.trim()    || null,
+        phone:   document.getElementById('emp-phone').value.trim()   || null,
+        pix_key: document.getElementById('emp-pix').value.trim()     || null,
+        address: document.getElementById('emp-address').value.trim() || null,
+      };
+
+      const { error } = await sb.from('companies')
+        .update(payload)
+        .eq('id', APP.company.id);
+
+      btn.disabled = false; btn.textContent = 'Salvar';
+
+      if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+      // Atualiza cache local
+      Object.assign(APP.company, payload);
+      document.getElementById('nome-empresa').textContent = payload.name || '';
+      dmToast('Dados salvos!');
+    }
+
+    // ── Equipe ──
+    async function carregarEquipe() {
+      const { data, error } = await sb.from('profiles')
+        .select('id, name, email, whatsapp, role')
+        .eq('company_id', APP.company.id)
+        .order('name');
+
+      const lista = document.getElementById('equipe-lista');
+      if (error || !data?.length) {
+        lista.innerHTML = '<div class="empty-state" style="padding:24px;text-align:center">Nenhum membro cadastrado.</div>';
+        return;
+      }
+
+      lista.innerHTML = data.map(m => {
+        const primeiroNome = (m.name || m.email || '?').split(' ')[0];
+        const inicial      = primeiroNome[0].toUpperCase();
+        const isDono       = m.role === 'dono';
+        const subInfo      = [m.email, m.whatsapp ? formatarWA(m.whatsapp) : null].filter(Boolean).join(' · ');
+        return `
+          <div class="equipe-card">
+            <div class="equipe-avatar">${inicial}</div>
+            <div class="equipe-info">
+              <div class="equipe-nome">${esc(primeiroNome)}</div>
+              <div class="equipe-sub">${esc(subInfo)}</div>
+            </div>
+            <span class="equipe-papel ${isDono ? 'dono' : ''}">${isDono ? 'Dono' : 'Técnico'}</span>
+            ${!isDono ? `<button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="removerMembro('${m.id}','${esc(primeiroNome)}')">Remover</button>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function formatarWA(n) {
+      const d = n.replace(/\D/g, '');
+      if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+      return n;
+    }
+
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    async function removerMembro(id, nome) {
+      dmConfirm(`Remover ${nome} da equipe? O acesso ao sistema será desativado.`, async () => {
+        // Apaga o profile (auth user continua mas sem company_id)
+        const { error } = await sb.from('profiles')
+          .update({ company_id: null })
+          .eq('id', id);
+        if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+        dmToast(`${nome} removido.`);
+        await carregarEquipe();
+      }, 'Remover', true);
+    }
+
+    // ── Modal novo membro ──
+    let _novoMembroWA = null;
+
+    function abrirModalMembro() {
+      document.getElementById('m-nome').value     = '';
+      document.getElementById('m-email').value    = '';
+      document.getElementById('m-whatsapp').value = '';
+      document.getElementById('m-senha').value    = '';
+      document.getElementById('wa-success').classList.remove('show');
+      document.getElementById('modal-membro-actions').style.display = 'flex';
+      document.getElementById('btn-criar-membro').disabled = false;
+      document.getElementById('btn-criar-membro').textContent = 'Criar acesso';
+      document.getElementById('modal-membro').classList.add('active');
+      document.getElementById('m-nome').focus();
+      _novoMembroWA = null;
+    }
+
+    function fecharModalMembro() {
+      document.getElementById('modal-membro').classList.remove('active');
+      if (_novoMembroWA) carregarEquipe(); // atualiza lista se criou alguém
+      _novoMembroWA = null;
+    }
+
+    document.getElementById('modal-membro').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModalMembro();
+    });
+
+    function toggleSenha() {
+      const inp = document.getElementById('m-senha');
+      const btn = document.getElementById('btn-eye');
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '◎'; }
+      else { inp.type = 'password'; btn.textContent = '◉'; }
+    }
+
+    async function criarMembro() {
+      const nome     = document.getElementById('m-nome').value.trim();
+      const email    = document.getElementById('m-email').value.trim();
+      const whatsapp = document.getElementById('m-whatsapp').value.trim();
+      const senha    = document.getElementById('m-senha').value;
+
+      if (!nome || !email || !senha) {
+        dmToast('Preencha nome, e-mail e senha.', 'error'); return;
+      }
+      if (senha.length < 6) {
+        dmToast('Senha precisa ter pelo menos 6 caracteres.', 'error'); return;
+      }
+
+      const btn = document.getElementById('btn-criar-membro');
+      btn.disabled = true; btn.textContent = 'Criando...';
+
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/criar-membro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${(await sb.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({ name: nome, email, whatsapp, password: senha, company_id: APP.company.id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        btn.disabled = false; btn.textContent = 'Criar acesso';
+        dmToast('Erro: ' + (data.error || 'Falha ao criar.'), 'error');
+        return;
+      }
+
+      // Sucesso — mostra bloco WA
+      const primeiroNome = nome.split(' ')[0];
+      const appUrl       = window.location.origin + '/login.html';
+      _novoMembroWA      = { nome: primeiroNome, email, senha, whatsapp };
+
+      const texto = `Olá ${primeiroNome}! Seu acesso ao sistema foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`;
+      document.getElementById('wa-texto').textContent = texto;
+      document.getElementById('wa-success').classList.add('show');
+      document.getElementById('modal-membro-actions').style.display = 'none';
+
+      dmToast(`Acesso de ${primeiroNome} criado!`);
+    }
+
+    function abrirWA() {
+      if (!_novoMembroWA) return;
+      const { nome, email, senha, whatsapp } = _novoMembroWA;
+      const appUrl = window.location.origin + '/login.html';
+      const msg = encodeURIComponent(
+        `Olá ${nome}! Seu acesso ao sistema foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`
+      );
+      const num = whatsapp.replace(/\D/g, '');
+      const waNum = num.length === 11 ? '55' + num : num;
+      window.open(`https://wa.me/${waNum}?text=${msg}`, '_blank');
+    }
+  </script>
+</body>
+</html>
