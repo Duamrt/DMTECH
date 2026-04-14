@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141739"></script>
-  <script src="js/auth.js?v=04141739"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141739">
+  <script src="js/config.js?v=04141741"></script>
+  <script src="js/auth.js?v=04141741"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141741">
   <style>
     .banner-bv {
       display: none;
@@ -66,6 +66,104 @@
       white-space: nowrap;
     }
     .badge-demo { background: rgba(234,179,8,.15); color: #fbbf24; border: 1px solid rgba(234,179,8,.3); font-size: 10px; font-weight: 800; padding: 1px 5px; margin-left: 6px; vertical-align: middle; }
+    /* Wizard setup */
+    .wizard-card {
+      display: none;
+      padding: 20px 22px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .wizard-card.show { display: block; }
+    .wizard-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .wizard-titulo {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+      flex: 1;
+    }
+    .wizard-progresso {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .wizard-fechar {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 2px 4px;
+      line-height: 1;
+    }
+    .wizard-fechar:hover { color: var(--text); }
+    .wizard-bar {
+      height: 3px;
+      background: var(--border);
+      margin-bottom: 18px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .wizard-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width .4s ease;
+    }
+    .wizard-steps { display: flex; flex-direction: column; gap: 0; }
+    .wizard-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.04));
+    }
+    .wizard-step:last-child { border-bottom: none; }
+    .wizard-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .wizard-check.done {
+      border-color: #4ade80;
+      background: rgba(74,222,128,.12);
+      color: #4ade80;
+    }
+    .wizard-step-body { flex: 1; min-width: 0; }
+    .wizard-step-titulo {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .wizard-step.done .wizard-step-titulo { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--text-dim); }
+    .wizard-step-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .wizard-step-link {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-decoration: none;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .wizard-step-link:hover { opacity: .8; }
+    .wizard-step.done .wizard-step-link { display: none; }
   </style>
 </head>
 <body>
@@ -146,6 +244,17 @@
             <button class="banner-bv-btn" id="btn-carregar-demo" onclick="carregarDemo()">Carregar dados de demonstração</button>
           </div>
           <button class="banner-bv-fechar" onclick="fecharBanner()" title="Fechar">✕</button>
+        </div>
+
+        <!-- Wizard de primeiro acesso -->
+        <div class="wizard-card" id="wizard-setup">
+          <div class="wizard-header">
+            <div class="wizard-titulo">Configure seu ambiente</div>
+            <div class="wizard-progresso" id="wizard-prog">0 de 4</div>
+            <button class="wizard-fechar" onclick="dispensarWizard()" title="Dispensar">✕</button>
+          </div>
+          <div class="wizard-bar"><div class="wizard-bar-fill" id="wizard-fill" style="width:0%"></div></div>
+          <div class="wizard-steps" id="wizard-steps"></div>
         </div>
 
         <!-- Banner demo ativo -->
@@ -379,7 +488,53 @@
       if (dashVazio && !localStorage.getItem(bannerKey)) {
         document.getElementById('banner-bv').classList.add('show');
       }
+
+      // Wizard de primeiro acesso
+      const wizKey = `dmtech-wizard-${cid}`;
+      if (!localStorage.getItem(wizKey)) {
+        const { data: servicos } = await sb.from('services').select('id').eq('company_id', cid).limit(1);
+        const temEmpresaConfig = !!(APP.company?.phone);
+        const temServico = !!(servicos?.length);
+        const temCliente = !!(clientes?.length);
+        const temOS     = !!(osAbertas?.length || osConcluidas?.length);
+        renderWizard({ temEmpresaConfig, temServico, temCliente, temOS });
+      }
     })();
+
+    const WIZARD_STEPS = [
+      { id: 'empresa', titulo: 'Dados da empresa',       sub: 'Telefone, endereço e informações de contato.',  href: 'config.html',     cta: 'Configurar →' },
+      { id: 'servico', titulo: 'Adicionar serviço',       sub: 'Cadastre o primeiro serviço no catálogo.',      href: 'catalogo.html',   cta: 'Ir ao catálogo →' },
+      { id: 'cliente', titulo: 'Cadastrar primeiro cliente', sub: 'Adicione um cliente para criar OS.',          href: 'clientes.html',   cta: 'Cadastrar →' },
+      { id: 'os',      titulo: 'Abrir primeira OS',       sub: 'Crie uma Ordem de Serviço e comece a trabalhar.', href: 'os.html',       cta: 'Criar OS →' },
+    ];
+
+    function renderWizard({ temEmpresaConfig, temServico, temCliente, temOS }) {
+      const feito = [temEmpresaConfig, temServico, temCliente, temOS];
+      const qtdFeito = feito.filter(Boolean).length;
+      if (qtdFeito === 4) return; // tudo pronto — não exibe
+      document.getElementById('wizard-setup').classList.add('show');
+      document.getElementById('wizard-prog').textContent = `${qtdFeito} de 4`;
+      document.getElementById('wizard-fill').style.width = `${(qtdFeito / 4) * 100}%`;
+      document.getElementById('wizard-steps').innerHTML = WIZARD_STEPS.map((s, i) => {
+        const done = feito[i];
+        return `
+          <div class="wizard-step${done ? ' done' : ''}">
+            <div class="wizard-check${done ? ' done' : ''}">${done ? '✓' : ''}</div>
+            <div class="wizard-step-body">
+              <div class="wizard-step-titulo">${s.titulo}</div>
+              <div class="wizard-step-sub">${s.sub}</div>
+            </div>
+            <a href="${s.href}" class="wizard-step-link">${s.cta}</a>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function dispensarWizard() {
+      const cid = APP.company?.id;
+      if (cid) localStorage.setItem(`dmtech-wizard-${cid}`, 'skip');
+      document.getElementById('wizard-setup').classList.remove('show');
+    }
 
     function fecharBanner() {
       const cid = APP.company?.id;
