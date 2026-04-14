@@ -70,6 +70,42 @@
       gap: 12px;
     }
     .form-row .form-group { margin-bottom: 0; }
+
+    /* Importar */
+    .import-preview {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      margin-top: 16px;
+    }
+    .import-preview table { width: 100%; font-size: 12px; border-collapse: collapse; }
+    .import-preview th {
+      position: sticky; top: 0;
+      background: var(--surface-3);
+      padding: 7px 12px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+    .import-preview td {
+      padding: 7px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .import-preview tr:last-child td { border-bottom: none; }
+    .import-preview .row-err td { background: var(--danger-dim); color: var(--danger); }
+    .import-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+    .import-info span { color: var(--accent); font-weight: 700; }
+    .modal-import { max-width: 700px; }
   </style>
 </head>
 <body>
@@ -94,6 +130,9 @@
         </a>
         <a href="kanban.html" class="nav-item">
           <span class="nav-icon">▦</span> Kanban
+        </a>
+        <a href="catalogo.html" class="nav-item">
+          <span class="nav-icon">◧</span> Catálogo
         </a>
         <div class="nav-section">Gestão</div>
         <a href="financeiro.html" class="nav-item">
@@ -131,6 +170,9 @@
         <div class="search-bar">
           <input class="form-input" type="text" id="busca" placeholder="Buscar por nome, telefone ou CPF/CNPJ..." oninput="filtrar()">
           <button class="btn btn-primary" onclick="abrirModal()">+ Novo cliente</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('csv-input').click()">⇪ Importar CSV</button>
+          <button class="btn btn-ghost" onclick="baixarModelo()" title="Baixar modelo CSV">↓ Modelo</button>
+          <input type="file" id="csv-input" accept=".csv,.txt" style="display:none" onchange="lerCSV(this)">
         </div>
 
         <div class="section">
@@ -202,6 +244,32 @@
         <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
         <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
         <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal importação -->
+  <div class="modal-overlay" id="modal-import-overlay">
+    <div class="modal modal-import">
+      <div class="modal-title">Importar clientes — CSV</div>
+      <div class="import-info">
+        <span id="import-count">0</span> clientes encontrados.
+        Linhas com erro (sem nome) ficam destacadas e serão ignoradas.
+      </div>
+      <div class="import-preview">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Nome</th><th>Telefone</th><th>CPF/CNPJ</th>
+              <th>E-mail</th><th>Endereço</th><th>Cidade</th>
+            </tr>
+          </thead>
+          <tbody id="import-tbody"></tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharImport()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirmar-import" onclick="confirmarImport()">Importar</button>
       </div>
     </div>
   </div>
@@ -332,6 +400,119 @@
       if (error) { alert('Erro ao salvar: ' + error.message); return; }
       fecharModal();
       await carregar();
+    }
+
+    /* ── CSV Import ── */
+    let csvLinhas = [];
+
+    function parseCSV(texto) {
+      // detecta separador: ; ou ,
+      const sep = texto.split('\n')[0].includes(';') ? ';' : ',';
+      const linhas = texto
+        .replace(/\r/g, '')
+        .split('\n')
+        .map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g,'')));
+
+      // primeira linha: cabeçalho — mapeia colunas por nome
+      const header = linhas[0].map(h => h.toLowerCase().normalize('NFD').replace(/\p{M}/gu,''));
+      const idx = col => {
+        const aliases = {
+          name:     ['nome','name','cliente','razao social','razão social'],
+          phone:    ['telefone','fone','celular','phone','tel'],
+          cpf_cnpj: ['cpf','cnpj','cpf/cnpj','cpfcnpj','documento'],
+          email:    ['email','e-mail','mail'],
+          address:  ['endereco','endereço','address','rua','logradouro'],
+          city:     ['cidade','city','municipio','município'],
+          notes:    ['observacao','observação','obs','notes','nota'],
+        };
+        for (const [field, names] of Object.entries(aliases)) {
+          if (col === field || names.includes(col)) return field;
+        }
+        return null;
+      };
+
+      const mapa = header.map(idx);
+      return linhas.slice(1).filter(l => l.join('').trim()).map(cols => {
+        const obj = {};
+        mapa.forEach((field, i) => { if (field) obj[field] = cols[i] || null; });
+        return obj;
+      });
+    }
+
+    function lerCSV(input) {
+      const file = input.files[0];
+      if (!file) return;
+      input.value = '';
+      const reader = new FileReader();
+      reader.onload = e => {
+        csvLinhas = parseCSV(e.target.result);
+        mostrarPreview();
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function mostrarPreview() {
+      document.getElementById('import-count').textContent = csvLinhas.length;
+      const tbody = document.getElementById('import-tbody');
+      tbody.innerHTML = csvLinhas.map((c, i) => {
+        const err = !c.name;
+        return `<tr class="${err ? 'row-err' : ''}">
+          <td>${i+1}</td>
+          <td>${esc(c.name)}</td>
+          <td>${esc(c.phone)}</td>
+          <td>${esc(c.cpf_cnpj)}</td>
+          <td>${esc(c.email)}</td>
+          <td>${esc(c.address)}</td>
+          <td>${esc(c.city)}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('modal-import-overlay').classList.add('active');
+    }
+
+    function fecharImport() {
+      document.getElementById('modal-import-overlay').classList.remove('active');
+      csvLinhas = [];
+    }
+
+    document.getElementById('modal-import-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharImport();
+    });
+
+    async function confirmarImport() {
+      const validos = csvLinhas.filter(c => c.name?.trim());
+      if (!validos.length) { alert('Nenhum registro válido para importar.'); return; }
+
+      const btn = document.getElementById('btn-confirmar-import');
+      btn.disabled = true; btn.textContent = 'Importando...';
+
+      const payload = validos.map(c => ({
+        company_id: APP.company.id,
+        name:       c.name.trim(),
+        phone:      c.phone   || null,
+        cpf_cnpj:   c.cpf_cnpj|| null,
+        email:      c.email   || null,
+        address:    c.address || null,
+        city:       c.city    || null,
+        notes:      c.notes   || null,
+      }));
+
+      const { error } = await sb.from('clients').insert(payload);
+
+      btn.disabled = false; btn.textContent = 'Importar';
+
+      if (error) { alert('Erro: ' + error.message); return; }
+      fecharImport();
+      await carregar();
+      alert(`${payload.length} clientes importados com sucesso.`);
+    }
+
+    function baixarModelo() {
+      const conteudo = 'nome;telefone;cpf_cnpj;email;endereco;cidade;observacao\nJoão Silva;(11) 99999-9999;123.456.789-00;joao@email.com;Rua das Flores 10;São Paulo;\n';
+      const blob = new Blob([conteudo], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'modelo-clientes-dmtech.csv';
+      a.click();
     }
 
     async function excluir() {
