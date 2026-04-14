@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141357"></script>
-  <script src="js/auth.js?v=04141357"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141357">
+  <script src="js/config.js?v=04141402"></script>
+  <script src="js/auth.js?v=04141402"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141402">
   <style>
     /* Tabs */
     .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
@@ -337,11 +337,12 @@
       if (error) { alert('Erro: ' + error.message); return; }
       fecharModalServico(); await carregarServicos();
     }
-    async function excluirServico() {
+    function excluirServico() {
       const id = document.getElementById('srv-id').value;
-      if (!confirm('Excluir este serviço?')) return;
-      await sb.from('services').delete().eq('id', id);
-      fecharModalServico(); await carregarServicos();
+      dmConfirm('Excluir este serviço?', async () => {
+        await sb.from('services').delete().eq('id', id);
+        fecharModalServico(); await carregarServicos();
+      }, 'Excluir', true);
     }
 
     function lerCSVServicos(input) {
@@ -360,11 +361,12 @@
           unit: ui > -1 ? r[ui] || null : null,
           price: pi > -1 ? parseFloat((r[pi]||'0').replace(',','.')) || 0 : 0,
         }));
-        if (!payload.length) { alert('Nenhum registro válido.'); return; }
-        if (!confirm(`Importar ${payload.length} serviços?`)) return;
-        const { error } = await sb.from('services').insert(payload);
-        if (error) { alert('Erro: ' + error.message); return; }
-        await carregarServicos(); alert(`${payload.length} serviços importados.`);
+        if (!payload.length) { dmToast('Nenhum registro válido.', 'error'); return; }
+        dmConfirm(`Importar ${payload.length} serviços?`, async () => {
+          const { error } = await sb.from('services').insert(payload);
+          if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+          await carregarServicos(); dmToast(`${payload.length} serviços importados.`);
+        }, 'Importar');
       };
       reader.readAsText(file, 'UTF-8');
     }
@@ -446,11 +448,12 @@
       if (error) { alert('Erro: ' + error.message); return; }
       fecharModalProduto(); await carregarProdutos();
     }
-    async function excluirProduto() {
+    function excluirProduto() {
       const id = document.getElementById('prod-id').value;
-      if (!confirm('Excluir este produto?')) return;
-      await sb.from('products').delete().eq('id', id);
-      fecharModalProduto(); await carregarProdutos();
+      dmConfirm('Excluir este produto?', async () => {
+        await sb.from('products').delete().eq('id', id);
+        fecharModalProduto(); await carregarProdutos();
+      }, 'Excluir', true);
     }
 
     function lerCSVProdutos(input) {
@@ -475,11 +478,12 @@
           margin:     mi  > -1 ? n(r[mi])  : 0,
           price:      pi  > -1 ? n(r[pi])  : 0,
         }));
-        if (!payload.length) { alert('Nenhum registro válido.'); return; }
-        if (!confirm(`Importar ${payload.length} produtos?`)) return;
-        const { error } = await sb.from('products').insert(payload);
-        if (error) { alert('Erro: ' + error.message); return; }
-        await carregarProdutos(); alert(`${payload.length} produtos importados.`);
+        if (!payload.length) { dmToast('Nenhum registro válido.', 'error'); return; }
+        dmConfirm(`Importar ${payload.length} produtos?`, async () => {
+          const { error } = await sb.from('products').insert(payload);
+          if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+          await carregarProdutos(); dmToast(`${payload.length} produtos importados.`);
+        }, 'Importar');
       };
       reader.readAsText(file, 'UTF-8');
     }

@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141357"></script>
-  <script src="js/auth.js?v=04141357"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141357">
+  <script src="js/config.js?v=04141402"></script>
+  <script src="js/auth.js?v=04141402"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141402">
   <style>
     .search-bar {
       display: flex;
@@ -519,15 +519,15 @@
       a.click();
     }
 
-    async function excluir() {
+    function excluir() {
       const id = document.getElementById('cliente-id').value;
       if (!id) return;
-      if (!confirm('Excluir este cliente?')) return;
-
-      const { error } = await sb.from('clients').delete().eq('id', id);
-      if (error) { alert('Erro ao excluir: ' + error.message); return; }
-      fecharModal();
-      await carregar();
+      dmConfirm('Excluir este cliente permanentemente?', async () => {
+        const { error } = await sb.from('clients').delete().eq('id', id);
+        if (error) { dmToast('Erro ao excluir: ' + error.message, 'error'); return; }
+        fecharModal();
+        await carregar();
+      }, 'Excluir', true);
     }
   </script>
 </body>
