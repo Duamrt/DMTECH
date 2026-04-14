@@ -8,9 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141641"></script>
-  <script src="js/auth.js?v=04141641"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141641">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/config.js?v=04141646"></script>
+  <script src="js/auth.js?v=04141646"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141646">
   <style>
     /* Board */
     .board-outer {
@@ -1145,143 +1148,377 @@
       result.classList.add('show');
     }
 
-    // ── PDFs ──────────────────────────────────────────────────────────────────
+    // ── PDFs (pdfmake) ────────────────────────────────────────────────────────
 
-    function _pdfBase(titulo, corpo) {
+    let _logoB64 = null;
+
+    async function _carregarLogo() {
+      const url = APP.company?.logo_url;
+      if (!url || _logoB64) return;
+      return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth; c.height = img.naturalHeight;
+            c.getContext('2d').drawImage(img, 0, 0);
+            _logoB64 = c.toDataURL('image/png');
+          } catch(e) { _logoB64 = null; }
+          resolve();
+        };
+        img.onerror = () => { _logoB64 = null; resolve(); };
+        img.src = url;
+      });
+    }
+
+    function _pdfHeader(titulo) {
       const emp = APP.company || {};
-      const cabecalho = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:14px">
-          <div>
-            <div style="font-size:18px;font-weight:900">${emp.name || ''}</div>
-            ${emp.cnpj   ? `<div>CNPJ: ${emp.cnpj}</div>` : ''}
-            ${emp.whatsapp ? `<div>Tel: ${emp.whatsapp}</div>` : ''}
-            ${emp.email  ? `<div>${emp.email}</div>` : ''}
-            ${emp.endereco ? `<div>${emp.endereco}</div>` : ''}
-          </div>
-          <div style="text-align:right;font-size:20px;font-weight:900">${titulo}</div>
-        </div>`;
-      const w = window.open('', '_blank', 'width=780,height=900');
-      w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-        <title>${titulo}</title>
-        <style>
-          * { box-sizing:border-box; margin:0; padding:0; }
-          body { font-family: Arial, sans-serif; font-size: 13px; color:#000; padding:28px; }
-          table { width:100%; border-collapse:collapse; margin-top:10px; }
-          th { background:#000; color:#fff; padding:6px 8px; text-align:left; font-size:12px; }
-          td { padding:5px 8px; border-bottom:1px solid #ddd; font-size:12px; }
-          .label { color:#555; font-size:11px; }
-          .total-row td { font-weight:900; border-top:2px solid #000; border-bottom:none; }
-          @media print { body { padding:10px; } }
-        </style>
-      </head><body>${cabecalho}${corpo}</body></html>`);
-      w.document.close();
-      setTimeout(() => w.print(), 400);
+      const infoLines = [];
+      if (emp.cnpj)      infoLines.push({ text: 'CNPJ: ' + emp.cnpj,       style: 'headerInfo' });
+      if (emp.whatsapp)  infoLines.push({ text: 'Tel: '  + emp.whatsapp,   style: 'headerInfo' });
+      if (emp.email)     infoLines.push({ text: emp.email,                  style: 'headerInfo' });
+      if (emp.endereco)  infoLines.push({ text: emp.endereco,               style: 'headerInfo' });
+
+      const leftStack = [];
+      if (_logoB64?.startsWith('data:image/')) leftStack.push({ image: _logoB64, width: 70, margin: [0,0,0,4] });
+      leftStack.push({ text: emp.name || 'Empresa', fontSize: 16, bold: true, color: '#1a1a1a' });
+
+      const result = [
+        {
+          columns: [
+            { stack: leftStack, width: '*' },
+            {
+              stack: [
+                { text: [{ text: 'DM', bold: true, color: '#f97316', fontSize: 11 }, { text: 'Tech', bold: true, color: '#666', fontSize: 11 }], alignment: 'right', margin: [0,0,0,6] },
+                ...infoLines
+              ],
+              alignment: 'right', width: 'auto'
+            }
+          ],
+          margin: [0,0,0,8]
+        },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#f97316' }], margin: [0,0,0,12] }
+      ];
+      if (titulo) result.push({ text: titulo, fontSize: 16, bold: true, alignment: 'center', color: '#1a1a1a', margin: [0,0,0,14] });
+      return result;
     }
 
-    function pdfOS() {
-      if (!osAtual) return;
-      const numOS   = String(osAtual.numero || '').padStart(3, '0');
-      const cliente = osAtual.clients?.name || '—';
-      const data    = fmtData(osAtual.created_at);
-      const notas   = document.getElementById('p-notes').value || osAtual.notes || '';
-      const total   = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-
-      const linhasItens = itensPanel.map(it => `
-        <tr>
-          <td>${it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
-          <td>${it.descricao}</td>
-          <td style="text-align:right">${fmtN(it.quantidade)}</td>
-          <td style="text-align:right">${fmtMoeda(it.preco_unit || 0)}</td>
-          <td style="text-align:right">${fmtMoeda(it.subtotal || 0)}</td>
-        </tr>`).join('');
-
-      const corpo = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-          <div><span class="label">Nº OS</span><br><strong>#${numOS}</strong></div>
-          <div><span class="label">Data</span><br>${data}</div>
-          <div><span class="label">Cliente</span><br><strong>${cliente}</strong></div>
-          <div><span class="label">Status</span><br>${osAtual.status || '—'}</div>
-        </div>
-        <table>
-          <thead><tr><th>Tipo</th><th>Descrição</th><th style="text-align:right">Qtd</th><th style="text-align:right">Unit.</th><th style="text-align:right">Total</th></tr></thead>
-          <tbody>
-            ${linhasItens || '<tr><td colspan="5">Sem itens</td></tr>'}
-            <tr class="total-row"><td colspan="4">TOTAL</td><td style="text-align:right">${fmtMoeda(total)}</td></tr>
-          </tbody>
-        </table>
-        ${notas ? `<div style="margin-top:14px"><span class="label">Observações</span><br>${notas}</div>` : ''}
-        <div style="margin-top:30px;border-top:1px solid #000;padding-top:10px;font-size:11px;color:#555">
-          Documento gerado em ${new Date().toLocaleString('pt-BR')}
-        </div>`;
-
-      _pdfBase(`OS #${numOS}`, corpo);
+    function _pdfInfoOS(os) {
+      const c = os.clients || {};
+      const STATUS = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' };
+      const numOS = String(os.numero || '-').padStart(3, '0');
+      const resp  = os.responsavel?.name || os.responsavel?.email || 'Não definido';
+      const endCli = [c.address, c.city].filter(Boolean).join(' — ');
+      return {
+        table: {
+          widths: ['*','*','*','*'],
+          body: [
+            [
+              { text: 'OS #' + numOS,                              style: 'infoLabel' },
+              { text: 'Data: ' + fmtData(os.created_at),          style: 'infoVal' },
+              { text: 'Status: ' + (STATUS[os.status] || os.status || '-'), style: 'infoVal' },
+              { text: 'Técnico: ' + resp,                          style: 'infoVal' }
+            ],
+            [
+              { text: 'Cliente: ' + (c.name || '-'),  style: 'infoVal', colSpan: 2 }, {},
+              { text: endCli ? 'End.: ' + endCli : '', style: 'infoVal', colSpan: 2 }, {}
+            ],
+            [
+              { text: c.phone ? 'Tel: ' + c.phone : '', style: 'infoVal' },
+              { text: c.cpf_cnpj ? 'CPF/CNPJ: ' + c.cpf_cnpj : '', style: 'infoVal' },
+              { text: c.email || '', style: 'infoVal', colSpan: 2 }, {}
+            ]
+          ]
+        },
+        layout: {
+          hLineWidth: () => 0.5, vLineWidth: () => 0.5,
+          hLineColor: () => '#cccccc', vLineColor: () => '#cccccc',
+          paddingLeft: () => 6, paddingRight: () => 6,
+          paddingTop: () => 5, paddingBottom: () => 5
+        },
+        margin: [0,0,0,14]
+      };
     }
 
-    function pdfRecibo() {
-      if (!osAtual) return;
-      const numOS   = String(osAtual.numero || '').padStart(3, '0');
-      const cliente = osAtual.clients?.name || '—';
-      const data    = new Date().toLocaleDateString('pt-BR');
-      const total   = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-      const servicos = itensPanel
-        .filter(i => i.tipo === 'servico')
-        .map(i => i.descricao).join(', ') || 'Serviços prestados';
-
-      const corpo = `
-        <div style="text-align:center;margin-bottom:20px;font-size:16px;font-weight:900;letter-spacing:1px">RECIBO DE PAGAMENTO</div>
-        <p style="line-height:1.8;font-size:13px">
-          Recebi(mos) de <strong>${cliente}</strong> a importância de
-          <strong>${fmtMoeda(total)}</strong>
-          referente a: <em>${servicos}</em> — OS #${numOS}.
-        </p>
-        <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-          <div><span class="label">Data</span><br>${data}</div>
-          <div><span class="label">Valor</span><br><strong>${fmtMoeda(total)}</strong></div>
-        </div>
-        <div style="margin-top:50px;display:flex;justify-content:space-between">
-          <div style="border-top:1px solid #000;padding-top:6px;width:45%;text-align:center;font-size:11px">Assinatura do Prestador</div>
-          <div style="border-top:1px solid #000;padding-top:6px;width:45%;text-align:center;font-size:11px">Assinatura do Cliente</div>
-        </div>`;
-
-      _pdfBase(`Recibo OS #${numOS}`, corpo);
+    function _pdfTabelaServicos(servicos, totalServicos) {
+      const fmt = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      return {
+        table: {
+          headerRows: 1,
+          widths: ['*', 90],
+          body: [
+            [{ text: 'SERVIÇOS (Mão de obra)', style: 'sectionTitle', colSpan: 2 }, {}],
+            ...servicos.map(s => [
+              { text: s.descricao || '', style: 'tableCell' },
+              { text: fmt(s.subtotal), style: 'tableCellRight' }
+            ]),
+            ...(servicos.length === 0 ? [[{ text: 'Nenhum serviço registrado', style: 'tableEmpty', colSpan: 2 }, {}]] : []),
+            [{ text: 'Subtotal Serviços', style: 'tableSubtotal' }, { text: fmt(totalServicos), style: 'tableSubtotalRight' }]
+          ]
+        },
+        layout: {
+          hLineWidth: (i, n) => (i === 0 || i === 1 || i === n.table.body.length) ? 0.5 : 0.3,
+          vLineWidth: () => 0.5, hLineColor: () => '#cccccc', vLineColor: () => '#cccccc',
+          paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 4, paddingBottom: () => 4
+        },
+        margin: [0,0,0,10]
+      };
     }
 
-    function pdfDemanda() {
+    function _pdfTabelaProdutos(produtos, totalProdutos) {
+      const fmt = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      return {
+        table: {
+          headerRows: 2,
+          widths: ['*', 35, 70, 80],
+          body: [
+            [{ text: 'PRODUTOS / MATERIAIS', style: 'sectionTitle', colSpan: 4 }, {}, {}, {}],
+            [
+              { text: 'Descrição',  style: 'tableColHeader' },
+              { text: 'Qtd',        style: 'tableColHeader', alignment: 'center' },
+              { text: 'Valor Unit.', style: 'tableColHeader', alignment: 'right' },
+              { text: 'Total',      style: 'tableColHeader', alignment: 'right' }
+            ],
+            ...produtos.map(p => [
+              { text: p.descricao || '', style: 'tableCell' },
+              { text: fmtN(p.quantidade), style: 'tableCell', alignment: 'center' },
+              { text: fmt(p.preco_unit), style: 'tableCellRight' },
+              { text: fmt(p.subtotal), style: 'tableCellRight' }
+            ]),
+            ...(produtos.length === 0 ? [[{ text: 'Nenhum produto registrado', style: 'tableEmpty', colSpan: 4 }, {}, {}, {}]] : []),
+            [{ text: 'Subtotal Produtos', style: 'tableSubtotal', colSpan: 3 }, {}, {}, { text: fmt(totalProdutos), style: 'tableSubtotalRight' }]
+          ]
+        },
+        layout: {
+          hLineWidth: (i, n) => (i <= 2 || i === n.table.body.length) ? 0.5 : 0.3,
+          vLineWidth: () => 0.5, hLineColor: () => '#cccccc', vLineColor: () => '#cccccc',
+          paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 4, paddingBottom: () => 4
+        },
+        margin: [0,0,0,10]
+      };
+    }
+
+    function _pdfTotais(totalServicos, totalProdutos) {
+      const fmt = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+      const totalGeral = totalServicos + totalProdutos;
+      const linhas = [
+        [{ text: 'Serviços', style: 'totalLabel' }, { text: fmt(totalServicos), style: 'totalVal' }],
+        [{ text: 'Produtos', style: 'totalLabel' }, { text: fmt(totalProdutos), style: 'totalVal' }],
+        [{ text: 'TOTAL',    style: 'totalFinal' }, { text: fmt(totalGeral),    style: 'totalFinalVal' }]
+      ];
+      return {
+        totalGeral,
+        bloco: {
+          table: { widths: ['*', 120], body: linhas },
+          layout: {
+            hLineWidth: (i, n) => i === n.table.body.length - 1 ? 1 : 0.3,
+            vLineWidth: () => 0, hLineColor: () => '#333',
+            paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 5, paddingBottom: () => 5
+          },
+          margin: [0,0,0,14]
+        }
+      };
+    }
+
+    function _pdfAssinaturas() {
+      const linha = x => ({ canvas: [{ type: 'line', x1: 0, y1: 0, x2: x, y2: 0, lineWidth: 0.5, lineColor: '#999' }] });
+      return {
+        columns: [
+          { stack: [linha(200), { text: 'Assinatura do cliente',  fontSize: 8, color: '#999', alignment: 'center', margin: [0,4,0,0] }], width: 220 },
+          { text: '', width: '*' },
+          { stack: [linha(200), { text: 'Assinatura da empresa',  fontSize: 8, color: '#999', alignment: 'center', margin: [0,4,0,0] }], width: 220 }
+        ],
+        margin: [0,10,0,0]
+      };
+    }
+
+    function _pdfFooter() {
+      return { text: 'Powered by DMTech', alignment: 'center', fontSize: 8, color: '#999', margin: [40,10,40,0] };
+    }
+
+    function _pdfStyles() {
+      return {
+        headerInfo:         { fontSize: 9,  color: '#666' },
+        infoLabel:          { fontSize: 11, bold: true, color: '#1a1a1a' },
+        infoVal:            { fontSize: 10, color: '#444' },
+        sectionTitle:       { fontSize: 11, bold: true, color: '#1a1a1a', fillColor: '#f0f0f0' },
+        tableColHeader:     { fontSize: 9,  bold: true, color: '#666', fillColor: '#fafafa' },
+        tableCell:          { fontSize: 10, color: '#333' },
+        tableCellRight:     { fontSize: 10, color: '#333', alignment: 'right' },
+        tableEmpty:         { fontSize: 10, color: '#999', italics: true },
+        tableSubtotal:      { fontSize: 10, bold: true, color: '#1a1a1a', fillColor: '#f5f5f5' },
+        tableSubtotalRight: { fontSize: 10, bold: true, color: '#1a1a1a', alignment: 'right', fillColor: '#f5f5f5' },
+        totalLabel:         { fontSize: 10, color: '#555' },
+        totalVal:           { fontSize: 10, color: '#333', alignment: 'right' },
+        totalFinal:         { fontSize: 14, bold: true, color: '#1a1a1a' },
+        totalFinalVal:      { fontSize: 14, bold: true, color: '#2e7d32', alignment: 'right' },
+        obs:                { fontSize: 9,  color: '#666' }
+      };
+    }
+
+    function _pixEMV(chave, nome, cidade, valor, txid) {
+      const tlv = (id, v) => id + String(v.length).padStart(2,'0') + v;
+      const norm = s => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const mai  = tlv('00','br.gov.bcb.pix') + tlv('01', chave);
+      let emv = tlv('00','01') + tlv('26',mai) + tlv('52','0000') + tlv('53','986')
+              + tlv('54', valor.toFixed(2)) + tlv('58','BR')
+              + tlv('59', norm(nome).substring(0,25))
+              + tlv('60', norm(cidade).substring(0,15))
+              + tlv('62', tlv('05', txid)) + '6304';
+      let crc = 0xFFFF;
+      for (let i = 0; i < emv.length; i++) {
+        crc ^= emv.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? (crc<<1)^0x1021 : crc<<1, crc &= 0xFFFF;
+      }
+      return emv + crc.toString(16).toUpperCase().padStart(4,'0');
+    }
+
+    async function _qrPixBase64(emv) {
+      return new Promise(resolve => {
+        try {
+          const div = document.createElement('div');
+          div.style.cssText = 'position:absolute;left:-9999px';
+          document.body.appendChild(div);
+          new QRCode(div, { text: emv, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.M });
+          setTimeout(() => {
+            const img = div.querySelector('img') || div.querySelector('canvas');
+            let src = null;
+            if (img?.tagName === 'IMG') src = img.src;
+            else if (img?.tagName === 'CANVAS') src = img.toDataURL();
+            document.body.removeChild(div);
+            resolve(src);
+          }, 200);
+        } catch(e) { resolve(null); }
+      });
+    }
+
+    async function pdfOS() {
       if (!osAtual) return;
-      const numOS    = String(osAtual.numero || '').padStart(3, '0');
-      const cliente  = osAtual.clients?.name || '—';
-      const data     = fmtData(osAtual.created_at);
-      const resp     = osAtual.responsavel?.name || osAtual.responsavel?.email || '—';
-      const notas    = document.getElementById('p-notes').value || osAtual.notes || '';
+      await _carregarLogo();
+      const os       = osAtual;
+      const servicos = itensPanel.filter(i => i.tipo === 'servico');
+      const produtos  = itensPanel.filter(i => i.tipo === 'produto');
+      const totalS   = servicos.reduce((s,i) => s+(i.subtotal||0), 0);
+      const totalP   = itensPanel.filter(i=>i.tipo==='produto').reduce((s,i)=>s+(i.subtotal||0),0);
+      const { bloco: blocoTotais } = _pdfTotais(totalS, totalP);
+      const notas = document.getElementById('p-notes').value || os.notes || '';
+      const docDef = {
+        pageSize: 'A4', pageMargins: [40,30,40,50],
+        content: [
+          ..._pdfHeader(),
+          _pdfInfoOS(os),
+          _pdfTabelaServicos(servicos, totalS),
+          _pdfTabelaProdutos(produtos, totalP),
+          blocoTotais,
+          notas ? { text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,20] } : { text: '' },
+          _pdfAssinaturas()
+        ],
+        footer: _pdfFooter(), styles: _pdfStyles()
+      };
+      pdfMake.createPdf(docDef).open();
+    }
 
-      const linhasItens = itensPanel.map(it => `
-        <tr>
-          <td>${it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
-          <td>${it.descricao}</td>
-          <td style="text-align:right">${fmtN(it.quantidade)}</td>
-          <td style="text-align:center">[ ]</td>
-        </tr>`).join('');
+    async function pdfRecibo() {
+      if (!osAtual) return;
+      await _carregarLogo();
+      const os       = osAtual;
+      const servicos = itensPanel.filter(i => i.tipo === 'servico');
+      const produtos  = itensPanel.filter(i => i.tipo === 'produto');
+      const totalS   = servicos.reduce((s,i) => s+(i.subtotal||0), 0);
+      const totalP   = produtos.reduce((s,i) => s+(i.subtotal||0), 0);
+      const { bloco: blocoTotais, totalGeral } = _pdfTotais(totalS, totalP);
+      const notas = document.getElementById('p-notes').value || os.notes || '';
 
-      const corpo = `
-        <div style="text-align:center;margin-bottom:16px;font-size:14px;font-weight:900;letter-spacing:1px">ORDEM DE SERVIÇO — USO INTERNO</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-          <div><span class="label">Nº OS</span><br><strong>#${numOS}</strong></div>
-          <div><span class="label">Data</span><br>${data}</div>
-          <div><span class="label">Cliente</span><br><strong>${cliente}</strong></div>
-          <div><span class="label">Responsável</span><br>${resp}</div>
-        </div>
-        <table>
-          <thead><tr><th>Tipo</th><th>Descrição</th><th style="text-align:right">Qtd</th><th style="text-align:center">OK</th></tr></thead>
-          <tbody>
-            ${linhasItens || '<tr><td colspan="4">Sem itens</td></tr>'}
-          </tbody>
-        </table>
-        ${notas ? `<div style="margin-top:14px"><span class="label">Observações</span><br>${notas}</div>` : ''}
-        <div style="margin-top:30px;border-top:1px solid #000;padding-top:10px;font-size:11px;color:#555">
-          Gerado em ${new Date().toLocaleString('pt-BR')} — NÃO CONTÉM VALORES
-        </div>`;
+      // QR PIX
+      let blocoPix = null;
+      try {
+        const emp = APP.company || {};
+        if (emp.pix_chave && totalGeral > 0 && typeof QRCode !== 'undefined') {
+          const emv = _pixEMV(emp.pix_chave, emp.pix_nome||emp.name||'EMPRESA', emp.cidade||'CIDADE', totalGeral, 'OS'+(os.numero||0));
+          const qrImg = await _qrPixBase64(emv);
+          if (qrImg) blocoPix = {
+            stack: [
+              { text: 'Pague com PIX', fontSize: 10, bold: true, color: '#1a1a1a', margin: [0,0,0,4] },
+              { image: qrImg, width: 85, height: 85 },
+              { text: 'Chave: ' + emp.pix_chave, fontSize: 7, color: '#666', margin: [0,2,0,0] },
+              { text: emp.pix_nome || emp.name, fontSize: 7, color: '#666' }
+            ], alignment: 'center', width: 120
+          };
+        }
+      } catch(e) {}
 
-      _pdfBase(`Demanda OS #${numOS}`, corpo);
+      const blocoFinal = [];
+      if (blocoPix) blocoFinal.push({ columns: [{ ...blocoTotais, width: '*', margin:[0,0,0,6] }, blocoPix], margin:[0,0,0,6] });
+      else blocoFinal.push(blocoTotais);
+      if (notas) blocoFinal.push({ text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,20] });
+      blocoFinal.push(_pdfAssinaturas());
+
+      const docDef = {
+        pageSize: 'A4', pageMargins: [40,30,40,50],
+        content: [
+          ..._pdfHeader('RECIBO DE SERVIÇO'),
+          _pdfInfoOS(os),
+          _pdfTabelaServicos(servicos, totalS),
+          _pdfTabelaProdutos(produtos, totalP),
+          ...blocoFinal
+        ],
+        footer: _pdfFooter(), styles: _pdfStyles()
+      };
+      pdfMake.createPdf(docDef).open();
+    }
+
+    async function pdfDemanda() {
+      if (!osAtual) return;
+      await _carregarLogo();
+      const os       = osAtual;
+      const servicos = itensPanel.filter(i => i.tipo === 'servico');
+      const produtos  = itensPanel.filter(i => i.tipo === 'produto');
+      const notas    = document.getElementById('p-notes').value || os.notes || '';
+
+      const tabelaServicos = {
+        table: { headerRows: 1, widths: [30, '*'],
+          body: [
+            [{ text: 'SERVIÇOS (Mão de obra)', style: 'sectionTitle', colSpan: 2 }, {}],
+            ...servicos.map(s => [
+              { text: fmtN(s.quantidade), style: 'tableCell', alignment: 'center' },
+              { text: s.descricao || '', style: 'tableCell' }
+            ]),
+            ...(servicos.length === 0 ? [[{ text: 'Nenhum serviço', style: 'tableEmpty', colSpan: 2 }, {}]] : [])
+          ]
+        },
+        layout: { hLineWidth:(i,n)=>(i<=1||i===n.table.body.length)?0.5:0.3, vLineWidth:()=>0.5, hLineColor:()=>'#ccc', vLineColor:()=>'#ccc', paddingLeft:()=>6, paddingRight:()=>6, paddingTop:()=>4, paddingBottom:()=>4 },
+        margin: [0,0,0,10]
+      };
+
+      const tabelaProdutos = {
+        table: { headerRows: 2, widths: [30, '*'],
+          body: [
+            [{ text: 'PRODUTOS / MATERIAIS', style: 'sectionTitle', colSpan: 2 }, {}],
+            [{ text: 'Qtd', style: 'tableColHeader', alignment: 'center' }, { text: 'Descrição', style: 'tableColHeader' }],
+            ...produtos.map(p => [
+              { text: fmtN(p.quantidade), style: 'tableCell', alignment: 'center' },
+              { text: p.descricao || '', style: 'tableCell' }
+            ]),
+            ...(produtos.length === 0 ? [[{ text: 'Nenhum produto', style: 'tableEmpty', colSpan: 2 }, {}]] : [])
+          ]
+        },
+        layout: { hLineWidth:(i,n)=>(i<=2||i===n.table.body.length)?0.5:0.3, vLineWidth:()=>0.5, hLineColor:()=>'#ccc', vLineColor:()=>'#ccc', paddingLeft:()=>6, paddingRight:()=>6, paddingTop:()=>4, paddingBottom:()=>4 },
+        margin: [0,0,0,10]
+      };
+
+      const docDef = {
+        pageSize: 'A4', pageMargins: [40,30,40,50],
+        content: [
+          ..._pdfHeader('ORDEM DE SERVIÇO — TÉCNICO'),
+          _pdfInfoOS(os),
+          tabelaServicos,
+          tabelaProdutos,
+          notas ? { text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,20] } : { text: '' }
+        ],
+        footer: _pdfFooter(), styles: _pdfStyles()
+      };
+      pdfMake.createPdf(docDef).open();
     }
 
     function copiarIA() {
@@ -1296,7 +1533,7 @@
     async function carregarOS() {
       const { data, error } = await sb
         .from('ordens_servico')
-        .select('*, clients(name), orcamentos(numero), responsavel:profiles(id,name,email)')
+        .select('*, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
         .order('numero', { ascending: false });
       if (error) { console.error(error); return; }
       todasOS = data || [];
