@@ -10,10 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
-  <script src="js/config.js?v=04141730"></script>
-  <script src="js/auth.js?v=04141730"></script>
-  <script src="js/pdf-orc.js?v=04141730"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141730">
+  <script src="js/config.js?v=04141736"></script>
+  <script src="js/auth.js?v=04141736"></script>
+  <script src="js/pdf-orc.js?v=04141736"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141736">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -115,6 +115,9 @@
         <a href="notas-fiscais.html" class="nav-item"><span class="nav-icon">⊟</span> Nota Fiscal</a>
         <a href="folha.html" class="nav-item"><span class="nav-icon">⊠</span> Folha</a>
         <div class="nav-section">Sistema</div>
+                <a href="audit.html" class="nav-item">
+          <span class="nav-icon">&#9677;</span> Auditoria
+        </a>
         <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
       </nav>
       <div class="sidebar-footer" id="versao-sidebar"></div>
@@ -712,6 +715,7 @@
             quantidade: i.quantidade, preco_unit: i.preco_unit, subtotal: i.subtotal
           })));
         }
+        auditLog('aprovar_orcamento', 'orcamento', id, `Orçamento #${numero}`, { os_numero: proximoOs, os_id: novaOs?.id });
         dmToast(`✓ OS #${proximoOs} criada! Abrindo kanban...`);
         setTimeout(() => { window.location.href = `kanban.html?os=${novaOs.id}`; }, 800);
       }, 'Aprovar');

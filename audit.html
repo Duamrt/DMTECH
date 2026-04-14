@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Auditoria</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141736"></script>
+  <script src="js/auth.js?v=04141736"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141736">
+  <style>
+    .audit-filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .audit-filters select {
+      padding: 6px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 600;
+    }
+    .audit-filters input[type="date"] {
+      padding: 6px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-family: 'Fira Code', monospace;
+    }
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .audit-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .audit-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.04));
+      vertical-align: middle;
+    }
+    .audit-table tr:hover td { background: var(--surface-2); }
+    .audit-ts {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .audit-user {
+      font-weight: 700;
+      color: var(--text);
+    }
+    .audit-label {
+      color: var(--text-muted);
+    }
+    .audit-action {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 2px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .action-status_change { background: rgba(249,115,22,.12); color: #f97316; }
+    .action-aprovar_orcamento { background: rgba(74,222,128,.1); color: #4ade80; }
+    .action-criar { background: rgba(96,165,250,.1); color: #60a5fa; }
+    .action-deletar { background: rgba(239,68,68,.1); color: #f87171; }
+    .action-default { background: var(--surface-3); color: var(--text-muted); }
+    .audit-details {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .vazio-audit {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .audit-count {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="minha-fila.html" class="nav-item">
+          <span class="nav-icon">◫</span> Minha Fila
+        </a>
+        <a href="clientes.html" class="nav-item">
+          <span class="nav-icon">◎</span> Clientes
+        </a>
+        <a href="orcamentos.html" class="nav-item">
+          <span class="nav-icon">◨</span> Orçamentos
+        </a>
+        <a href="os.html" class="nav-item">
+          <span class="nav-icon">◈</span> Ordens de Serviço
+        </a>
+        <a href="kanban.html" class="nav-item">
+          <span class="nav-icon">▦</span> Kanban
+        </a>
+        <a href="catalogo.html" class="nav-item">
+          <span class="nav-icon">◧</span> Catálogo
+        </a>
+        <a href="fornecedores.html" class="nav-item"><span class="nav-icon">◪</span> Fornecedores</a>
+        <div class="nav-section">Financeiro</div>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Caixa</a>
+        <a href="notas-fiscais.html" class="nav-item"><span class="nav-icon">⊟</span> Nota Fiscal</a>
+        <a href="folha.html" class="nav-item"><span class="nav-icon">⊠</span> Folha</a>
+        <div class="nav-section">Sistema</div>
+        <a href="audit.html" class="nav-item active">
+          <span class="nav-icon">◑</span> Auditoria
+        </a>
+        <a href="config.html" class="nav-item">
+          <span class="nav-icon">⚙</span> Configurações
+        </a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-title">Auditoria</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <div class="page-header">
+          <h2>Log de Auditoria</h2>
+          <span class="audit-count" id="audit-count"></span>
+        </div>
+
+        <div class="audit-filters">
+          <select id="filtro-entity" onchange="aplicarFiltros()">
+            <option value="">Todas as entidades</option>
+            <option value="os">OS</option>
+            <option value="orcamento">Orçamento</option>
+            <option value="cliente">Cliente</option>
+            <option value="caixa">Caixa</option>
+          </select>
+          <select id="filtro-action" onchange="aplicarFiltros()">
+            <option value="">Todas as ações</option>
+            <option value="status_change">Mudança de status</option>
+            <option value="aprovar_orcamento">Aprovação de orçamento</option>
+            <option value="criar">Criar</option>
+            <option value="deletar">Deletar</option>
+          </select>
+          <input type="date" id="filtro-de" onchange="aplicarFiltros()" title="De">
+          <input type="date" id="filtro-ate" onchange="aplicarFiltros()" title="Até">
+        </div>
+
+        <div id="audit-container">
+          <div class="vazio-audit">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    let todosLogs = [];
+
+    const ACTION_LABEL = {
+      status_change: 'Status alterado',
+      aprovar_orcamento: 'Orçamento aprovado',
+      criar: 'Criado',
+      deletar: 'Deletado'
+    };
+
+    function fmtTs(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function fmtDetails(det) {
+      if (!det) return '';
+      if (det.de && det.para) return `${det.de} → ${det.para}`;
+      return JSON.stringify(det).replace(/[{}"]/g, '').replace(/,/g, ' · ');
+    }
+
+    function actionClass(action) {
+      if (['status_change','aprovar_orcamento','criar','deletar'].includes(action)) return 'action-' + action;
+      return 'action-default';
+    }
+
+    function renderLogs(lista) {
+      const el = document.getElementById('audit-container');
+      document.getElementById('audit-count').textContent = `${lista.length} registro${lista.length !== 1 ? 's' : ''}`;
+      if (!lista.length) {
+        el.innerHTML = '<div class="vazio-audit">Nenhum registro de auditoria encontrado.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Usuário</th>
+              <th>Ação</th>
+              <th>Registro</th>
+              <th>Detalhes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lista.map(l => `
+              <tr>
+                <td class="audit-ts">${fmtTs(l.created_at)}</td>
+                <td class="audit-user">${l.user_name || '—'}</td>
+                <td><span class="audit-action ${actionClass(l.action)}">${ACTION_LABEL[l.action] || l.action}</span></td>
+                <td class="audit-label">${l.entity_label || l.entity || '—'}</td>
+                <td class="audit-details" title="${fmtDetails(l.details)}">${fmtDetails(l.details)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function aplicarFiltros() {
+      const entity = document.getElementById('filtro-entity').value;
+      const action = document.getElementById('filtro-action').value;
+      const de     = document.getElementById('filtro-de').value;
+      const ate    = document.getElementById('filtro-ate').value;
+      let lista = todosLogs;
+      if (entity) lista = lista.filter(l => l.entity === entity);
+      if (action) lista = lista.filter(l => l.action === action);
+      if (de)     lista = lista.filter(l => l.created_at >= de);
+      if (ate)    lista = lista.filter(l => l.created_at.slice(0,10) <= ate);
+      renderLogs(lista);
+    }
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+
+      const { data, error } = await sb.from('audit_log')
+        .select('*')
+        .eq('company_id', APP.company.id)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (error) {
+        document.getElementById('audit-container').innerHTML = '<div class="vazio-audit">Erro ao carregar o log de auditoria.</div>';
+        return;
+      }
+
+      todosLogs = data || [];
+      renderLogs(todosLogs);
+    })();
+  </script>
+</body>
+</html>

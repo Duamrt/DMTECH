@@ -104,6 +104,21 @@ function dmConfirm(msg, onConfirm, btnLabel = 'Confirmar', danger = false) {
   _dmConfirmCb = onConfirm;
 }
 
+async function auditLog(action, entity, entityId, entityLabel, details) {
+  if (!APP?.company?.id) return;
+  try {
+    await sb.from('audit_log').insert({
+      company_id: APP.company.id,
+      user_id: APP.user?.id || null,
+      user_name: APP.profile?.name || APP.profile?.email || '',
+      action, entity,
+      entity_id: entityId ? String(entityId) : null,
+      entity_label: entityLabel || null,
+      details: details || null
+    });
+  } catch(e) { /* silencioso */ }
+}
+
 function dmToast(msg, tipo = 'success') {
   const el = document.getElementById('dm-toast');
   el.textContent = msg;
