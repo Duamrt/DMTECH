@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141744"></script>
-  <script src="js/auth.js?v=04141744"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141744">
+  <script src="js/config.js?v=04141748"></script>
+  <script src="js/auth.js?v=04141748"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141748">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -35,7 +35,7 @@
     .tec-liquido-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
     .tec-liquido-val { font-size:22px; font-weight:800; font-family:'Fira Code',monospace; }
 
-    .tec-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+    .tec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; }
     .tec-cell { background:var(--surface-3,var(--surface)); border:1px solid var(--border); padding:8px 10px; text-align:center; }
     .tec-cell-val { font-size:13px; font-weight:700; font-family:'Fira Code',monospace; }
     .tec-cell-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-top:2px; }
@@ -126,6 +126,10 @@
           <div class="folha-kpi">
             <div class="folha-kpi-label">Vales / Adiant.</div>
             <div class="folha-kpi-val" id="kpi-vales" style="color:#f87171">—</div>
+          </div>
+          <div class="folha-kpi">
+            <div class="folha-kpi-label">Comissões</div>
+            <div class="folha-kpi-val" id="kpi-comissoes" style="color:#a78bfa">—</div>
           </div>
           <div class="folha-kpi">
             <div class="folha-kpi-label">Total Líquido</div>
@@ -219,9 +223,9 @@
       const inicio = `${ANO}-${pad(MES)}-01`;
       const fim    = `${ANO}-${pad(MES)}-${pad(new Date(ANO,MES,0).getDate())}`;
 
-      const [resProf, resVales] = await Promise.all([
+      const [resProf, resVales, resOS] = await Promise.all([
         sb.from('profiles')
-          .select('id, name, role, salario_base, vale_refeicao')
+          .select('id, name, role, salario_base, vale_refeicao, comissao_pct')
           .eq('company_id', APP.company.id)
           .eq('ativo', true)
           .eq('role', 'tecnico')
@@ -232,11 +236,27 @@
           .eq('tipo', 'saida')
           .eq('categoria', 'vale')
           .gte('created_at', inicio+'T00:00:00')
-          .lte('created_at', fim+'T23:59:59')
+          .lte('created_at', fim+'T23:59:59'),
+        sb.from('ordens_servico')
+          .select('responsavel_id, total')
+          .eq('company_id', APP.company.id)
+          .eq('status', 'entregue')
+          .gte('updated_at', inicio+'T00:00:00')
+          .lte('updated_at', fim+'T23:59:59')
       ]);
 
       const tecnicos  = resProf.data || [];
       const valesBrut = resVales.data || [];
+      const osBrut    = resOS.data    || [];
+
+      // Agrupar OS entregues por responsavel_id
+      const osPor = {};
+      osBrut.forEach(o => {
+        if (!o.responsavel_id) return;
+        if (!osPor[o.responsavel_id]) osPor[o.responsavel_id] = { qtd: 0, total: 0 };
+        osPor[o.responsavel_id].qtd++;
+        osPor[o.responsavel_id].total += (o.total || 0);
+      });
 
       if (!tecnicos.length) {
         document.getElementById('emp-lista').innerHTML = '<div class="empty-state">Nenhum técnico ativo cadastrado.</div>';
@@ -256,52 +276,57 @@
       });
 
       const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
-      _dados = calcularFolha(tecnicos, valesPor, dias);
+      _dados = calcularFolha(tecnicos, valesPor, osPor, dias);
       renderFolha(_dados);
     }
 
     function calcular() {
       if (!_dados) return;
       const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
-      // Recalcula com novos dias mas mantém vales carregados
       const recalc = _dados.folha.map(f => {
-        const vr = (f.vale_refeicao || 0) * dias;
-        const liquido = (f.salario || 0) + vr - f.totalVale;
+        const vr      = (f.vale_refeicao || 0) * dias;
+        const liquido = (f.salario || 0) + vr + f.comissao - f.totalVale;
         return { ...f, vr, liquido };
       });
       const nd = { ...calcTotais(recalc), folha: recalc };
       renderFolha(nd);
     }
 
-    function calcularFolha(tecnicos, valesPor, dias) {
+    function calcularFolha(tecnicos, valesPor, osPor, dias) {
+      const comissaoPadrao = APP.company?.comissao_padrao || 0;
       const folha = tecnicos.map(t => {
-        const salario   = t.salario_base   || 0;
-        const vrDia     = t.vale_refeicao  || 0;
-        const vr        = vrDia * dias;
-        const meusVales = valesPor[t.id] || [];
-        const totalVale = meusVales.reduce((s,v) => s+(v.valor||0), 0);
-        const liquido   = salario + vr - totalVale;
-        return { ...t, salario, vrDia, vr, meusVales, totalVale, liquido };
+        const salario      = t.salario_base  || 0;
+        const vrDia        = t.vale_refeicao || 0;
+        const vr           = vrDia * dias;
+        const meusVales    = valesPor[t.id]  || [];
+        const totalVale    = meusVales.reduce((s,v) => s+(v.valor||0), 0);
+        const pct          = (t.comissao_pct != null ? t.comissao_pct : comissaoPadrao);
+        const minhasOS     = osPor[t.id]     || { qtd: 0, total: 0 };
+        const comissao     = minhasOS.total * (pct / 100);
+        const liquido      = salario + vr + comissao - totalVale;
+        return { ...t, salario, vrDia, vr, meusVales, totalVale, pct, minhasOS, comissao, liquido };
       });
       return { ...calcTotais(folha), folha };
     }
 
     function calcTotais(folha) {
       return {
-        totalSalarios: folha.reduce((s,f)=>s+f.salario,0),
-        totalVR:       folha.reduce((s,f)=>s+f.vr,0),
-        totalVales:    folha.reduce((s,f)=>s+f.totalVale,0),
-        totalLiquido:  folha.reduce((s,f)=>s+f.liquido,0),
+        totalSalarios:  folha.reduce((s,f)=>s+f.salario,0),
+        totalVR:        folha.reduce((s,f)=>s+f.vr,0),
+        totalVales:     folha.reduce((s,f)=>s+f.totalVale,0),
+        totalComissoes: folha.reduce((s,f)=>s+f.comissao,0),
+        totalLiquido:   folha.reduce((s,f)=>s+f.liquido,0),
       };
     }
 
-    function renderFolha({ folha, totalSalarios, totalVR, totalVales, totalLiquido }) {
-      _dados = { folha, totalSalarios, totalVR, totalVales, totalLiquido };
+    function renderFolha({ folha, totalSalarios, totalVR, totalVales, totalComissoes, totalLiquido }) {
+      _dados = { folha, totalSalarios, totalVR, totalVales, totalComissoes, totalLiquido };
 
-      document.getElementById('kpi-salarios').textContent = fmtM(totalSalarios);
-      document.getElementById('kpi-vr').textContent       = fmtM(totalVR);
-      document.getElementById('kpi-vales').textContent    = fmtM(totalVales);
-      document.getElementById('kpi-liquido').textContent  = fmtM(totalLiquido);
+      document.getElementById('kpi-salarios').textContent  = fmtM(totalSalarios);
+      document.getElementById('kpi-vr').textContent        = fmtM(totalVR);
+      document.getElementById('kpi-vales').textContent     = fmtM(totalVales);
+      document.getElementById('kpi-comissoes').textContent = fmtM(totalComissoes);
+      document.getElementById('kpi-liquido').textContent   = fmtM(totalLiquido);
 
       document.getElementById('emp-lista').innerHTML = folha.map(f => {
         const iniciais = (f.name||'??').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
@@ -334,9 +359,16 @@
           <div class="tec-grid">
             <div class="tec-cell"><div class="tec-cell-val" style="color:var(--text)">${fmtM(f.salario)}</div><div class="tec-cell-label">Salário</div></div>
             <div class="tec-cell"><div class="tec-cell-val" style="color:#60a5fa">${fmtM(f.vr)}</div><div class="tec-cell-label">VR Mês</div></div>
+            <div class="tec-cell" title="OS entregues no mês: ${f.minhasOS.qtd} OS · ${fmtM(f.minhasOS.total)}">
+              <div class="tec-cell-val" style="color:var(--text-muted)">${f.minhasOS.qtd}</div>
+              <div class="tec-cell-label">OS/Mês</div>
+            </div>
+            <div class="tec-cell" title="${f.pct}% sobre ${fmtM(f.minhasOS.total)}">
+              <div class="tec-cell-val" style="color:#a78bfa">${fmtM(f.comissao)}</div>
+              <div class="tec-cell-label">Comissão ${f.pct}%</div>
+            </div>
             <div class="tec-cell"><div class="tec-cell-val" style="color:#f87171">-${fmtM(f.totalVale)}</div><div class="tec-cell-label">Vales</div></div>
             <div class="tec-cell"><div class="tec-cell-val" style="color:${liqCor}">${fmtM(f.liquido)}</div><div class="tec-cell-label">Líquido</div></div>
-            <div class="tec-cell"><div class="tec-cell-val" style="color:var(--text-muted)">${f.meusVales.length}</div><div class="tec-cell-label">Adiant.</div></div>
           </div>
           ${valesHtml}
           <div class="tec-actions">
@@ -349,7 +381,7 @@
         <div class="total-bar">
           <div>
             <div class="total-bar-label">Total Folha — ${MESES[MES-1]} ${ANO}</div>
-            <div style="font-size:12px;color:var(--text-dim);margin-top:4px">${folha.length} técnico(s) · Sal. ${fmtM(totalSalarios)} · VR ${fmtM(totalVR)} · Vales -${fmtM(totalVales)}</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px">${folha.length} técnico(s) · Sal. ${fmtM(totalSalarios)} · VR ${fmtM(totalVR)} · Com. ${fmtM(totalComissoes)} · Vales -${fmtM(totalVales)}</div>
           </div>
           <div class="total-bar-val">${fmtM(totalLiquido)}</div>
         </div>`;
