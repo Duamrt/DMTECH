@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Catálogo</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141257"></script>
+  <script src="js/auth.js?v=04141257"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141257">
+  <style>
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .tab {
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all .12s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Search bar */
+    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-bar .form-input { max-width: 320px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface-2); border: 1px solid var(--border);
+      width: 100%; max-width: 480px; padding: 28px; position: relative;
+    }
+    .modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .btn-danger {
+      background: none; border: 1px solid var(--danger); color: var(--danger);
+      padding: 9px 18px; font-size: 13px; font-weight: 700;
+      font-family: 'Manrope', sans-serif; cursor: pointer; transition: all .12s;
+    }
+    .btn-danger:hover { background: var(--danger-dim); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row .form-group { margin-bottom: 0; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .form-row-3 .form-group { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item active"><span class="nav-icon">◧</span> Catálogo</a>
+        <div class="nav-section">Gestão</div>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Financeiro</a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">Catálogo</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="page-header">
+          <h2>Catálogo</h2>
+          <p>Serviços prestados e produtos/materiais utilizados.</p>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" onclick="trocarAba('servicos')">Serviços</div>
+          <div class="tab" onclick="trocarAba('produtos')">Produtos</div>
+        </div>
+
+        <!-- ABA SERVIÇOS -->
+        <div class="tab-panel active" id="panel-servicos">
+          <div class="search-bar">
+            <input class="form-input" type="text" id="busca-srv" placeholder="Buscar serviço..." oninput="filtrarServicos()">
+            <button class="btn btn-primary" onclick="abrirModalServico()">+ Novo serviço</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('csv-srv').click()">⇪ Importar CSV</button>
+            <input type="file" id="csv-srv" accept=".csv,.txt" style="display:none" onchange="lerCSVServicos(this)">
+          </div>
+          <div class="section">
+            <div class="section-body">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Nome</th><th>Código</th><th>Unidade</th><th>Preço</th><th></th></tr>
+                </thead>
+                <tbody id="tabela-servicos">
+                  <tr><td colspan="5" class="empty-state">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA PRODUTOS -->
+        <div class="tab-panel" id="panel-produtos">
+          <div class="search-bar">
+            <input class="form-input" type="text" id="busca-prod" placeholder="Buscar produto..." oninput="filtrarProdutos()">
+            <button class="btn btn-primary" onclick="abrirModalProduto()">+ Novo produto</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('csv-prod').click()">⇪ Importar CSV</button>
+            <input type="file" id="csv-prod" accept=".csv,.txt" style="display:none" onchange="lerCSVProdutos(this)">
+          </div>
+          <div class="section">
+            <div class="section-body">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Nome</th><th>Código</th><th>Grupo</th><th>Preço</th><th>Estoque</th><th></th></tr>
+                </thead>
+                <tbody id="tabela-produtos">
+                  <tr><td colspan="6" class="empty-state">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal Serviço -->
+  <div class="modal-overlay" id="modal-srv-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-srv-titulo">Novo serviço</div>
+      <input type="hidden" id="srv-id">
+      <div class="form-group">
+        <label class="form-label">Nome *</label>
+        <input class="form-input" type="text" id="srv-name" placeholder="Ex: Instalação de câmera">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Código</label>
+          <input class="form-input" type="text" id="srv-code" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidade</label>
+          <input class="form-input" type="text" id="srv-unit" placeholder="UN, SER, KM...">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Preço de venda (R$)</label>
+        <input class="form-input" type="number" id="srv-price" placeholder="0,00" step="0.01" min="0">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModalServico()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-excluir-srv" onclick="excluirServico()" style="display:none">Excluir</button>
+        <button class="btn btn-primary" onclick="salvarServico()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Produto -->
+  <div class="modal-overlay" id="modal-prod-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-prod-titulo">Novo produto</div>
+      <input type="hidden" id="prod-id">
+      <div class="form-group">
+        <label class="form-label">Nome *</label>
+        <input class="form-input" type="text" id="prod-name" placeholder="Ex: Câmera VHL 1120">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Código</label>
+          <input class="form-input" type="text" id="prod-code" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Código de barras</label>
+          <input class="form-input" type="text" id="prod-barcode" placeholder="EAN">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Grupo</label>
+          <input class="form-input" type="text" id="prod-group" placeholder="Ex: LOJA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidade</label>
+          <input class="form-input" type="text" id="prod-unit" placeholder="UN, M, KG...">
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Custo (R$)</label>
+          <input class="form-input" type="number" id="prod-cost" placeholder="0,00" step="0.01" min="0" oninput="calcPreco()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Margem (%)</label>
+          <input class="form-input" type="number" id="prod-margin" placeholder="30" step="0.01" min="0" oninput="calcPreco()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preço (R$)</label>
+          <input class="form-input" type="number" id="prod-price" placeholder="0,00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Estoque atual</label>
+          <input class="form-input" type="number" id="prod-stock" placeholder="0" step="0.001">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Estoque mínimo</label>
+          <input class="form-input" type="number" id="prod-stock-min" placeholder="0" step="0.001">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModalProduto()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-excluir-prod" onclick="excluirProduto()" style="display:none">Excluir</button>
+        <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    let todosServicos = [], todosProdutos = [];
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+      await Promise.all([carregarServicos(), carregarProdutos()]);
+    })();
+
+    /* ── Tabs ── */
+    function trocarAba(aba) {
+      document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['servicos','produtos'][i] === aba));
+      document.getElementById('panel-servicos').classList.toggle('active', aba === 'servicos');
+      document.getElementById('panel-produtos').classList.toggle('active', aba === 'produtos');
+    }
+
+    /* ── Util ── */
+    function esc(v) {
+      if (v == null || v === '') return '<span style="color:var(--text-dim)">—</span>';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function fmt(v) { return v != null ? 'R$ ' + Number(v).toFixed(2).replace('.',',') : '—'; }
+
+    /* ════════════════ SERVIÇOS ════════════════ */
+    async function carregarServicos() {
+      const { data } = await sb.from('services').select('*').eq('company_id', APP.company.id).order('name');
+      todosServicos = data || [];
+      renderServicos(todosServicos);
+    }
+    function filtrarServicos() {
+      const q = document.getElementById('busca-srv').value.toLowerCase();
+      renderServicos(q ? todosServicos.filter(s => s.name.toLowerCase().includes(q) || (s.code||'').toLowerCase().includes(q)) : todosServicos);
+    }
+    function renderServicos(lista) {
+      const tb = document.getElementById('tabela-servicos');
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum serviço cadastrado.</td></tr>'; return; }
+      tb.innerHTML = lista.map(s => `
+        <tr style="cursor:pointer" onclick="abrirModalServico(${JSON.stringify(s).replace(/"/g,'&quot;')})">
+          <td style="color:var(--text);font-weight:600">${esc(s.name)}</td>
+          <td class="mono">${esc(s.code)}</td>
+          <td>${esc(s.unit)}</td>
+          <td style="color:var(--accent)">${fmt(s.price)}</td>
+          <td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>
+        </tr>`).join('');
+    }
+
+    function abrirModalServico(s) {
+      const edit = !!s;
+      document.getElementById('modal-srv-titulo').textContent = edit ? 'Editar serviço' : 'Novo serviço';
+      document.getElementById('srv-id').value    = edit ? s.id    : '';
+      document.getElementById('srv-name').value  = edit ? (s.name  || '') : '';
+      document.getElementById('srv-code').value  = edit ? (s.code  || '') : '';
+      document.getElementById('srv-unit').value  = edit ? (s.unit  || '') : '';
+      document.getElementById('srv-price').value = edit ? (s.price || '') : '';
+      document.getElementById('btn-excluir-srv').style.display = edit ? 'block' : 'none';
+      document.getElementById('modal-srv-overlay').classList.add('active');
+      document.getElementById('srv-name').focus();
+    }
+    function fecharModalServico() { document.getElementById('modal-srv-overlay').classList.remove('active'); }
+    document.getElementById('modal-srv-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) fecharModalServico(); });
+
+    async function salvarServico() {
+      const id   = document.getElementById('srv-id').value;
+      const name = document.getElementById('srv-name').value.trim();
+      if (!name) { alert('Nome é obrigatório.'); return; }
+      const payload = {
+        name, code: document.getElementById('srv-code').value.trim() || null,
+        unit: document.getElementById('srv-unit').value.trim() || null,
+        price: parseFloat(document.getElementById('srv-price').value) || 0,
+      };
+      let error;
+      if (id) { ({ error } = await sb.from('services').update(payload).eq('id', id)); }
+      else { payload.company_id = APP.company.id; ({ error } = await sb.from('services').insert(payload)); }
+      if (error) { alert('Erro: ' + error.message); return; }
+      fecharModalServico(); await carregarServicos();
+    }
+    async function excluirServico() {
+      const id = document.getElementById('srv-id').value;
+      if (!confirm('Excluir este serviço?')) return;
+      await sb.from('services').delete().eq('id', id);
+      fecharModalServico(); await carregarServicos();
+    }
+
+    function lerCSVServicos(input) {
+      const file = input.files[0]; if (!file) return; input.value = '';
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const sep = e.target.result.split('\n')[0].includes(';') ? ';' : ',';
+        const rows = e.target.result.replace(/\r/g,'').split('\n').map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g,'')));
+        const h = rows[0].map(x => x.toLowerCase());
+        const idx = k => h.findIndex(x => x.includes(k));
+        const ni = idx('nome'), pi = idx('preo') > -1 ? idx('preo') : idx('pre'), ci = idx('cod'), ui = idx('un');
+        const payload = rows.slice(1).filter(r => r[ni]?.trim()).map(r => ({
+          company_id: APP.company.id,
+          name: r[ni].trim(),
+          code: ci > -1 ? r[ci] || null : null,
+          unit: ui > -1 ? r[ui] || null : null,
+          price: pi > -1 ? parseFloat((r[pi]||'0').replace(',','.')) || 0 : 0,
+        }));
+        if (!payload.length) { alert('Nenhum registro válido.'); return; }
+        if (!confirm(`Importar ${payload.length} serviços?`)) return;
+        const { error } = await sb.from('services').insert(payload);
+        if (error) { alert('Erro: ' + error.message); return; }
+        await carregarServicos(); alert(`${payload.length} serviços importados.`);
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    /* ════════════════ PRODUTOS ════════════════ */
+    async function carregarProdutos() {
+      const { data } = await sb.from('products').select('*').eq('company_id', APP.company.id).order('name');
+      todosProdutos = data || [];
+      renderProdutos(todosProdutos);
+    }
+    function filtrarProdutos() {
+      const q = document.getElementById('busca-prod').value.toLowerCase();
+      renderProdutos(q ? todosProdutos.filter(p => p.name.toLowerCase().includes(q) || (p.code||'').toLowerCase().includes(q) || (p.barcode||'').includes(q)) : todosProdutos);
+    }
+    function renderProdutos(lista) {
+      const tb = document.getElementById('tabela-produtos');
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum produto cadastrado.</td></tr>'; return; }
+      tb.innerHTML = lista.map(p => {
+        const estoqueClass = p.stock_min > 0 && p.stock <= p.stock_min ? 'color:var(--danger)' : 'color:var(--text-muted)';
+        return `<tr style="cursor:pointer" onclick="abrirModalProduto(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+          <td style="color:var(--text);font-weight:600">${esc(p.name)}</td>
+          <td class="mono">${esc(p.code)}</td>
+          <td>${esc(p.group_name)}</td>
+          <td style="color:var(--accent)">${fmt(p.price)}</td>
+          <td style="${estoqueClass}">${p.stock != null ? Number(p.stock).toLocaleString('pt-BR') : '—'}</td>
+          <td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function calcPreco() {
+      const cost   = parseFloat(document.getElementById('prod-cost').value) || 0;
+      const margin = parseFloat(document.getElementById('prod-margin').value) || 0;
+      if (cost > 0 && margin > 0) {
+        document.getElementById('prod-price').value = (cost * (1 + margin / 100)).toFixed(2);
+      }
+    }
+
+    function abrirModalProduto(p) {
+      const edit = !!p;
+      document.getElementById('modal-prod-titulo').textContent   = edit ? 'Editar produto' : 'Novo produto';
+      document.getElementById('prod-id').value       = edit ? p.id          : '';
+      document.getElementById('prod-name').value     = edit ? (p.name       || '') : '';
+      document.getElementById('prod-code').value     = edit ? (p.code       || '') : '';
+      document.getElementById('prod-barcode').value  = edit ? (p.barcode    || '') : '';
+      document.getElementById('prod-group').value    = edit ? (p.group_name || '') : '';
+      document.getElementById('prod-unit').value     = edit ? (p.unit       || '') : '';
+      document.getElementById('prod-cost').value     = edit ? (p.cost       || '') : '';
+      document.getElementById('prod-margin').value   = edit ? (p.margin     || '') : '';
+      document.getElementById('prod-price').value    = edit ? (p.price      || '') : '';
+      document.getElementById('prod-stock').value    = edit ? (p.stock      || '') : '';
+      document.getElementById('prod-stock-min').value= edit ? (p.stock_min  || '') : '';
+      document.getElementById('btn-excluir-prod').style.display = edit ? 'block' : 'none';
+      document.getElementById('modal-prod-overlay').classList.add('active');
+      document.getElementById('prod-name').focus();
+    }
+    function fecharModalProduto() { document.getElementById('modal-prod-overlay').classList.remove('active'); }
+    document.getElementById('modal-prod-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) fecharModalProduto(); });
+
+    async function salvarProduto() {
+      const id   = document.getElementById('prod-id').value;
+      const name = document.getElementById('prod-name').value.trim();
+      if (!name) { alert('Nome é obrigatório.'); return; }
+      const payload = {
+        name,
+        code:       document.getElementById('prod-code').value.trim()    || null,
+        barcode:    document.getElementById('prod-barcode').value.trim() || null,
+        group_name: document.getElementById('prod-group').value.trim()   || null,
+        unit:       document.getElementById('prod-unit').value.trim()    || null,
+        cost:       parseFloat(document.getElementById('prod-cost').value)      || 0,
+        margin:     parseFloat(document.getElementById('prod-margin').value)    || 0,
+        price:      parseFloat(document.getElementById('prod-price').value)     || 0,
+        stock:      parseFloat(document.getElementById('prod-stock').value)     || 0,
+        stock_min:  parseFloat(document.getElementById('prod-stock-min').value) || 0,
+      };
+      let error;
+      if (id) { ({ error } = await sb.from('products').update(payload).eq('id', id)); }
+      else { payload.company_id = APP.company.id; ({ error } = await sb.from('products').insert(payload)); }
+      if (error) { alert('Erro: ' + error.message); return; }
+      fecharModalProduto(); await carregarProdutos();
+    }
+    async function excluirProduto() {
+      const id = document.getElementById('prod-id').value;
+      if (!confirm('Excluir este produto?')) return;
+      await sb.from('products').delete().eq('id', id);
+      fecharModalProduto(); await carregarProdutos();
+    }
+
+    function lerCSVProdutos(input) {
+      const file = input.files[0]; if (!file) return; input.value = '';
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const sep = e.target.result.split('\n')[0].includes(';') ? ';' : ',';
+        const rows = e.target.result.replace(/\r/g,'').split('\n').map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g,'')));
+        const h = rows[0].map(x => x.toLowerCase().normalize('NFD').replace(/\p{M}/gu,''));
+        const fi = k => h.findIndex(x => x.includes(k));
+        const ni = fi('nome'), ci = fi('cod'), bi = fi('barras'), gi = fi('grupo'),
+              ui = fi('un'), coi = fi('custo'), mi = fi('marg'), pi = fi('pre');
+        const n = v => parseFloat((v||'0').replace('.','').replace(',','.')) || 0;
+        const payload = rows.slice(1).filter(r => r[ni]?.trim()).map(r => ({
+          company_id: APP.company.id,
+          name:       r[ni].trim(),
+          code:       ci > -1 ? r[ci] || null : null,
+          barcode:    bi > -1 ? r[bi] || null : null,
+          group_name: gi > -1 ? r[gi] || null : null,
+          unit:       ui > -1 ? r[ui] || null : null,
+          cost:       coi > -1 ? n(r[coi]) : 0,
+          margin:     mi  > -1 ? n(r[mi])  : 0,
+          price:      pi  > -1 ? n(r[pi])  : 0,
+        }));
+        if (!payload.length) { alert('Nenhum registro válido.'); return; }
+        if (!confirm(`Importar ${payload.length} produtos?`)) return;
+        const { error } = await sb.from('products').insert(payload);
+        if (error) { alert('Erro: ' + error.message); return; }
+        await carregarProdutos(); alert(`${payload.length} produtos importados.`);
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+  </script>
+</body>
+</html>
