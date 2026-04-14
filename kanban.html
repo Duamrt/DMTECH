@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Kanban</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141327"></script>
+  <script src="js/auth.js?v=04141327"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141327">
+  <style>
+    /* Board */
+    .board-outer {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 20px;
+      display: flex;
+      gap: 12px;
+    }
+    .board-outer::-webkit-scrollbar { height: 4px; }
+    .board-outer::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px; }
+
+    .k-col {
+      flex-shrink: 0;
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 100px);
+    }
+
+    .k-col-header {
+      padding: 10px 12px 8px;
+      border-top: 3px solid var(--col-color);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .k-col-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--col-color);
+    }
+    .k-col-count {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      background: var(--surface-2);
+      padding: 1px 7px;
+      border-radius: 20px;
+    }
+
+    .k-col-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-top: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .k-col-body::-webkit-scrollbar { width: 3px; }
+    .k-col-body::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px; }
+
+    /* Color per column */
+    .k-col[data-status="aberta"]          { --col-color: #60a5fa; }
+    .k-col[data-status="em_andamento"]    { --col-color: #fbbf24; }
+    .k-col[data-status="aguardando_peca"] { --col-color: #fb923c; }
+    .k-col[data-status="pronta"]          { --col-color: #4ade80; }
+    .k-col[data-status="entregue"]        { --col-color: #6b7280; }
+
+    /* Cards */
+    .k-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color .12s, transform .08s;
+    }
+    .k-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .k-card-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .k-card-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      background: var(--surface-3);
+      color: var(--text-muted);
+      padding: 1px 5px;
+    }
+    .k-card-client {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .k-card-notes {
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+    .k-card-date {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .k-empty {
+      text-align: center;
+      padding: 28px 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Side panel */
+    .side-panel {
+      position: fixed;
+      top: 0; right: -440px;
+      width: 420px;
+      height: 100vh;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      transition: right .2s ease;
+    }
+    .side-panel.open { right: 0; }
+
+    .panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 199;
+      display: none;
+    }
+    .panel-overlay.open { display: block; }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .panel-client {
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .panel-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 2px 6px;
+      line-height: 1;
+    }
+    .panel-close:hover { color: var(--text); }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .p-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 7px;
+      margin-bottom: 4px;
+    }
+
+    .p-info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .p-info-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+    }
+    .p-info-val {
+      font-size: 13px;
+      color: var(--text);
+    }
+    .p-info-mono {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Status buttons */
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .status-btn {
+      padding: 9px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-family: 'Manrope', sans-serif;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .12s;
+      text-align: center;
+    }
+    .status-btn:hover { border-color: var(--border-strong); color: var(--text); }
+    .status-btn.btn-aberta.active          { background: rgba(59,130,246,.2);  border-color:#3b82f6; color:#60a5fa; }
+    .status-btn.btn-em_andamento.active    { background: rgba(245,158,11,.2);  border-color:#d97706; color:#fbbf24; }
+    .status-btn.btn-aguardando_peca.active { background: rgba(249,115,22,.2);  border-color:#ea580c; color:#fb923c; }
+    .status-btn.btn-pronta.active          { background: rgba(34,197,94,.2);   border-color:#16a34a; color:#4ade80; }
+    .status-btn.btn-entregue.active        { background: rgba(107,114,128,.2); border-color:#4b5563; color:#9ca3af; }
+
+    /* Avançar/Voltar */
+    .mover-bar {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-mover {
+      flex: 1;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: all .12s;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-muted);
+    }
+    .btn-mover:hover { border-color: var(--border-strong); color: var(--text); }
+    .btn-mover.avancar {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-mover.avancar:hover { opacity: .85; }
+
+    /* Notes */
+    .panel-textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5;
+    }
+    .panel-textarea:focus { outline: none; border-color: var(--accent); }
+
+    /* Footer actions */
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .btn-salvar {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity .12s;
+    }
+    .btn-salvar:hover { opacity: .85; }
+    .btn-ver-os {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .12s;
+      white-space: nowrap;
+    }
+    .btn-ver-os:hover { border-color: var(--border-strong); color: var(--text); }
+
+    /* Kanban overrides layout */
+    .main { overflow: hidden; display: flex; flex-direction: column; }
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; }
+
+    /* Loading */
+    .board-loading {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="clientes.html" class="nav-item">
+          <span class="nav-icon">◎</span> Clientes
+        </a>
+        <a href="orcamentos.html" class="nav-item">
+          <span class="nav-icon">◨</span> Orçamentos
+        </a>
+        <a href="os.html" class="nav-item">
+          <span class="nav-icon">◈</span> Ordens de Serviço
+        </a>
+        <a href="kanban.html" class="nav-item active">
+          <span class="nav-icon">▦</span> Kanban
+        </a>
+        <a href="catalogo.html" class="nav-item">
+          <span class="nav-icon">◧</span> Catálogo
+        </a>
+        <div class="nav-section">Gestão</div>
+        <a href="financeiro.html" class="nav-item">
+          <span class="nav-icon">◉</span> Financeiro
+        </a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item">
+          <span class="nav-icon">⚙</span> Configurações
+        </a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-title">Kanban</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <!-- Board -->
+      <div class="content">
+        <div class="board-outer" id="board">
+          <div class="board-loading">Carregando...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="panel-overlay" id="panel-overlay" onclick="fecharPanel()"></div>
+
+  <!-- Side panel -->
+  <div class="side-panel" id="side-panel">
+    <div class="panel-head">
+      <div>
+        <div class="panel-num" id="p-num">OS #—</div>
+        <div class="panel-client" id="p-client">—</div>
+      </div>
+      <button class="panel-close" onclick="fecharPanel()">×</button>
+    </div>
+    <div class="panel-body">
+
+      <div id="p-orc-row" style="display:none">
+        <div class="p-info-label" style="margin-bottom:3px">Origem</div>
+        <div class="p-info-mono" id="p-orc">—</div>
+      </div>
+
+      <div class="p-info-row">
+        <div class="p-info-label">Criada em</div>
+        <div class="p-info-mono" id="p-date">—</div>
+      </div>
+
+      <div>
+        <div class="p-section-title">Status</div>
+        <div class="status-grid">
+          <button class="status-btn btn-aberta"          onclick="selecionarStatus('aberta')">Aberta</button>
+          <button class="status-btn btn-em_andamento"    onclick="selecionarStatus('em_andamento')">Em Andamento</button>
+          <button class="status-btn btn-aguardando_peca" onclick="selecionarStatus('aguardando_peca')">Aguard. Peça</button>
+          <button class="status-btn btn-pronta"          onclick="selecionarStatus('pronta')">Pronta</button>
+          <button class="status-btn btn-entregue"        onclick="selecionarStatus('entregue')">Entregue</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="p-section-title">Avançar</div>
+        <div class="mover-bar">
+          <button class="btn-mover" id="btn-voltar"  onclick="moverStatus(-1)">← Voltar</button>
+          <button class="btn-mover avancar" id="btn-avancar" onclick="moverStatus(1)">Avançar →</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="p-section-title">Observações</div>
+        <textarea class="panel-textarea" id="p-notes" placeholder="Observações sobre o serviço..."></textarea>
+      </div>
+
+    </div>
+    <div class="panel-actions">
+      <button class="btn-ver-os" onclick="irParaOS()">Ver OS →</button>
+      <button class="btn-salvar" onclick="salvarStatus()">Salvar</button>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    const COLUNAS = [
+      { status: 'aberta',          label: 'Aberta'        },
+      { status: 'em_andamento',    label: 'Em Andamento'  },
+      { status: 'aguardando_peca', label: 'Aguard. Peça'  },
+      { status: 'pronta',          label: 'Pronta'        },
+      { status: 'entregue',        label: 'Entregue'      },
+    ];
+
+    let todasOS         = [];
+    let osAtual         = null;
+    let statusSelecionado = null;
+
+    function fmtData(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+    }
+
+    function renderBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+
+      COLUNAS.forEach(col => {
+        const cards = todasOS.filter(o => o.status === col.status);
+
+        const colEl = document.createElement('div');
+        colEl.className = 'k-col';
+        colEl.dataset.status = col.status;
+
+        colEl.innerHTML = `
+          <div class="k-col-header">
+            <span class="k-col-title">${col.label}</span>
+            <span class="k-col-count">${cards.length}</span>
+          </div>
+          <div class="k-col-body">
+            ${cards.length === 0
+              ? '<div class="k-empty">—</div>'
+              : cards.map(cardHTML).join('')
+            }
+          </div>
+        `;
+        board.appendChild(colEl);
+      });
+    }
+
+    function cardHTML(o) {
+      const tag = o.orcamentos
+        ? `<span class="k-card-tag">ORC #${String(o.orcamentos.numero).padStart(3,'0')}</span>`
+        : `<span class="k-card-tag">Direta</span>`;
+      const notes = o.notes ? o.notes.substring(0, 90) : '';
+
+      return `
+        <div class="k-card" onclick="abrirPanel('${o.id}')">
+          <div class="k-card-num">
+            <span>OS #${String(o.numero).padStart(3,'0')}</span>
+            ${tag}
+          </div>
+          <div class="k-card-client">${o.clients?.name || '—'}</div>
+          ${notes ? `<div class="k-card-notes">${notes}</div>` : ''}
+          <div class="k-card-date">${fmtData(o.created_at)}</div>
+        </div>
+      `;
+    }
+
+    function abrirPanel(id) {
+      osAtual = todasOS.find(o => o.id === id);
+      if (!osAtual) return;
+
+      document.getElementById('p-num').textContent    = `OS #${String(osAtual.numero).padStart(3,'0')}`;
+      document.getElementById('p-client').textContent = osAtual.clients?.name || '—';
+      document.getElementById('p-date').textContent   = fmtData(osAtual.created_at);
+      document.getElementById('p-notes').value        = osAtual.notes || '';
+
+      const orcRow = document.getElementById('p-orc-row');
+      if (osAtual.orcamentos) {
+        orcRow.style.display = '';
+        document.getElementById('p-orc').textContent = `Orçamento #${String(osAtual.orcamentos.numero).padStart(3,'0')}`;
+      } else {
+        orcRow.style.display = 'none';
+      }
+
+      selecionarStatus(osAtual.status);
+      atualizarBotoesMover();
+
+      document.getElementById('side-panel').classList.add('open');
+      document.getElementById('panel-overlay').classList.add('open');
+    }
+
+    function fecharPanel() {
+      document.getElementById('side-panel').classList.remove('open');
+      document.getElementById('panel-overlay').classList.remove('open');
+      osAtual = null;
+    }
+
+    function selecionarStatus(s) {
+      statusSelecionado = s;
+      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.querySelector(`.btn-${s}`);
+      if (btn) btn.classList.add('active');
+      atualizarBotoesMover();
+    }
+
+    function atualizarBotoesMover() {
+      const idx = COLUNAS.findIndex(c => c.status === statusSelecionado);
+      const btnV = document.getElementById('btn-voltar');
+      const btnA = document.getElementById('btn-avancar');
+
+      btnV.disabled = idx <= 0;
+      btnV.style.opacity = idx <= 0 ? '.3' : '1';
+      btnA.disabled = idx >= COLUNAS.length - 1;
+      btnA.style.opacity = idx >= COLUNAS.length - 1 ? '.3' : '1';
+    }
+
+    function moverStatus(dir) {
+      const idx = COLUNAS.findIndex(c => c.status === statusSelecionado);
+      const next = idx + dir;
+      if (next < 0 || next >= COLUNAS.length) return;
+      selecionarStatus(COLUNAS[next].status);
+    }
+
+    async function salvarStatus() {
+      if (!osAtual || !statusSelecionado) return;
+      const notes = document.getElementById('p-notes').value.trim();
+      const { error } = await sb
+        .from('ordens_servico')
+        .update({ status: statusSelecionado, notes })
+        .eq('id', osAtual.id);
+      if (error) { alert('Erro: ' + error.message); return; }
+      osAtual.status = statusSelecionado;
+      osAtual.notes  = notes;
+      fecharPanel();
+      await carregarOS();
+    }
+
+    function irParaOS() {
+      window.location.href = 'os.html';
+    }
+
+    async function carregarOS() {
+      const { data, error } = await sb
+        .from('ordens_servico')
+        .select('*, clients(name), orcamentos(numero)')
+        .order('numero', { ascending: false });
+      if (error) { console.error(error); return; }
+      todasOS = data || [];
+      renderBoard();
+    }
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      const nome    = APP.profile.name || APP.profile.email || '';
+      const empresa = APP.company?.name || '';
+      document.getElementById('topbar-user').textContent  = nome;
+      document.getElementById('nome-empresa').textContent = empresa;
+
+      await carregarOS();
+    })();
+  </script>
+</body>
+</html>
