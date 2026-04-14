@@ -8,9 +8,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141723"></script>
-  <script src="js/auth.js?v=04141723"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141723">
+  <script src="js/config.js?v=04141727"></script>
+  <script src="js/auth.js?v=04141727"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141727">
+  <style>
+    .banner-bv {
+      display: none;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 18px;
+      background: rgba(34,197,94,.06);
+      border: 1px solid rgba(34,197,94,.3);
+      margin-bottom: 20px;
+    }
+    .banner-bv.show { display: flex; }
+    .banner-bv-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .banner-bv-body { flex: 1; }
+    .banner-bv-titulo { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .banner-bv-texto  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .banner-bv-fechar { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; flex-shrink: 0; line-height: 1; padding: 2px 4px; }
+    .banner-bv-fechar:hover { color: var(--text); }
+  </style>
 </head>
 <body>
   <div class="layout">
@@ -76,6 +94,16 @@
         <div class="page-header">
           <h2 id="titulo-boas-vindas">Olá!</h2>
           <p>Visão geral do seu negócio hoje.</p>
+        </div>
+
+        <!-- Banner boas-vindas (novo tenant) -->
+        <div class="banner-bv" id="banner-bv">
+          <div class="banner-bv-icon">🔒</div>
+          <div class="banner-bv-body">
+            <div class="banner-bv-titulo" id="banner-bv-titulo">Bem-vindo!</div>
+            <div class="banner-bv-texto">Seu ambiente está pronto e <strong>totalmente isolado</strong>. Nenhum dado de outros clientes é visível aqui — cada empresa acessa apenas os seus próprios registros.</div>
+          </div>
+          <button class="banner-bv-fechar" onclick="fecharBanner()" title="Fechar">✕</button>
         </div>
 
         <!-- KPIs -->
@@ -208,6 +236,7 @@
       document.getElementById('titulo-boas-vindas').textContent = `Olá, ${nome}!`;
       document.getElementById('topbar-user').textContent        = nome;
       document.getElementById('nome-empresa').textContent       = empresa;
+      document.getElementById('banner-bv-titulo').textContent   = `Bem-vindo(a) à ${empresa}!`;
 
       const agora   = new Date();
       const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
@@ -282,7 +311,20 @@
           <td>${fmtData(o.validade)}</td>
         </tr>`).join('');
       }
+
+      // Banner boas-vindas: mostra quando dashboard vazio e não foi dispensado
+      const bannerKey = `dmtech-bv-${cid}`;
+      const dashVazio = !clientes?.length && !osAbertas?.length && !orcAbertos?.length;
+      if (dashVazio && !localStorage.getItem(bannerKey)) {
+        document.getElementById('banner-bv').classList.add('show');
+      }
     })();
+
+    function fecharBanner() {
+      const cid = APP.company?.id;
+      if (cid) localStorage.setItem(`dmtech-bv-${cid}`, '1');
+      document.getElementById('banner-bv').classList.remove('show');
+    }
   </script>
 </body>
 </html>
