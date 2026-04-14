@@ -5,12 +5,24 @@
   <title>DMTechApp</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141854"></script>
+  <script src="js/config.js?v=04141858"></script>
   <script>
     sb.auth.getSession().then(({ data: { session } }) => {
       window.location.href = session ? 'dashboard.html' : 'login.html';
     });
   </script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f97316">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DMTech">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
-<body></body>
+<body>  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
 </html>

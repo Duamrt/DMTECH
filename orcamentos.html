@@ -10,10 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
-  <script src="js/config.js?v=04141854"></script>
-  <script src="js/auth.js?v=04141854"></script>
-  <script src="js/pdf-orc.js?v=04141854"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141854">
+  <script src="js/config.js?v=04141858"></script>
+  <script src="js/auth.js?v=04141858"></script>
+  <script src="js/pdf-orc.js?v=04141858"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141858">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -89,6 +89,13 @@
     .btn-reprove:hover { background:var(--danger-dim); }
     .actions-cell { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
   </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f97316">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DMTech">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
   <div class="layout">
@@ -828,6 +835,11 @@
     function esc(v) {
       if (!v) return '<span style="color:var(--text-dim)">—</span>';
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
 </body>
