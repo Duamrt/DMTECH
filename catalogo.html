@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141428"></script>
-  <script src="js/auth.js?v=04141428"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141428">
+  <script src="js/config.js?v=04141432"></script>
+  <script src="js/auth.js?v=04141432"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141432">
   <style>
     /* Tabs */
     .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
@@ -270,6 +270,20 @@
       await Promise.all([carregarServicos(), carregarProdutos()]);
     })();
 
+    /* ── Geração automática de código ── */
+    async function gerarCodigo(tipo) {
+      const tabela  = tipo === 'servico' ? 'services' : 'products';
+      const prefixo = tipo === 'servico' ? 'SRV' : 'PRD';
+      const { data } = await sb.from(tabela)
+        .select('code')
+        .eq('company_id', APP.company.id)
+        .like('code', `${prefixo}%`)
+        .order('code', { ascending: false })
+        .limit(1);
+      const ultimo = data?.[0]?.code ? parseInt(data[0].code.replace(prefixo, '')) || 0 : 0;
+      return `${prefixo}${String(ultimo + 1).padStart(3, '0')}`;
+    }
+
     /* ── Tabs ── */
     function trocarAba(aba) {
       document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['servicos','produtos'][i] === aba));
@@ -326,8 +340,10 @@
       const id   = document.getElementById('srv-id').value;
       const name = document.getElementById('srv-name').value.trim();
       if (!name) { alert('Nome é obrigatório.'); return; }
+      let code = document.getElementById('srv-code').value.trim() || null;
+      if (!id && !code) code = await gerarCodigo('servico');
       const payload = {
-        name, code: document.getElementById('srv-code').value.trim() || null,
+        name, code,
         unit: document.getElementById('srv-unit').value.trim() || null,
         price: parseFloat(document.getElementById('srv-price').value) || 0,
       };
@@ -430,9 +446,11 @@
       const id   = document.getElementById('prod-id').value;
       const name = document.getElementById('prod-name').value.trim();
       if (!name) { alert('Nome é obrigatório.'); return; }
+      let prodCode = document.getElementById('prod-code').value.trim() || null;
+      if (!id && !prodCode) prodCode = await gerarCodigo('produto');
       const payload = {
         name,
-        code:       document.getElementById('prod-code').value.trim()    || null,
+        code:       prodCode,
         barcode:    document.getElementById('prod-barcode').value.trim() || null,
         group_name: document.getElementById('prod-group').value.trim()   || null,
         unit:       document.getElementById('prod-unit').value.trim()    || null,

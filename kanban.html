@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141428"></script>
-  <script src="js/auth.js?v=04141428"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141428">
+  <script src="js/config.js?v=04141432"></script>
+  <script src="js/auth.js?v=04141432"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141432">
   <style>
     /* Board */
     .board-outer {
@@ -376,7 +376,7 @@
 
     .p-item-add {
       display: grid;
-      grid-template-columns: 30px 46px 1fr 38px 58px 28px;
+      grid-template-columns: 30px 1fr 38px 58px 28px;
       gap: 4px;
       margin-top: 8px;
       align-items: center;
@@ -634,7 +634,6 @@
             <option value="servico">S</option>
             <option value="produto">P</option>
           </select>
-          <input class="p-add-inp" id="p-add-codigo" placeholder="Cód." type="text" title="Código">
           <div class="p-ac-wrap" style="position:relative">
             <input class="p-add-inp" id="p-add-desc" placeholder="Descrição..." type="text"
               autocomplete="off"
@@ -707,9 +706,10 @@
     let statusSelecionado = null;
     let itensPanel        = [];
     let equipe            = [];
-    let catalogoCache     = [];   // services + products combinados
-    let acMatchesList     = [];   // resultados correntes do autocomplete
-    let acIdx             = -1;   // navegação por teclado
+    let catalogoCache       = [];   // services + products combinados
+    let acMatchesList       = [];   // resultados correntes do autocomplete
+    let acIdx               = -1;   // navegação por teclado
+    let acCodigoSelecionado = null; // código do item selecionado no autocomplete
 
     const fmtMoeda = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const fmtN     = v => (v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
@@ -842,30 +842,44 @@
 
     async function adicionarItem() {
       if (!osAtual) return;
-      const tipo   = document.getElementById('p-add-tipo').value;
-      const desc   = document.getElementById('p-add-desc').value.trim();
-      const codigo = document.getElementById('p-add-codigo').value.trim() || null;
-      const qtd    = parseFloat(document.getElementById('p-add-qtd').value) || 1;
-      const preco  = parseFloat(document.getElementById('p-add-preco').value) || 0;
+      const tipo  = document.getElementById('p-add-tipo').value;
+      const desc  = document.getElementById('p-add-desc').value.trim();
+      const qtd   = parseFloat(document.getElementById('p-add-qtd').value) || 1;
+      const preco = parseFloat(document.getElementById('p-add-preco').value) || 0;
       if (!desc) { dmToast('Informe a descrição do item', 'info'); return; }
 
       acFechar();
       const subtotal = qtd * preco;
       const { data, error } = await sb.from('os_items').insert({
-        os_id: osAtual.id, tipo, codigo, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal
+        os_id: osAtual.id, tipo, codigo: acCodigoSelecionado, descricao: desc,
+        quantidade: qtd, preco_unit: preco, subtotal
       }).select().single();
       if (error) { dmToast('Erro ao adicionar item', 'error'); return; }
 
+      acCodigoSelecionado = null;
       itensPanel.push(data);
       renderItensPanel();
-      document.getElementById('p-add-desc').value   = '';
-      document.getElementById('p-add-codigo').value = '';
-      document.getElementById('p-add-qtd').value    = '1';
-      document.getElementById('p-add-preco').value  = '0';
+      document.getElementById('p-add-desc').value  = '';
+      document.getElementById('p-add-qtd').value   = '1';
+      document.getElementById('p-add-preco').value = '0';
 
       // Atualiza total na OS
       const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
       await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+    }
+
+    /* ── Geração automática de código ── */
+    async function gerarCodigo(tipo) {
+      const tabela  = tipo === 'servico' ? 'services' : 'products';
+      const prefixo = tipo === 'servico' ? 'SRV' : 'PRD';
+      const { data } = await sb.from(tabela)
+        .select('code')
+        .eq('company_id', APP.company.id)
+        .like('code', `${prefixo}%`)
+        .order('code', { ascending: false })
+        .limit(1);
+      const ultimo = data?.[0]?.code ? parseInt(data[0].code.replace(prefixo, '')) || 0 : 0;
+      return `${prefixo}${String(ultimo + 1).padStart(3, '0')}`;
     }
 
     /* ── Autocomplete catálogo ── */
@@ -934,10 +948,10 @@
     function acSelecionar(i) {
       const item = acMatchesList[i];
       if (!item) return;
-      document.getElementById('p-add-tipo').value   = item._tipo;
-      document.getElementById('p-add-desc').value   = item.name;
-      document.getElementById('p-add-codigo').value = item.code || '';
-      document.getElementById('p-add-preco').value  = item.price || 0;
+      acCodigoSelecionado = item.code || null;
+      document.getElementById('p-add-tipo').value  = item._tipo;
+      document.getElementById('p-add-desc').value  = item.name;
+      document.getElementById('p-add-preco').value = item.price || 0;
       acFechar();
       document.getElementById('p-add-qtd').focus();
     }
@@ -945,20 +959,19 @@
     async function acCriar() {
       const nome = document.getElementById('p-add-desc').value.trim();
       const tipo = document.getElementById('p-add-tipo').value;
-      const cod  = document.getElementById('p-add-codigo').value.trim() || null;
       const prec = parseFloat(document.getElementById('p-add-preco').value) || 0;
       if (!nome) return;
       acFechar();
+      const cod    = await gerarCodigo(tipo);
       const tabela = tipo === 'servico' ? 'services' : 'products';
       const { data, error } = await sb.from(tabela).insert({
-        company_id: APP.company.id, name: nome, code: cod || null, price: prec
+        company_id: APP.company.id, name: nome, code: cod, price: prec
       }).select().single();
       if (error) { dmToast('Erro ao criar no catálogo', 'error'); return; }
-      // Adiciona ao cache e seleciona
       data._tipo = tipo;
       catalogoCache.push(data);
-      document.getElementById('p-add-codigo').value = data.code || '';
-      dmToast(`"${nome}" criado no catálogo!`, 'success');
+      acCodigoSelecionado = cod;
+      dmToast(`"${nome}" criado como ${cod}`, 'success');
     }
 
     function acKeyDown(e) {
