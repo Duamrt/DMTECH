@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141633"></script>
-  <script src="js/auth.js?v=04141633"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141633">
+  <script src="js/config.js?v=04141636"></script>
+  <script src="js/auth.js?v=04141636"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141636">
   <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
     .modal-overlay.active { display:flex; }
@@ -227,6 +227,7 @@
       <div id="painel-xml" style="display:none">
 
         <!-- Drop zone (antes de selecionar arquivo) -->
+        <div id="xml-erro-dup" class="aviso-xml" style="display:none;margin-bottom:10px"></div>
         <div id="xml-dropzone"
           onclick="document.getElementById('input-xml').click()"
           style="border:2px dashed var(--border);padding:40px 20px;text-align:center;cursor:pointer;margin-bottom:4px;transition:border-color .12s"
@@ -419,11 +420,28 @@
       reader.onload = async e => {
         const parsed = parseNFe(e.target.result);
         if (!parsed) { dmToast('XML inválido ou não reconhecido como NF-e', 'error'); return; }
-        parsed.itens = await matchItensAoCatalogo(parsed.itens);
         parsed.fornMatch = await matchFornecedor(parsed.cnpjEmit, parsed.nomeEmit);
+
+        // ── Bloqueia duplicata ANTES de qualquer coisa ──
+        if (parsed.nNF && parsed.fornMatch.id) {
+          const { data: dup } = await sb.from('notas_fiscais')
+            .select('id')
+            .eq('company_id', APP.company.id)
+            .eq('fornecedor_id', parsed.fornMatch.id)
+            .eq('numero', parsed.nNF)
+            .limit(1);
+          if (dup?.length) {
+            const el = document.getElementById('xml-erro-dup');
+            el.textContent = `NF nº ${parsed.nNF} deste fornecedor já está lançada. Selecione outro arquivo.`;
+            el.style.display = 'block';
+            return; // para tudo — não mostra revisão
+          }
+        }
+
+        parsed.itens = await matchItensAoCatalogo(parsed.itens);
         xmlDados = parsed;
         preencherRevisao(parsed);
-        // Mostra revisão dentro do painel XML
+        document.getElementById('xml-erro-dup').style.display = 'none';
         document.getElementById('xml-dropzone').style.display = 'none';
         document.getElementById('xml-actions-inicial').style.display = 'none';
         document.getElementById('xml-revisao').style.display = 'block';
@@ -535,6 +553,7 @@
     function voltarDropzone() {
       xmlDados = null;
       document.getElementById('xml-revisao').style.display = 'none';
+      document.getElementById('xml-erro-dup').style.display = 'none';
       document.getElementById('xml-dropzone').style.display = 'block';
       document.getElementById('xml-actions-inicial').style.display = 'flex';
     }
@@ -571,24 +590,7 @@
           }
         }
 
-        // 2. Verificar duplicata de NF (mesmo fornecedor + mesmo número)
-        if (d.nNF && fornId) {
-          const { data: dup } = await sb.from('notas_fiscais')
-            .select('id,numero')
-            .eq('company_id', APP.company.id)
-            .eq('fornecedor_id', fornId)
-            .eq('numero', d.nNF)
-            .limit(1);
-          if (dup?.length) {
-            const aviso = document.getElementById('xml-aviso-dup');
-            aviso.textContent = `NF nº ${d.nNF} deste fornecedor já foi lançada. Importação bloqueada para evitar duplicata.`;
-            aviso.style.display = 'block';
-            btn.disabled = false; btn.textContent = 'Confirmar Importação';
-            return;
-          }
-        }
-
-        // 3. Inserir NF
+        // 2. Inserir NF
         const vencXml = document.getElementById('xml-vencimento').value || null;
         const { data: nfNova, error: errNf } = await sb.from('notas_fiscais').insert({
           company_id:      APP.company.id,
