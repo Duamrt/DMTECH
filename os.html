@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Ordens de Serviço</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141319"></script>
+  <script src="js/auth.js?v=04141319"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141319">
+  <style>
+    .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .filter-btn {
+      padding:6px 14px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif;
+      background:none; border:1px solid var(--border); color:var(--text-muted);
+      cursor:pointer; transition:all .12s;
+    }
+    .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .filter-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    .badge { display:inline-block; padding:2px 8px; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    .badge-aberta         { background:rgba(59,130,246,.15);  color:#60a5fa; }
+    .badge-em_andamento   { background:rgba(245,158,11,.15);  color:#fbbf24; }
+    .badge-aguardando_peca{ background:rgba(249,115,22,.15);  color:#fb923c; }
+    .badge-pronta         { background:rgba(34,197,94,.15);   color:#4ade80; }
+    .badge-entregue       { background:rgba(107,114,128,.15); color:#9ca3af; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:860px; padding:28px; position:relative; max-height:90vh; overflow-y:auto; }
+    .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
+    .btn-danger:hover { background:var(--danger-dim); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-row .form-group { margin-bottom:0; }
+
+    .items-section { margin-top:20px; }
+    .items-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .items-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
+    .items-total { font-size:14px; font-weight:800; color:var(--accent); }
+    .items-table { width:100%; border-collapse:collapse; font-size:13px; border:1px solid var(--border); }
+    .items-table th { background:var(--surface-3); padding:7px 10px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); border-bottom:1px solid var(--border); }
+    .items-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-muted); }
+    .items-table tr:last-child td { border-bottom:none; }
+    .item-add-row { display:grid; grid-template-columns:1fr 90px 120px 100px; gap:8px; margin-top:8px; align-items:start; }
+    .ac-wrap { position:relative; }
+    .ac-drop { position:absolute; top:100%; left:0; right:0; background:var(--surface-3); border:1px solid var(--border); z-index:300; max-height:200px; overflow-y:auto; display:none; }
+    .ac-item { padding:8px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); }
+    .ac-item:hover { background:var(--surface-2); color:var(--text); }
+    .ac-item:last-child { border-bottom:none; }
+    .tipo-badge { font-size:10px; font-weight:800; padding:1px 5px; }
+    .tipo-s { background:rgba(59,130,246,.2); color:#60a5fa; }
+    .tipo-p { background:rgba(34,197,94,.2); color:#4ade80; }
+    .btn-remove { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; }
+    .btn-remove:hover { color:var(--danger); }
+    .origem-tag { font-size:11px; color:var(--text-dim); font-family:'Fira Code',monospace; }
+    .actions-cell { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+        <a href="os.html" class="nav-item active"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
+        <div class="nav-section">Gestão</div>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Financeiro</a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">Ordens de Serviço</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="page-header">
+          <h2>Ordens de Serviço</h2>
+          <p>Acompanhe todas as OS abertas e em andamento.</p>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+          <div class="filter-bar" style="margin-bottom:0">
+            <button class="filter-btn active" onclick="setFiltro('todos',this)">Todas</button>
+            <button class="filter-btn" onclick="setFiltro('aberta',this)">Aberta</button>
+            <button class="filter-btn" onclick="setFiltro('em_andamento',this)">Em Andamento</button>
+            <button class="filter-btn" onclick="setFiltro('aguardando_peca',this)">Aguardando Peça</button>
+            <button class="filter-btn" onclick="setFiltro('pronta',this)">Pronta</button>
+            <button class="filter-btn" onclick="setFiltro('entregue',this)">Entregue</button>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModal()">+ Nova OS</button>
+        </div>
+
+        <div class="section">
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cliente</th>
+                  <th>Origem</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Data</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tabela-os">
+                <tr><td colspan="7" class="empty-state">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal OS -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-titulo">Nova OS</div>
+
+      <input type="hidden" id="os-id">
+
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <select class="form-input" id="os-cliente">
+            <option value="">Selecionar cliente...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-input" id="os-status">
+            <option value="aberta">Aberta</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="aguardando_peca">Aguardando Peça</option>
+            <option value="pronta">Pronta</option>
+            <option value="entregue">Entregue</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <input class="form-input" type="text" id="os-notes" placeholder="Descrição do serviço...">
+      </div>
+
+      <!-- Items -->
+      <div class="items-section">
+        <div class="items-header">
+          <span class="items-title">Itens</span>
+          <span class="items-total" id="os-itens-total">Total: R$ 0,00</span>
+        </div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th style="width:40%">Descrição</th>
+              <th>Qtd</th>
+              <th>Preço Unit.</th>
+              <th>Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="os-items-tbody">
+            <tr><td colspan="6" class="empty-state" style="font-size:12px">Nenhum item adicionado.</td></tr>
+          </tbody>
+        </table>
+        <div class="item-add-row" id="os-add-row">
+          <div class="ac-wrap">
+            <input class="form-input" type="text" id="os-item-desc" placeholder="Buscar catálogo ou digitar..."
+              oninput="filtrarAc(this.value)" onblur="setTimeout(esconderAc,150)">
+            <div class="ac-drop" id="ac-drop"></div>
+          </div>
+          <input class="form-input" type="number" id="os-item-qtd" placeholder="Qtd" value="1" min="0.001" step="any">
+          <input class="form-input" type="number" id="os-item-preco" placeholder="Preço" min="0" step="0.01">
+          <button class="btn btn-ghost" onclick="adicionarItem()">+ Item</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    let todasOs = [];
+    let clientes = [];
+    let catalogo = [];
+    let itensAtual = [];
+    let tipoItemAtual = 'servico';
+    let filtroAtivo = 'todos';
+    let osOrigemMap = {}; // id -> numero do orc
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+      await Promise.all([carregarClientes(), carregarCatalogo()]);
+      await carregarOs();
+    })();
+
+    async function carregarClientes() {
+      const { data } = await sb.from('clients').select('id,name').eq('company_id', APP.company.id).order('name');
+      clientes = data || [];
+      const sel = document.getElementById('os-cliente');
+      sel.innerHTML = '<option value="">Selecionar cliente...</option>' +
+        clientes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    }
+
+    async function carregarCatalogo() {
+      const [{ data: servs }, { data: prods }] = await Promise.all([
+        sb.from('services').select('id,name,unit,price').eq('company_id', APP.company.id),
+        sb.from('products').select('id,name,unit,price').eq('company_id', APP.company.id)
+      ]);
+      catalogo = [
+        ...(servs || []).map(s => ({ ...s, tipo: 'servico' })),
+        ...(prods || []).map(p => ({ ...p, tipo: 'produto' }))
+      ];
+    }
+
+    async function carregarOs() {
+      const { data } = await sb.from('ordens_servico')
+        .select('*, clients(name), orcamentos(numero)')
+        .eq('company_id', APP.company.id)
+        .order('numero', { ascending: false });
+      todasOs = data || [];
+      renderTabela();
+    }
+
+    function setFiltro(f, btn) {
+      filtroAtivo = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTabela();
+    }
+
+    function renderTabela() {
+      const lista = filtroAtivo === 'todos' ? todasOs : todasOs.filter(o => o.status === filtroAtivo);
+      const tbody = document.getElementById('tabela-os');
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma OS encontrada.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(o => {
+        const nome   = o.clients?.name || '—';
+        const origem = o.orcamentos ? `<span class="origem-tag">ORC #${o.orcamentos.numero}</span>` : '<span style="color:var(--text-dim);font-size:11px">Direta</span>';
+        const data   = new Date(o.created_at).toLocaleDateString('pt-BR');
+        return `<tr>
+          <td class="mono" style="color:var(--text-dim);font-size:12px">#${o.numero}</td>
+          <td style="font-weight:600;color:var(--text)">${esc(nome)}</td>
+          <td>${origem}</td>
+          <td><span class="badge badge-${o.status}">${labelStatus(o.status)}</span></td>
+          <td style="font-family:'Fira Code',monospace;color:var(--accent)">${fmtMoeda(o.total)}</td>
+          <td style="color:var(--text-dim);font-size:12px">${data}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick='abrirModalEditar(${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function labelStatus(s) {
+      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' }[s] || s;
+    }
+
+    // ── Modal ──
+    function abrirModal() {
+      itensAtual = [];
+      tipoItemAtual = 'servico';
+      document.getElementById('modal-titulo').textContent = 'Nova OS';
+      document.getElementById('os-id').value = '';
+      document.getElementById('os-cliente').value = '';
+      document.getElementById('os-status').value = 'aberta';
+      document.getElementById('os-notes').value = '';
+      document.getElementById('btn-excluir').style.display = 'none';
+      document.getElementById('os-add-row').style.display = 'grid';
+      renderItens();
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    async function abrirModalEditar(os) {
+      itensAtual = [];
+      tipoItemAtual = 'servico';
+      document.getElementById('modal-titulo').textContent = `OS #${os.numero}`;
+      document.getElementById('os-id').value = os.id;
+      document.getElementById('os-cliente').value = os.client_id || '';
+      document.getElementById('os-status').value = os.status;
+      document.getElementById('os-notes').value = os.notes || '';
+      document.getElementById('btn-excluir').style.display = 'block';
+      document.getElementById('os-add-row').style.display = 'grid';
+
+      const { data: items } = await sb.from('os_items').select('*').eq('os_id', os.id).order('id');
+      itensAtual = (items || []).map(i => ({
+        tipo: i.tipo, descricao: i.descricao,
+        quantidade: parseFloat(i.quantidade), preco_unit: parseFloat(i.preco_unit), subtotal: parseFloat(i.subtotal)
+      }));
+      renderItens();
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+      esconderAc();
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModal();
+    });
+
+    // ── Items ──
+    let acSugs = [];
+
+    function filtrarAc(q) {
+      if (!q || q.length < 2) { esconderAc(); return; }
+      acSugs = catalogo.filter(c => c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+      const div = document.getElementById('ac-drop');
+      if (!acSugs.length) { div.style.display = 'none'; return; }
+      div.innerHTML = acSugs.map((c, i) =>
+        `<div class="ac-item" onmousedown="selecionarAc(${i})">[${c.tipo === 'servico' ? 'S' : 'P'}] ${esc(c.name)} — ${fmtMoeda(c.price)}</div>`
+      ).join('');
+      div.style.display = 'block';
+    }
+
+    function selecionarAc(idx) {
+      const item = acSugs[idx];
+      if (!item) return;
+      document.getElementById('os-item-desc').value = item.name;
+      document.getElementById('os-item-preco').value = item.price || '';
+      tipoItemAtual = item.tipo;
+      esconderAc();
+      document.getElementById('os-item-qtd').focus();
+    }
+
+    function esconderAc() {
+      document.getElementById('ac-drop').style.display = 'none';
+    }
+
+    function adicionarItem() {
+      const desc  = document.getElementById('os-item-desc').value.trim();
+      const qtd   = parseFloat(document.getElementById('os-item-qtd').value)    || 0;
+      const preco = parseFloat(document.getElementById('os-item-preco').value) || 0;
+      if (!desc || qtd <= 0) return;
+      itensAtual.push({ tipo: tipoItemAtual, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal: qtd * preco });
+      document.getElementById('os-item-desc').value  = '';
+      document.getElementById('os-item-qtd').value   = '1';
+      document.getElementById('os-item-preco').value = '';
+      tipoItemAtual = 'servico';
+      renderItens();
+      document.getElementById('os-item-desc').focus();
+    }
+
+    function removerItem(idx) {
+      itensAtual.splice(idx, 1);
+      renderItens();
+    }
+
+    function renderItens() {
+      const tbody = document.getElementById('os-items-tbody');
+      if (!itensAtual.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="font-size:12px">Nenhum item adicionado.</td></tr>';
+        document.getElementById('os-itens-total').textContent = 'Total: R$ 0,00';
+        return;
+      }
+      tbody.innerHTML = itensAtual.map((it, i) => `
+        <tr>
+          <td><span class="badge tipo-badge tipo-${it.tipo === 'servico' ? 's' : 'p'}">${it.tipo === 'servico' ? 'S' : 'P'}</span></td>
+          <td style="color:var(--text)">${esc(it.descricao)}</td>
+          <td class="mono">${fmtQtd(it.quantidade)}</td>
+          <td class="mono">${fmtMoeda(it.preco_unit)}</td>
+          <td class="mono" style="color:var(--accent)">${fmtMoeda(it.subtotal)}</td>
+          <td><button class="btn-remove" onclick="removerItem(${i})" title="Remover">×</button></td>
+        </tr>
+      `).join('');
+      const total = itensAtual.reduce((s, it) => s + it.subtotal, 0);
+      document.getElementById('os-itens-total').textContent = 'Total: ' + fmtMoeda(total);
+    }
+
+    // ── Salvar ──
+    async function salvar() {
+      const id       = document.getElementById('os-id').value;
+      const clientId = document.getElementById('os-cliente').value || null;
+      const status   = document.getElementById('os-status').value;
+      const notes    = document.getElementById('os-notes').value.trim() || null;
+      const total    = itensAtual.reduce((s, it) => s + it.subtotal, 0);
+
+      const btn = document.getElementById('btn-salvar');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      let osId = id;
+
+      if (id) {
+        await sb.from('ordens_servico').update({ client_id: clientId, status, notes, total }).eq('id', id);
+        await sb.from('os_items').delete().eq('os_id', id);
+      } else {
+        const { data: maxN } = await sb.from('ordens_servico').select('numero').eq('company_id', APP.company.id).order('numero', { ascending: false }).limit(1);
+        const numero = maxN?.length ? maxN[0].numero + 1 : 1;
+        const { data: novaOs } = await sb.from('ordens_servico').insert({
+          company_id: APP.company.id, client_id: clientId, status, notes, total, numero
+        }).select().single();
+        osId = novaOs?.id;
+      }
+
+      if (osId && itensAtual.length) {
+        await sb.from('os_items').insert(
+          itensAtual.map(it => ({ os_id: osId, ...it }))
+        );
+      }
+
+      btn.disabled = false; btn.textContent = 'Salvar';
+      fecharModal();
+      await carregarOs();
+    }
+
+    async function excluir() {
+      const id = document.getElementById('os-id').value;
+      if (!id) return;
+      if (!confirm('Excluir esta OS?')) return;
+      await sb.from('ordens_servico').delete().eq('id', id);
+      fecharModal();
+      await carregarOs();
+    }
+
+    function fmtMoeda(v) {
+      return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v || 0);
+    }
+    function fmtQtd(v) {
+      return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+    }
+    function esc(v) {
+      if (!v) return '<span style="color:var(--text-dim)">—</span>';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>
