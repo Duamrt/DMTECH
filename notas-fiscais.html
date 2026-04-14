@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Notas Fiscais</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141606"></script>
+  <script src="js/auth.js?v=04141606"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141606">
+  <style>
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:560px; padding:28px; position:relative; max-height:90vh; overflow-y:auto; }
+    .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
+    .btn-danger:hover { background:rgba(239,68,68,.08); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-row .form-group { margin-bottom:0; }
+
+    .nf-badge {
+      display:inline-block; padding:2px 8px; font-size:10px; font-weight:700;
+      letter-spacing:.04em; text-transform:uppercase;
+    }
+    .nf-badge-sim { background:rgba(74,222,128,.12); color:#4ade80; }
+    .nf-badge-nao { background:rgba(107,114,128,.12); color:#9ca3af; }
+
+    .ac-wrap { position:relative; }
+    .ac-drop {
+      position:absolute; top:100%; left:0; right:0; background:var(--surface-3);
+      border:1px solid var(--border); z-index:300; max-height:200px; overflow-y:auto; display:none;
+    }
+    .ac-item { padding:8px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); }
+    .ac-item:hover { background:var(--surface-2); color:var(--text); }
+    .ac-item:last-child { border-bottom:none; }
+
+    .actions-cell { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+    .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+    .filter-btn { padding:6px 14px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; background:none; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; transition:all .12s; }
+    .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .filter-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="minha-fila.html" class="nav-item"><span class="nav-icon">◫</span> Minha Fila</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+        <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
+        <a href="fornecedores.html" class="nav-item"><span class="nav-icon">◪</span> Fornecedores</a>
+        <div class="nav-section">Financeiro</div>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Caixa</a>
+        <a href="notas-fiscais.html" class="nav-item active"><span class="nav-icon">⊟</span> Nota Fiscal</a>
+        <a href="folha.html" class="nav-item"><span class="nav-icon">⊠</span> Folha</a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">Notas Fiscais</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="page-header">
+          <h2>Notas Fiscais</h2>
+          <p>Registro de NFs de compra vinculadas a fornecedores.</p>
+        </div>
+
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="setFiltro('todos',this)">Todas</button>
+          <button class="filter-btn" onclick="setFiltro('pendente',this)">A Pagar</button>
+          <button class="filter-btn" onclick="setFiltro('pago',this)">Pagas</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary" onclick="abrirModal()">+ Nova NF</button>
+        </div>
+
+        <div class="section">
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nº NF</th>
+                  <th>Fornecedor</th>
+                  <th>Data</th>
+                  <th>Vencimento</th>
+                  <th>Caixa</th>
+                  <th style="text-align:right">Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tabela-nf">
+                <tr><td colspan="7" class="empty-state">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal NF -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-titulo">Nova Nota Fiscal</div>
+      <input type="hidden" id="nf-id">
+
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Fornecedor</label>
+          <div class="ac-wrap">
+            <input class="form-input" type="text" id="nf-fornecedor-nome"
+              placeholder="Buscar fornecedor..."
+              oninput="acFornecedor(this.value)" onblur="setTimeout(esconderAcForn,150)">
+            <div class="ac-drop" id="ac-forn-drop"></div>
+          </div>
+          <input type="hidden" id="nf-fornecedor-id">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Número NF</label>
+          <input class="form-input" type="text" id="nf-numero" placeholder="000001">
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Data de Emissão</label>
+          <input class="form-input" type="date" id="nf-data">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vencimento</label>
+          <input class="form-input" type="date" id="nf-vencimento">
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Valor Total (R$) *</label>
+          <input class="form-input" type="number" id="nf-valor" placeholder="0,00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Forma de Pagamento</label>
+          <select class="form-input" id="nf-forma">
+            <option value="">— selecionar —</option>
+            <option value="pix">PIX</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferência</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao">Cartão</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <input class="form-input" type="text" id="nf-obs" placeholder="Material comprado, número do pedido...">
+      </div>
+
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <input type="checkbox" id="nf-lancou-caixa" style="width:16px;height:16px;cursor:pointer">
+        <label for="nf-lancou-caixa" style="font-size:13px;color:var(--text-muted);cursor:pointer">
+          Registrar automaticamente no Caixa como despesa
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    let todasNf = [], fornecedores = [], acSugs = [], filtroAtivo = 'todos', editandoId = null;
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+      await Promise.all([carregarNFs(), carregarFornecedores()]);
+    })();
+
+    async function carregarNFs() {
+      const { data } = await sb.from('notas_fiscais')
+        .select('*, fornecedores(nome)')
+        .eq('company_id', APP.company.id)
+        .order('created_at', { ascending: false });
+      todasNf = data || [];
+      renderTabela();
+    }
+
+    async function carregarFornecedores() {
+      const { data } = await sb.from('fornecedores').select('id,nome,cnpj').eq('company_id', APP.company.id).order('nome');
+      fornecedores = data || [];
+    }
+
+    function setFiltro(f, btn) {
+      filtroAtivo = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTabela();
+    }
+
+    function renderTabela() {
+      let lista = todasNf;
+      if (filtroAtivo === 'pendente') lista = lista.filter(n => n.vencimento && !_nfPago(n));
+      else if (filtroAtivo === 'pago')   lista = lista.filter(n => _nfPago(n));
+
+      const tbody = document.getElementById('tabela-nf');
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma NF encontrada.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(n => {
+        const forn  = n.fornecedores?.nome || '<span style="color:var(--text-dim)">—</span>';
+        const data  = n.data ? new Date(n.data+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        const venc  = n.vencimento ? new Date(n.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        const pago  = _nfPago(n);
+        const badge = pago
+          ? '<span class="nf-badge nf-badge-sim">No Caixa</span>'
+          : '<span class="nf-badge nf-badge-nao">Pendente</span>';
+        return `<tr>
+          <td class="mono" style="color:var(--text-dim);font-size:12px">${esc(n.numero||'—')}</td>
+          <td style="font-weight:600;color:var(--text)">${esc(forn)}</td>
+          <td style="color:var(--text-dim);font-size:12px">${data}</td>
+          <td style="color:var(--text-dim);font-size:12px">${venc}</td>
+          <td>${badge}</td>
+          <td style="font-family:'Fira Code',monospace;color:var(--accent);text-align:right;font-weight:700">${fmtMoeda(n.valor_total)}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick='abrirEditar(${JSON.stringify(n).replace(/'/g,"&#39;")})'>Editar</button>
+            ${!pago ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;color:var(--accent)" onclick="lancarCaixa('${n.id}','${esc(n.fornecedores?.nome||'')}','${n.valor_total}','${n.vencimento||''}')">+ Caixa</button>` : ''}
+          </div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Checa se já tem lançamento no caixa p/ esta NF
+    function _nfPago(n) {
+      // Simplificado: se obs ou campo caixa_id existisse poderíamos checar. Por ora usa campo na tabela.
+      return n._lancou_caixa || false;
+    }
+
+    // Autocomplete fornecedor
+    function acFornecedor(q) {
+      document.getElementById('nf-fornecedor-id').value = '';
+      if (!q || q.length < 1) { esconderAcForn(); return; }
+      acSugs = fornecedores.filter(f => f.nome.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+      const drop = document.getElementById('ac-forn-drop');
+      if (!acSugs.length) { drop.style.display='none'; return; }
+      drop.innerHTML = acSugs.map((f,i) =>
+        `<div class="ac-item" onmousedown="selecionarForn(${i})">${esc(f.nome)}</div>`
+      ).join('');
+      drop.style.display = 'block';
+    }
+
+    function selecionarForn(idx) {
+      const f = acSugs[idx];
+      if (!f) return;
+      document.getElementById('nf-fornecedor-nome').value = f.nome;
+      document.getElementById('nf-fornecedor-id').value   = f.id;
+      esconderAcForn();
+    }
+
+    function esconderAcForn() {
+      document.getElementById('ac-forn-drop').style.display = 'none';
+    }
+
+    function abrirModal() {
+      editandoId = null;
+      document.getElementById('modal-titulo').textContent = 'Nova Nota Fiscal';
+      ['nf-id','nf-numero','nf-obs'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('nf-fornecedor-nome').value = '';
+      document.getElementById('nf-fornecedor-id').value   = '';
+      document.getElementById('nf-data').value       = new Date().toISOString().slice(0,10);
+      document.getElementById('nf-vencimento').value = '';
+      document.getElementById('nf-valor').value      = '';
+      document.getElementById('nf-forma').value      = '';
+      document.getElementById('nf-lancou-caixa').checked = true;
+      document.getElementById('btn-excluir').style.display = 'none';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function abrirEditar(n) {
+      editandoId = n.id;
+      document.getElementById('modal-titulo').textContent = 'Editar NF';
+      document.getElementById('nf-id').value             = n.id;
+      document.getElementById('nf-fornecedor-nome').value = n.fornecedores?.nome || '';
+      document.getElementById('nf-fornecedor-id').value  = n.fornecedor_id || '';
+      document.getElementById('nf-numero').value         = n.numero || '';
+      document.getElementById('nf-data').value           = n.data || '';
+      document.getElementById('nf-vencimento').value     = n.vencimento || '';
+      document.getElementById('nf-valor').value          = n.valor_total || '';
+      document.getElementById('nf-forma').value          = n.forma_pagamento || '';
+      document.getElementById('nf-obs').value            = n.obs || '';
+      document.getElementById('nf-lancou-caixa').checked = false;
+      document.getElementById('btn-excluir').style.display = 'block';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+      editandoId = null;
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModal();
+    });
+
+    async function salvar() {
+      const valor = parseFloat(document.getElementById('nf-valor').value);
+      if (!valor || valor <= 0) { dmToast('Informe o valor total', 'error'); return; }
+
+      const fornId    = document.getElementById('nf-fornecedor-id').value || null;
+      const numero    = document.getElementById('nf-numero').value.trim() || null;
+      const data      = document.getElementById('nf-data').value || null;
+      const vencimento = document.getElementById('nf-vencimento').value || null;
+      const forma     = document.getElementById('nf-forma').value || null;
+      const obs       = document.getElementById('nf-obs').value.trim() || null;
+      const lancarCx  = document.getElementById('nf-lancou-caixa').checked;
+      const fornNome  = document.getElementById('nf-fornecedor-nome').value.trim();
+
+      const btn = document.getElementById('btn-salvar');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      const payload = { fornecedor_id: fornId, numero, data, vencimento, valor_total: valor, forma_pagamento: forma, obs };
+      let nfId = editandoId, error;
+
+      if (editandoId) {
+        ({ error } = await sb.from('notas_fiscais').update(payload).eq('id', editandoId).eq('company_id', APP.company.id));
+      } else {
+        const { data: nova, error: e } = await sb.from('notas_fiscais').insert({ ...payload, company_id: APP.company.id }).select('id').single();
+        error = e; nfId = nova?.id;
+      }
+
+      if (error) { btn.disabled=false; btn.textContent='Salvar'; dmToast('Erro: '+error.message,'error'); return; }
+
+      // Lançar no caixa automaticamente
+      if (lancarCx && nfId && !editandoId) {
+        const descCaixa = `NF ${numero||'s/n'} — ${fornNome || 'Fornecedor'}`;
+        await sb.from('caixa').insert({
+          company_id: APP.company.id,
+          tipo: 'saida',
+          descricao: descCaixa,
+          valor,
+          data_vencimento: vencimento || data,
+          pago: false,
+          forma_pagamento: forma,
+          categoria: 'fornecedor',
+          nf_id: nfId
+        });
+      }
+
+      btn.disabled = false; btn.textContent = 'Salvar';
+      dmToast(editandoId ? 'NF atualizada' : 'NF registrada' + (lancarCx ? ' e lançada no Caixa' : ''));
+      fecharModal();
+      await carregarNFs();
+    }
+
+    async function lancarCaixa(nfId, fornNome, valor, vencimento) {
+      const nf = todasNf.find(n => n.id === nfId);
+      const desc = `NF ${nf?.numero||'s/n'} — ${fornNome || 'Fornecedor'}`;
+      const { error } = await sb.from('caixa').insert({
+        company_id: APP.company.id,
+        tipo: 'saida',
+        descricao: desc,
+        valor: parseFloat(valor),
+        data_vencimento: vencimento || null,
+        pago: false,
+        categoria: 'fornecedor',
+        nf_id: nfId
+      });
+      if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      dmToast('Despesa lançada no Caixa');
+      await carregarNFs();
+    }
+
+    function excluir() {
+      dmConfirm('Excluir esta NF? Lançamentos no Caixa não serão removidos.', async () => {
+        const { error } = await sb.from('notas_fiscais').delete().eq('id', editandoId).eq('company_id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message,'error'); return; }
+        dmToast('NF excluída');
+        fecharModal();
+        await carregarNFs();
+      }, 'Excluir', true);
+    }
+
+    function fmtMoeda(v) {
+      return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v||0);
+    }
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

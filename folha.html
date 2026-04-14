@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Folha</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141606"></script>
+  <script src="js/auth.js?v=04141606"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141606">
+  <style>
+    /* ── Period nav ── */
+    .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+    .period-nav-label { font-size:20px; font-weight:800; color:var(--text); min-width:180px; text-align:center; }
+    .period-nav-label span { color:var(--accent); }
+    .period-btn { width:36px; height:36px; background:var(--surface-2); border:1px solid var(--border); cursor:pointer; font-size:16px; color:var(--text-muted); transition:all .12s; display:flex; align-items:center; justify-content:center; }
+    .period-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* ── KPIs ── */
+    .folha-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:24px; }
+    .folha-kpi  { background:var(--surface-2); border:1px solid var(--border); padding:14px 16px; }
+    .folha-kpi-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:5px; }
+    .folha-kpi-val   { font-size:20px; font-weight:800; font-family:'Fira Code',monospace; }
+
+    /* ── Technician cards ── */
+    .tec-card { background:var(--surface-2); border:2px solid var(--border); padding:16px 18px; margin-bottom:8px; transition:border-color .12s; }
+    .tec-card:hover { border-color:var(--border-light, var(--accent)); }
+    .tec-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+    .tec-nome { font-size:16px; font-weight:800; color:var(--text); text-transform:uppercase; }
+    .tec-cargo { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .tec-liquido { text-align:right; }
+    .tec-liquido-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
+    .tec-liquido-val { font-size:22px; font-weight:800; font-family:'Fira Code',monospace; }
+
+    .tec-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+    .tec-cell { background:var(--surface-3,var(--surface)); border:1px solid var(--border); padding:8px 10px; text-align:center; }
+    .tec-cell-val { font-size:13px; font-weight:700; font-family:'Fira Code',monospace; }
+    .tec-cell-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-top:2px; }
+
+    .tec-vales { margin-top:10px; border-left:3px solid #f87171; padding-left:12px; }
+    .vale-line { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; }
+    .vale-info { color:var(--text-muted); }
+    .vale-dt   { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-dim); margin-right:8px; }
+    .vale-val  { font-family:'Fira Code',monospace; font-weight:700; color:#f87171; }
+
+    .tec-actions { margin-top:10px; display:flex; justify-content:flex-end; }
+
+    /* ── Total bar ── */
+    .total-bar { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border:2px solid var(--accent); padding:16px 22px; margin-top:8px; }
+    .total-bar-label { font-size:13px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+    .total-bar-val   { font-size:26px; font-weight:800; font-family:'Fira Code',monospace; color:var(--accent); }
+
+    /* ── Modal Vale ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:400px; padding:28px; position:relative; }
+    .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="minha-fila.html" class="nav-item"><span class="nav-icon">◫</span> Minha Fila</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+        <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
+        <a href="fornecedores.html" class="nav-item"><span class="nav-icon">◪</span> Fornecedores</a>
+        <div class="nav-section">Financeiro</div>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Caixa</a>
+        <a href="notas-fiscais.html" class="nav-item"><span class="nav-icon">⊟</span> Nota Fiscal</a>
+        <a href="folha.html" class="nav-item active"><span class="nav-icon">⊠</span> Folha</a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">Folha de Pagamento</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <div class="period-nav">
+          <button class="period-btn" onclick="mudarMes(-1)">&#8592;</button>
+          <div class="period-nav-label" id="period-label">— <span>—</span></div>
+          <button class="period-btn" onclick="mudarMes(1)">&#8594;</button>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+            <label class="form-label" style="margin:0;font-size:12px">Dias úteis:</label>
+            <input class="form-input" type="number" id="dias-uteis" value="22" min="1" max="31" style="width:70px" oninput="calcular()">
+          </div>
+        </div>
+
+        <div class="folha-kpis">
+          <div class="folha-kpi">
+            <div class="folha-kpi-label">Salários</div>
+            <div class="folha-kpi-val" id="kpi-salarios" style="color:var(--text)">—</div>
+          </div>
+          <div class="folha-kpi">
+            <div class="folha-kpi-label">Vale Refeição</div>
+            <div class="folha-kpi-val" id="kpi-vr" style="color:#60a5fa">—</div>
+          </div>
+          <div class="folha-kpi">
+            <div class="folha-kpi-label">Vales / Adiant.</div>
+            <div class="folha-kpi-val" id="kpi-vales" style="color:#f87171">—</div>
+          </div>
+          <div class="folha-kpi">
+            <div class="folha-kpi-label">Total Líquido</div>
+            <div class="folha-kpi-val" id="kpi-liquido" style="color:var(--accent)">—</div>
+          </div>
+        </div>
+
+        <div id="emp-lista">
+          <div class="empty-state">Carregando...</div>
+        </div>
+        <div id="total-bar"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal Vale -->
+  <div class="modal-overlay" id="modal-vale">
+    <div class="modal">
+      <div class="modal-title">Registrar Vale / Adiantamento</div>
+      <input type="hidden" id="vale-profile-id">
+
+      <div class="form-group">
+        <label class="form-label">Técnico</label>
+        <input class="form-input" type="text" id="vale-nome" readonly style="background:var(--surface-3,var(--surface));color:var(--text-muted)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor (R$) *</label>
+        <input class="form-input" type="number" id="vale-valor" placeholder="0,00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input class="form-input" type="text" id="vale-desc" placeholder="Vale transporte, adiantamento...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" type="date" id="vale-data">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModalVale()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-vale-salvar" onclick="salvarVale()">Registrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    let MES, ANO, _dados = null;
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+      const agora = new Date();
+      MES = agora.getMonth() + 1;
+      ANO = agora.getFullYear();
+      await carregar();
+    })();
+
+    function mudarMes(delta) {
+      MES += delta;
+      if (MES > 12) { MES = 1; ANO++; }
+      if (MES < 1)  { MES = 12; ANO--; }
+      carregar();
+    }
+
+    async function carregar() {
+      document.getElementById('period-label').innerHTML = `${MESES[MES-1]} <span>${ANO}</span>`;
+      document.getElementById('emp-lista').innerHTML = '<div class="empty-state">Carregando...</div>';
+
+      const pad = n => String(n).padStart(2,'0');
+      const inicio = `${ANO}-${pad(MES)}-01`;
+      const fim    = `${ANO}-${pad(MES)}-${pad(new Date(ANO,MES,0).getDate())}`;
+
+      const [resProf, resVales] = await Promise.all([
+        sb.from('profiles')
+          .select('id, name, role, salario_base, vale_refeicao')
+          .eq('company_id', APP.company.id)
+          .eq('ativo', true)
+          .eq('role', 'tecnico')
+          .order('name'),
+        sb.from('caixa')
+          .select('id, profile_id, valor, descricao, created_at')
+          .eq('company_id', APP.company.id)
+          .eq('tipo', 'saida')
+          .eq('categoria', 'vale')
+          .gte('created_at', inicio+'T00:00:00')
+          .lte('created_at', fim+'T23:59:59')
+      ]);
+
+      const tecnicos  = resProf.data || [];
+      const valesBrut = resVales.data || [];
+
+      if (!tecnicos.length) {
+        document.getElementById('emp-lista').innerHTML = '<div class="empty-state">Nenhum técnico ativo cadastrado.</div>';
+        document.getElementById('total-bar').innerHTML = '';
+        _dados = null;
+        return;
+      }
+
+      const valesPor = {};
+      valesBrut.forEach(v => {
+        if (!v.profile_id) return;
+        if (!valesPor[v.profile_id]) valesPor[v.profile_id] = [];
+        valesPor[v.profile_id].push(v);
+      });
+
+      const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
+      _dados = calcularFolha(tecnicos, valesPor, dias);
+      renderFolha(_dados);
+    }
+
+    function calcular() {
+      if (!_dados) return;
+      const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
+      // Recalcula com novos dias mas mantém vales carregados
+      const recalc = _dados.folha.map(f => {
+        const vr = (f.vale_refeicao || 0) * dias;
+        const liquido = (f.salario || 0) + vr - f.totalVale;
+        return { ...f, vr, liquido };
+      });
+      const nd = { ...calcTotais(recalc), folha: recalc };
+      renderFolha(nd);
+    }
+
+    function calcularFolha(tecnicos, valesPor, dias) {
+      const folha = tecnicos.map(t => {
+        const salario   = t.salario_base   || 0;
+        const vrDia     = t.vale_refeicao  || 0;
+        const vr        = vrDia * dias;
+        const meusVales = valesPor[t.id] || [];
+        const totalVale = meusVales.reduce((s,v) => s+(v.valor||0), 0);
+        const liquido   = salario + vr - totalVale;
+        return { ...t, salario, vrDia, vr, meusVales, totalVale, liquido };
+      });
+      return { ...calcTotais(folha), folha };
+    }
+
+    function calcTotais(folha) {
+      return {
+        totalSalarios: folha.reduce((s,f)=>s+f.salario,0),
+        totalVR:       folha.reduce((s,f)=>s+f.vr,0),
+        totalVales:    folha.reduce((s,f)=>s+f.totalVale,0),
+        totalLiquido:  folha.reduce((s,f)=>s+f.liquido,0),
+      };
+    }
+
+    function renderFolha({ folha, totalSalarios, totalVR, totalVales, totalLiquido }) {
+      _dados = { folha, totalSalarios, totalVR, totalVales, totalLiquido };
+
+      document.getElementById('kpi-salarios').textContent = fmtM(totalSalarios);
+      document.getElementById('kpi-vr').textContent       = fmtM(totalVR);
+      document.getElementById('kpi-vales').textContent    = fmtM(totalVales);
+      document.getElementById('kpi-liquido').textContent  = fmtM(totalLiquido);
+
+      document.getElementById('emp-lista').innerHTML = folha.map(f => {
+        const iniciais = (f.name||'??').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
+        const liqCor   = f.liquido >= 0 ? 'var(--accent)' : '#f87171';
+        const vrDiaStr = f.vrDia > 0 ? `VR/dia ${fmtM(f.vrDia)}` : 'Sem VR';
+
+        let valesHtml = '';
+        if (f.meusVales.length) {
+          valesHtml = `<div class="tec-vales">` + f.meusVales.map(v => {
+            const dt = new Date(v.created_at);
+            const dtStr = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
+            return `<div class="vale-line">
+              <span class="vale-info"><span class="vale-dt">${dtStr}</span>${esc(v.descricao||'Vale')}</span>
+              <span class="vale-val">-${fmtM(v.valor)}</span>
+            </div>`;
+          }).join('') + `</div>`;
+        }
+
+        return `<div class="tec-card">
+          <div class="tec-head">
+            <div>
+              <div class="tec-nome">${esc(f.name||'—')}</div>
+              <div class="tec-cargo">Técnico · ${vrDiaStr}</div>
+            </div>
+            <div class="tec-liquido">
+              <div class="tec-liquido-label">A receber</div>
+              <div class="tec-liquido-val" style="color:${liqCor}">${fmtM(f.liquido)}</div>
+            </div>
+          </div>
+          <div class="tec-grid">
+            <div class="tec-cell"><div class="tec-cell-val" style="color:var(--text)">${fmtM(f.salario)}</div><div class="tec-cell-label">Salário</div></div>
+            <div class="tec-cell"><div class="tec-cell-val" style="color:#60a5fa">${fmtM(f.vr)}</div><div class="tec-cell-label">VR Mês</div></div>
+            <div class="tec-cell"><div class="tec-cell-val" style="color:#f87171">-${fmtM(f.totalVale)}</div><div class="tec-cell-label">Vales</div></div>
+            <div class="tec-cell"><div class="tec-cell-val" style="color:${liqCor}">${fmtM(f.liquido)}</div><div class="tec-cell-label">Líquido</div></div>
+            <div class="tec-cell"><div class="tec-cell-val" style="color:var(--text-muted)">${f.meusVales.length}</div><div class="tec-cell-label">Adiant.</div></div>
+          </div>
+          ${valesHtml}
+          <div class="tec-actions">
+            <button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick="abrirModalVale('${f.id}','${esc(f.name||'')}')">+ Vale</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      document.getElementById('total-bar').innerHTML = `
+        <div class="total-bar">
+          <div>
+            <div class="total-bar-label">Total Folha — ${MESES[MES-1]} ${ANO}</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px">${folha.length} técnico(s) · Sal. ${fmtM(totalSalarios)} · VR ${fmtM(totalVR)} · Vales -${fmtM(totalVales)}</div>
+          </div>
+          <div class="total-bar-val">${fmtM(totalLiquido)}</div>
+        </div>`;
+    }
+
+    // ── Modal Vale ──
+    function abrirModalVale(profileId, nome) {
+      document.getElementById('vale-profile-id').value = profileId;
+      document.getElementById('vale-nome').value       = nome;
+      document.getElementById('vale-valor').value      = '';
+      document.getElementById('vale-desc').value       = '';
+      document.getElementById('vale-data').value       = new Date().toISOString().slice(0,10);
+      document.getElementById('modal-vale').classList.add('active');
+      setTimeout(() => document.getElementById('vale-valor').focus(), 80);
+    }
+
+    function fecharModalVale() {
+      document.getElementById('modal-vale').classList.remove('active');
+    }
+
+    document.getElementById('modal-vale').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModalVale();
+    });
+
+    async function salvarVale() {
+      const profileId = document.getElementById('vale-profile-id').value;
+      const valor     = parseFloat(document.getElementById('vale-valor').value);
+      const desc      = document.getElementById('vale-desc').value.trim() || 'Vale';
+      const data      = document.getElementById('vale-data').value;
+      const nome      = document.getElementById('vale-nome').value;
+
+      if (!valor || valor <= 0) { dmToast('Informe o valor', 'error'); return; }
+
+      const btn = document.getElementById('btn-vale-salvar');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      const { error } = await sb.from('caixa').insert({
+        company_id:      APP.company.id,
+        tipo:            'saida',
+        descricao:       `Vale — ${nome}: ${desc}`,
+        valor,
+        data_vencimento: data,
+        pago:            true,
+        categoria:       'vale',
+        profile_id:      profileId
+      });
+
+      btn.disabled = false; btn.textContent = 'Registrar';
+      if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      dmToast('Vale registrado');
+      fecharModalVale();
+      await carregar();
+    }
+
+    function fmtM(v) {
+      return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v||0);
+    }
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

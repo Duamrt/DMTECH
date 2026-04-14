@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Fornecedores</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141606"></script>
+  <script src="js/auth.js?v=04141606"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141606">
+  <style>
+    .busca-bar { display:flex; gap:10px; margin-bottom:20px; }
+    .busca-bar input { flex:1; }
+
+    .forn-grid { display:flex; flex-direction:column; gap:8px; }
+    .forn-card {
+      display:flex; justify-content:space-between; align-items:center;
+      background:var(--surface-2); border:1px solid var(--border); padding:14px 18px;
+      transition:border-color .12s;
+    }
+    .forn-card:hover { border-color:var(--accent); }
+    .forn-nome { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; }
+    .forn-sub  { font-size:12px; color:var(--text-muted); font-family:'Fira Code',monospace; }
+    .forn-obs  { font-size:12px; color:var(--text-dim); margin-top:3px; }
+    .forn-actions { display:flex; gap:8px; flex-shrink:0; margin-left:16px; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:480px; padding:28px; position:relative; }
+    .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
+    .btn-danger:hover { background:rgba(239,68,68,.08); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="minha-fila.html" class="nav-item"><span class="nav-icon">◫</span> Minha Fila</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+        <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
+        <a href="fornecedores.html" class="nav-item active"><span class="nav-icon">◪</span> Fornecedores</a>
+        <div class="nav-section">Financeiro</div>
+        <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Caixa</a>
+        <a href="notas-fiscais.html" class="nav-item"><span class="nav-icon">⊟</span> Nota Fiscal</a>
+        <a href="folha.html" class="nav-item"><span class="nav-icon">⊠</span> Folha</a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title">Fornecedores</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="page-header">
+          <h2>Fornecedores</h2>
+          <p>Cadastre fornecedores para vincular às notas fiscais.</p>
+        </div>
+
+        <div class="busca-bar">
+          <input class="form-input" type="text" id="busca" placeholder="Buscar por nome ou CNPJ..." oninput="filtrar(this.value)">
+          <button class="btn btn-primary" onclick="abrirModal()">+ Novo Fornecedor</button>
+        </div>
+
+        <div class="forn-grid" id="forn-lista">
+          <div class="empty-state">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-titulo">Novo Fornecedor</div>
+      <input type="hidden" id="f-id">
+
+      <div class="form-group">
+        <label class="form-label">Nome *</label>
+        <input class="form-input" type="text" id="f-nome" placeholder="Ex: Distribuidora XYZ">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">CNPJ</label>
+          <input class="form-input" type="text" id="f-cnpj" placeholder="00.000.000/0001-00" oninput="mascCNPJ(this)" maxlength="18">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" type="text" id="f-tel" placeholder="(87) 9 9999-9999">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input class="form-input" type="email" id="f-email" placeholder="contato@fornecedor.com.br">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <input class="form-input" type="text" id="f-obs" placeholder="Prazo de entrega, condições...">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    let todos = [], editandoId = null;
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+      await carregar();
+    })();
+
+    async function carregar() {
+      const { data } = await sb.from('fornecedores')
+        .select('id,nome,cnpj,telefone,email,obs,created_at')
+        .eq('company_id', APP.company.id)
+        .order('nome');
+      todos = data || [];
+      renderLista(todos);
+    }
+
+    function filtrar(q) {
+      if (!q) { renderLista(todos); return; }
+      const ql = q.toLowerCase();
+      renderLista(todos.filter(f =>
+        (f.nome||'').toLowerCase().includes(ql) ||
+        (f.cnpj||'').replace(/\D/g,'').includes(q.replace(/\D/g,''))
+      ));
+    }
+
+    function fmtCNPJ(c) {
+      if (!c) return '';
+      const d = c.replace(/\D/g,'');
+      return d.length===14 ? d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5') : c;
+    }
+
+    function renderLista(lista) {
+      const el = document.getElementById('forn-lista');
+      if (!lista.length) {
+        el.innerHTML = '<div class="empty-state">Nenhum fornecedor cadastrado.</div>';
+        return;
+      }
+      el.innerHTML = lista.map(f => {
+        const sub = [fmtCNPJ(f.cnpj), f.telefone, f.email].filter(Boolean).join(' · ');
+        return `<div class="forn-card">
+          <div>
+            <div class="forn-nome">${esc(f.nome)}</div>
+            ${sub ? `<div class="forn-sub">${esc(sub)}</div>` : ''}
+            ${f.obs ? `<div class="forn-obs">${esc(f.obs)}</div>` : ''}
+          </div>
+          <div class="forn-actions">
+            <button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick='abrirEditar(${JSON.stringify(f).replace(/'/g,"&#39;")})'>Editar</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function abrirModal() {
+      editandoId = null;
+      document.getElementById('modal-titulo').textContent = 'Novo Fornecedor';
+      ['f-id','f-nome','f-cnpj','f-tel','f-email','f-obs'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('btn-excluir').style.display = 'none';
+      document.getElementById('modal-overlay').classList.add('active');
+      setTimeout(() => document.getElementById('f-nome').focus(), 80);
+    }
+
+    function abrirEditar(f) {
+      editandoId = f.id;
+      document.getElementById('modal-titulo').textContent = 'Editar Fornecedor';
+      document.getElementById('f-id').value    = f.id;
+      document.getElementById('f-nome').value  = f.nome || '';
+      document.getElementById('f-cnpj').value  = fmtCNPJ(f.cnpj);
+      document.getElementById('f-tel').value   = f.telefone || '';
+      document.getElementById('f-email').value = f.email || '';
+      document.getElementById('f-obs').value   = f.obs || '';
+      document.getElementById('btn-excluir').style.display = 'block';
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+      editandoId = null;
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModal();
+    });
+
+    function mascCNPJ(inp) {
+      let v = inp.value.replace(/\D/g,'').substring(0,14);
+      if (v.length > 12) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/,'$1.$2.$3/$4-$5');
+      else if (v.length > 8) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{0,4})/,'$1.$2.$3/$4');
+      else if (v.length > 5) v = v.replace(/(\d{2})(\d{3})(\d{0,3})/,'$1.$2.$3');
+      else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,3})/,'$1.$2');
+      inp.value = v;
+    }
+
+    async function salvar() {
+      const nome = document.getElementById('f-nome').value.trim();
+      if (!nome) { dmToast('Nome obrigatório', 'error'); return; }
+
+      const cnpj     = document.getElementById('f-cnpj').value.replace(/\D/g,'') || null;
+      const telefone = document.getElementById('f-tel').value.trim() || null;
+      const email    = document.getElementById('f-email').value.trim() || null;
+      const obs      = document.getElementById('f-obs').value.trim() || null;
+
+      // Checar duplicata CNPJ
+      if (cnpj) {
+        const { data: exist } = await sb.from('fornecedores').select('id,nome').eq('company_id', APP.company.id).eq('cnpj', cnpj).limit(1);
+        if (exist?.length && exist[0].id !== editandoId) {
+          dmToast('CNPJ já cadastrado: ' + exist[0].nome, 'error');
+          return;
+        }
+      }
+
+      const btn = document.getElementById('btn-salvar');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      const payload = { nome, cnpj, telefone, email, obs };
+      let error;
+      if (editandoId) {
+        ({ error } = await sb.from('fornecedores').update(payload).eq('id', editandoId).eq('company_id', APP.company.id));
+      } else {
+        ({ error } = await sb.from('fornecedores').insert({ ...payload, company_id: APP.company.id }));
+      }
+
+      btn.disabled = false; btn.textContent = 'Salvar';
+      if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+      dmToast(editandoId ? 'Fornecedor atualizado' : 'Fornecedor cadastrado');
+      fecharModal();
+      await carregar();
+    }
+
+    function excluir() {
+      dmConfirm(`Excluir "${document.getElementById('f-nome').value}"? NFs vinculadas perdem o vínculo.`, async () => {
+        const { error } = await sb.from('fornecedores').delete().eq('id', editandoId).eq('company_id', APP.company.id);
+        if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+        dmToast('Fornecedor excluído');
+        fecharModal();
+        await carregar();
+      }, 'Excluir', true);
+    }
+
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>
