@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141327"></script>
-  <script src="js/auth.js?v=04141327"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141327">
+  <script src="js/config.js?v=04141336"></script>
+  <script src="js/auth.js?v=04141336"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141336">
   <style>
     /* Board */
     .board-outer {
@@ -338,6 +338,60 @@
     }
     .btn-ver-os:hover { border-color: var(--border-strong); color: var(--text); }
 
+    /* AI section */
+    .ai-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-ai {
+      flex: 1;
+      padding: 9px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn-ai:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ai:disabled { opacity: .5; cursor: not-allowed; }
+
+    .ai-result {
+      display: none;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      position: relative;
+    }
+    .ai-result.show { display: block; }
+    .ai-copy {
+      display: block;
+      margin-top: 10px;
+      width: 100%;
+      padding: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .12s;
+    }
+    .ai-copy:hover { border-color: var(--accent); color: var(--accent); }
+    .ai-spin { display: inline-block; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* Kanban overrides layout */
     .main { overflow: hidden; display: flex; flex-direction: column; }
     .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0; }
@@ -463,6 +517,22 @@
       <div>
         <div class="p-section-title">Observações</div>
         <textarea class="panel-textarea" id="p-notes" placeholder="Observações sobre o serviço..."></textarea>
+      </div>
+
+      <div>
+        <div class="p-section-title">Assistente IA</div>
+        <div class="ai-btns">
+          <button class="btn-ai" id="btn-checklist" onclick="gerarIA('checklist')">
+            <span>☑</span> Checklist
+          </button>
+          <button class="btn-ai" id="btn-whatsapp" onclick="gerarIA('whatsapp')">
+            <span>✉</span> Msg WA
+          </button>
+        </div>
+        <div class="ai-result" id="ai-result">
+          <span id="ai-text"></span>
+          <button class="ai-copy" onclick="copiarIA()">Copiar</button>
+        </div>
       </div>
 
     </div>
@@ -625,6 +695,59 @@
 
     function irParaOS() {
       window.location.href = 'os.html';
+    }
+
+    const SUPABASE_FN = `${SUPABASE_URL}/functions/v1/ai-assist`;
+
+    async function gerarIA(action) {
+      if (!osAtual) return;
+      const btnId = action === 'checklist' ? 'btn-checklist' : 'btn-whatsapp';
+      const btn = document.getElementById(btnId);
+      const result = document.getElementById('ai-result');
+      const textEl = document.getElementById('ai-text');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="ai-spin">↻</span> Gerando...';
+      result.classList.remove('show');
+
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch(SUPABASE_FN, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            action,
+            os: {
+              numero: osAtual.numero,
+              client_name: osAtual.clients?.name || '',
+              notes: document.getElementById('p-notes').value || osAtual.notes || '',
+              status: osAtual.status,
+            }
+          })
+        });
+        const { text, error } = await res.json();
+        if (error) throw new Error(error);
+        textEl.textContent = text;
+        result.classList.add('show');
+      } catch (e) {
+        textEl.textContent = 'Erro: ' + e.message;
+        result.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = action === 'checklist' ? '<span>☑</span> Checklist' : '<span>✉</span> Msg WA';
+      }
+    }
+
+    function copiarIA() {
+      const text = document.getElementById('ai-text').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.ai-copy');
+        btn.textContent = 'Copiado!';
+        setTimeout(() => btn.textContent = 'Copiar', 1500);
+      });
     }
 
     async function carregarOS() {
