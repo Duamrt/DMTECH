@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&amp;family=Fira+Code:wght@400;500&amp;family=Space+Grotesk:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "outline": "#a78b7d",
+                "outline-variant": "#584237",
+                "on-primary-fixed": "#341100",
+                "surface-bright": "#3a3939",
+                "on-tertiary-container": "#003554",
+                "on-tertiary": "#003351",
+                "primary-container": "#f97316",
+                "surface-tint": "#ffb690",
+                "inverse-on-surface": "#313030",
+                "tertiary-container": "#00a2f4",
+                "on-error-container": "#ffdad6",
+                "on-tertiary-fixed-variant": "#004b74",
+                "on-secondary-container": "#b6b5b4",
+                "on-primary-fixed-variant": "#783200",
+                "on-primary": "#552100",
+                "surface-variant": "#353534",
+                "on-error": "#690005",
+                "error": "#ffb4ab",
+                "surface-container-lowest": "#0e0e0e",
+                "surface-container-high": "#2a2a2a",
+                "surface": "#131313",
+                "on-primary-container": "#582200",
+                "on-tertiary-fixed": "#001d32",
+                "on-secondary-fixed": "#1b1c1c",
+                "inverse-primary": "#9d4300",
+                "surface-container": "#201f1f",
+                "primary-fixed": "#ffdbca",
+                "tertiary": "#93ccff",
+                "error-container": "#93000a",
+                "primary": "#ffb690",
+                "background": "#131313",
+                "surface-container-highest": "#353534",
+                "primary-fixed-dim": "#ffb690",
+                "secondary": "#c8c6c5",
+                "secondary-fixed": "#e4e2e1",
+                "secondary-fixed-dim": "#c8c6c5",
+                "tertiary-fixed": "#cde5ff",
+                "on-surface": "#e5e2e1",
+                "on-secondary-fixed-variant": "#474746",
+                "inverse-surface": "#e5e2e1",
+                "secondary-container": "#474746",
+                "surface-container-low": "#1c1b1b",
+                "tertiary-fixed-dim": "#93ccff",
+                "surface-dim": "#131313",
+                "on-surface-variant": "#e0c0b1",
+                "on-secondary": "#303030",
+                "on-background": "#e5e2e1"
+            },
+            "borderRadius": {
+                "none": "0px",
+                "DEFAULT": "0px",
+                "lg": "0px",
+                "xl": "0px",
+                "full": "0px"
+            },
+            "fontFamily": {
+                "headline": ["Manrope"],
+                "body": ["Manrope"],
+                "label": ["Fira Code"]
+            }
+          }
+        }
+      }
+    </script>
+<style>body {
+    background-color: #131313;
+    color: #e5e2e1;
+    font-family: "Manrope", sans-serif
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.grain-overlay {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCq7pjZN-vMh7ajPYfftNm1gUeoddavD850vIP-YvdJXoO-pq-8cT626b2fPyyL1ClGgkgNQa1L3J_JApxMmUKbYlf84zESGnsOKcNaJTsR0qAraR3vP1O-MQouetH_VGRE0EezDZj2_skX1aJOFnpkE0dOrDyWPKfrqLlLNwcGZq1PqGHcPXwMULlNlzemPwpssEA7JGvaKKd7s_u7YvB6Tj8YpTd__tHgdQ_xy-LoOKZNQlDytT0s2cKV6vJkiLYA5QtJkVF4DiI);
+    opacity: 0.03
+    }
+::-webkit-scrollbar {
+    width: 4px
+    }
+::-webkit-scrollbar-track {
+    background: #0e0e0e
+    }
+::-webkit-scrollbar-thumb {
+    background: #f97316
+    }</style>
+</head>
+<body class="antialiased overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full border-b-0 rounded-none z-50 bg-[#131313]/80 backdrop-blur-md flex justify-between items-center px-8 h-20 max-w-full">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-white font-['Manrope'] uppercase">DMTECH // ANALYTICS</span>
+<div class="hidden md:flex gap-6">
+<a class="text-orange-500 border-b-2 border-orange-500 pb-1 font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">PLATFORM</a>
+<a class="text-zinc-500 hover:text-zinc-200 transition-colors font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">ARCHITECTURE</a>
+<a class="text-zinc-500 hover:text-zinc-200 transition-colors font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">PRICING</a>
+<a class="text-zinc-500 hover:text-zinc-200 transition-colors font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">DOCS</a>
+</div>
+</div>
+<button class="bg-[#f97316] text-[#0d0d0d] px-6 py-3 font-['Fira_Code'] text-xs font-bold tracking-widest hover:bg-orange-400 transition-all active:scale-95">
+            INITIALIZE_SYSTEM
+        </button>
+</nav>
+<!-- Hero Section -->
+<header class="pt-40 pb-20 px-8 max-w-7xl mx-auto">
+<div class="flex flex-col items-start gap-4">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// GESTÃO DE OS</span>
+<h1 class="text-7xl md:text-9xl font-extrabold tracking-tighter text-white leading-none">
+                Chega de<br/>caderninho.
+            </h1>
+<p class="text-zinc-500 max-w-xl text-lg mt-4 font-body leading-relaxed">
+                Transforme o caos operacional em precisão cirúrgica. O DMTech automatiza o fluxo de ordens de serviço do orçamento ao faturamento em uma interface terminal de alta performance.
+            </p>
+<div class="flex gap-4 mt-8">
+<button class="bg-primary-container text-black px-10 py-4 font-bold uppercase tracking-widest text-sm hover:brightness-110">Criar conta grátis</button>
+<button class="border border-primary-container text-primary-container px-10 py-4 font-bold uppercase tracking-widest text-sm hover:bg-primary-container/10">Ver Demo</button>
+</div>
+<!-- ASCII Rule Decoration -->
+<div class="w-full mt-12 text-zinc-800 font-['Fira_Code'] text-[10px] overflow-hidden whitespace-nowrap opacity-50">
+                [SYSTEM_ACTIVE] ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            </div>
+<!-- Terminal UI Preview -->
+<div class="w-full mt-12 bg-surface-container-lowest border border-zinc-800 p-1">
+<div class="bg-zinc-900 px-4 py-2 flex items-center justify-between border-b border-zinc-800">
+<div class="flex gap-2">
+<div class="w-3 h-3 bg-zinc-800"></div>
+<div class="w-3 h-3 bg-zinc-800"></div>
+<div class="w-3 h-3 bg-zinc-800"></div>
+</div>
+<span class="font-['Fira_Code'] text-[10px] text-zinc-500">DMTECH_CONSOLE_V1.04 -- OS_BOARD</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-1 bg-zinc-800 p-1 min-h-[400px]">
+<!-- Column 1 -->
+<div class="bg-surface-dim p-4 flex flex-col gap-4">
+<span class="font-['Fira_Code'] text-[10px] text-primary-container uppercase">01_PENDENTE [03]</span>
+<div class="bg-surface-container-high p-4 border-l-2 border-primary-container">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-500">#OS-8922</span>
+<h4 class="text-sm font-bold mt-1 text-white uppercase">Reparo de Unidade Hidráulica</h4>
+<p class="text-[11px] text-zinc-500 mt-2 font-['Fira_Code']">CLIENTE: INDUSTRIAS_ALFA</p>
+</div>
+<div class="bg-surface-container-high p-4 border-l-2 border-zinc-700 opacity-50">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-500">#OS-8923</span>
+<h4 class="text-sm font-bold mt-1 text-white uppercase">Manutenção de Turbina</h4>
+</div>
+</div>
+<!-- Column 2 -->
+<div class="bg-surface-dim p-4 flex flex-col gap-4">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-500 uppercase">02_EXECUTANDO [01]</span>
+<div class="bg-surface-container-high p-4 border-l-2 border-orange-500">
+<span class="font-['Fira_Code'] text-[10px] text-orange-500">EXECUTANDO...</span>
+<h4 class="text-sm font-bold mt-1 text-white uppercase">Calibragem de Sensores</h4>
+<div class="w-full h-1 bg-zinc-800 mt-4">
+<div class="bg-orange-500 h-full w-[65%]"></div>
+</div>
+</div>
+</div>
+<!-- Column 3 -->
+<div class="bg-surface-dim p-4 flex flex-col gap-4">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-500 uppercase">03_FINALIZADO [12]</span>
+<img class="w-full h-32 object-cover grayscale opacity-50 filter grayscale contrast-125" data-alt="Close-up of industrial machinery gear with orange neon lighting highlight in dark factory setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk15DcFBQVPyfiVh32GgK0ntw3fduwszrA7hAqb5zacZlw4pm1B5r-OfqimpR6SSgVrk3vBSIYY3cTZWuEDEe23fCBXndpykJR4OCOpdOZYIQ4Wa3f9dj_mHV9JuH_CReolBT4fMa_kI_9v-IAI0Hztwvn6jQMUGFwJN-sPdRuDDDMwC4g7OvTMsebHWKxPKr6Q6aoru5SKw_iAabqSf602q0jmWkr9FEvBeznwlJJmXtSjIYb7PumnRfB4KUlac11FC_c1Ft21Sc"/>
+<div class="bg-surface-container-high p-4 border-l-2 border-zinc-700">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-400">#OS-8901 - CONCLUÍDO</span>
+<h4 class="text-sm font-bold mt-1 text-zinc-400 uppercase">Substituição de Rolamentos</h4>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Problem Section -->
+<section class="bg-surface-container-low py-32 px-8">
+<div class="max-w-7xl mx-auto">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// VOCÊ CONHECE ESSE PROBLEMA</span>
+<h2 class="text-5xl font-extrabold text-white mt-4 mb-16 tracking-tighter uppercase">O gargalo operacional<br/>está matando seu lucro.</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-dim p-8 border-l-[3px] border-primary-container">
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Informação Fragmentada</h3>
+<p class="text-zinc-500 text-sm leading-relaxed">Dados espalhados em papéis, planilhas e grupos de mensagens. A falta de centralização impede a visão real do negócio.</p>
+</div>
+<div class="bg-surface-dim p-8 border-l-[3px] border-primary-container">
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Atrasos de Faturamento</h3>
+<p class="text-zinc-500 text-sm leading-relaxed">Ordens de serviço esquecidas no fundo da gaveta significam dinheiro parado e fluxo de caixa comprometido.</p>
+</div>
+<div class="bg-surface-dim p-8 border-l-[3px] border-primary-container">
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Incerteza de Custos</h3>
+<p class="text-zinc-500 text-sm leading-relaxed">Sem o controle de peças e horas técnicas, você nunca sabe se está lucrando ou pagando para trabalhar.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- How it Works -->
+<section class="py-32 px-8 max-w-7xl mx-auto">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// DO ORÇAMENTO AO PAGAMENTO</span>
+<h2 class="text-5xl font-extrabold text-white mt-4 mb-24 tracking-tighter uppercase">Protocolo de Operação</h2>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-0 relative">
+<!-- Connector Line -->
+<div class="hidden md:block absolute top-12 left-0 w-full h-[1px] bg-zinc-800 z-0"></div>
+<div class="flex flex-col gap-6 relative z-10 pr-8 pb-12 md:pb-0">
+<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">01</span>
+<h3 class="text-xl font-bold text-white uppercase mt-4">Orçamento</h3>
+<p class="text-zinc-500 text-sm">Geração de propostas técnicas precisas em menos de 2 minutos através de presets inteligentes.</p>
+</div>
+<div class="flex flex-col gap-6 relative z-10 pr-8 pb-12 md:pb-0">
+<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">02</span>
+<h3 class="text-xl font-bold text-white uppercase mt-4">Aprovação</h3>
+<p class="text-zinc-500 text-sm">Workflow digital para aceite do cliente. Sem assinaturas físicas, sem burocracia desnecessária.</p>
+</div>
+<div class="flex flex-col gap-6 relative z-10 pr-8 pb-12 md:pb-0">
+<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">03</span>
+<h3 class="text-xl font-bold text-white uppercase mt-4">Execução</h3>
+<p class="text-zinc-500 text-sm">Acompanhamento em tempo real via terminal Kanban. Controle total sobre prazos e equipe técnica.</p>
+</div>
+<div class="flex flex-col gap-6 relative z-10 pr-8">
+<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">04</span>
+<h3 class="text-xl font-bold text-white uppercase mt-4">Pagamento</h3>
+<p class="text-zinc-500 text-sm">Fechamento automático. A OS aprovada vira fatura instantaneamente no seu ERP.</p>
+</div>
+</div>
+</section>
+<!-- Features -->
+<section class="bg-surface-container-high py-32 px-8">
+<div class="max-w-7xl mx-auto">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// O QUE ESTÁ INCLUÍDO</span>
+<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Infraestrutura Operacional</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-zinc-800">
+<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_KANBAN.OS</span>
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Visualização de Fluxo</h3>
+<p class="text-zinc-500 text-sm">Interface drag-and-drop inspirada em IDEs para gerenciar status de ordens.</p>
+</div>
+<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_INVENTORY.CTRL</span>
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Gestão de Estoque</h3>
+<p class="text-zinc-500 text-sm">Baixa automática de peças no momento do orçamento para evitar rupturas.</p>
+</div>
+<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_TEAM.SYNC</span>
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Apontamento de Horas</h3>
+<p class="text-zinc-500 text-sm">Registro técnico preciso via aplicativo mobile com validação por geolocalização.</p>
+</div>
+<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_DOCS.GEN</span>
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Laudos Automáticos</h3>
+<p class="text-zinc-500 text-sm">Geração de PDFs técnicos customizados com logs de fotos e assinaturas.</p>
+</div>
+<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_FINANCE.BRIDGE</span>
+<h3 class="text-xl font-bold text-white mb-4 uppercase">Integração Bancária</h3>
+<p class="text-zinc-500 text-sm">Conciliação direta com bancos para emissão de boletos e notas fiscais.</p>
+</div>
+<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
+<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_API.ACCESS</span>
+<h3 class="text-xl font-bold text-white mb-4 uppercase">API Aberta</h3>
+<p class="text-zinc-500 text-sm">Conecte o DMTech com qualquer ferramenta de BI ou CRM do mercado.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Wizard Section -->
+<section class="py-32 px-8 max-w-7xl mx-auto">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// PRIMEIRO ACESSO</span>
+<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Deployment em Minutos</h2>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="bg-surface-container-low p-8 relative overflow-hidden">
+<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">1</span>
+<h4 class="text-lg font-bold text-white uppercase relative z-10">Create Profile</h4>
+<p class="text-zinc-500 text-sm mt-4 relative z-10">Defina sua estrutura de serviços e categorias técnicas iniciais.</p>
+</div>
+<div class="bg-surface-container-low p-8 relative overflow-hidden">
+<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">2</span>
+<h4 class="text-lg font-bold text-white uppercase relative z-10">Import Data</h4>
+<p class="text-zinc-500 text-sm mt-4 relative z-10">Suba seu catálogo de peças e clientes via CSV em segundos.</p>
+</div>
+<div class="bg-surface-container-low p-8 relative overflow-hidden">
+<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">3</span>
+<h4 class="text-lg font-bold text-white uppercase relative z-10">Setup Team</h4>
+<p class="text-zinc-500 text-sm mt-4 relative z-10">Convide seus técnicos e atribua permissões de visualização.</p>
+</div>
+<div class="bg-surface-container-low p-8 relative overflow-hidden">
+<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">4</span>
+<h4 class="text-lg font-bold text-white uppercase relative z-10">System Live</h4>
+<p class="text-zinc-500 text-sm mt-4 relative z-10">Comece a emitir ordens de serviço digitais imediatamente.</p>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="bg-surface-container-lowest py-32 px-8">
+<div class="max-w-7xl mx-auto">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// QUEM USA</span>
+<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Feedback de Operação</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="border-l-[3px] border-primary-container pl-8">
+<p class="text-zinc-300 text-lg italic leading-relaxed">"O DMTech removeu o atrito da nossa comunicação. Hoje sabemos exatamente onde cada técnico está e qual o lucro de cada OS em tempo real."</p>
+<div class="mt-6">
+<p class="text-white font-bold uppercase tracking-tighter">Ricardo Silveira</p>
+<p class="text-zinc-600 font-['Fira_Code'] text-[10px]">CTO // ALFA_LOGISTICS</p>
+</div>
+</div>
+<div class="border-l-[3px] border-primary-container pl-8">
+<p class="text-zinc-300 text-lg italic leading-relaxed">"Paramos de perder dinheiro com peças esquecidas. O controle de estoque integrado à OS é o divisor de águas que precisávamos."</p>
+<div class="mt-6">
+<p class="text-white font-bold uppercase tracking-tighter">Mariana Costa</p>
+<p class="text-zinc-600 font-['Fira_Code'] text-[10px]">OPS_DIR // TECH_REPAIR</p>
+</div>
+</div>
+<div class="border-l-[3px] border-primary-container pl-8">
+<p class="text-zinc-300 text-lg italic leading-relaxed">"Sistema brutalmente eficiente. A interface limpa ajuda a focar no que importa: executar o serviço e faturar."</p>
+<div class="mt-6">
+<p class="text-white font-bold uppercase tracking-tighter">Carlos Nobrega</p>
+<p class="text-zinc-600 font-['Fira_Code'] text-[10px]">OWNER // NOBREGA_MEC</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing -->
+<section class="py-32 px-8 max-w-7xl mx-auto">
+<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// PREÇOS</span>
+<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Planos de Escalabilidade</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-800 border border-zinc-800">
+<!-- Free -->
+<div class="bg-surface-dim p-12 flex flex-col items-start">
+<span class="font-['Fira_Code'] text-xs text-zinc-500 uppercase tracking-widest">01_STARTUP</span>
+<h3 class="text-4xl font-extrabold text-white mt-4 mb-8 tracking-tighter uppercase">FREE</h3>
+<ul class="flex flex-col gap-4 mb-12 text-sm text-zinc-400">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Até 50 OS / mês</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> 1 Usuário admin</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Relatórios básicos</li>
+</ul>
+<button class="w-full py-4 border border-zinc-800 text-zinc-400 font-bold uppercase tracking-widest text-xs hover:border-zinc-500 transition-colors mt-auto">Initialize Free</button>
+</div>
+<!-- Pro -->
+<div class="bg-surface-container-high p-12 flex flex-col items-start border-[1px] border-primary-container relative">
+<div class="absolute top-0 right-0 bg-primary-container text-black px-4 py-1 text-[10px] font-bold uppercase font-['Fira_Code']">Recommended</div>
+<span class="font-['Fira_Code'] text-xs text-primary-container uppercase tracking-widest">02_ENTERPRISE</span>
+<h3 class="text-4xl font-extrabold text-white mt-4 mb-2 tracking-tighter uppercase">R$ 199<span class="text-lg text-zinc-500">/mês</span></h3>
+<p class="text-zinc-500 text-xs mb-8">Faturado anualmente</p>
+<ul class="flex flex-col gap-4 mb-12 text-sm text-zinc-300">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> OS Ilimitadas</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Até 10 usuários</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> API &amp; Integrações</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Suporte prioritário</li>
+</ul>
+<button class="w-full py-4 bg-primary-container text-black font-bold uppercase tracking-widest text-xs hover:brightness-110 mt-auto">Select Pro</button>
+</div>
+<!-- Business -->
+<div class="bg-surface-dim p-12 flex flex-col items-start">
+<span class="font-['Fira_Code'] text-xs text-zinc-500 uppercase tracking-widest">03_ARCHITECTURE</span>
+<h3 class="text-4xl font-extrabold text-white mt-4 mb-8 tracking-tighter uppercase">CUSTOM</h3>
+<ul class="flex flex-col gap-4 mb-12 text-sm text-zinc-400">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Usuários ilimitados</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Deployment On-Premise</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Whitelabel completo</li>
+</ul>
+<button class="w-full py-4 border border-zinc-800 text-zinc-400 font-bold uppercase tracking-widest text-xs hover:border-zinc-500 transition-colors mt-auto">Contact Sales</button>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-40 bg-primary-container text-black text-center px-8 relative overflow-hidden">
+<div class="grain-overlay absolute inset-0 pointer-events-none"></div>
+<div class="max-w-4xl mx-auto relative z-10">
+<h2 class="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-none mb-8">Assuma o controle agora.</h2>
+<p class="text-black/70 text-lg font-bold mb-12 uppercase tracking-tight">Menos papel. Mais execução. Resultado imediato.</p>
+<button class="bg-black text-white px-16 py-6 font-bold uppercase tracking-[0.2em] text-lg hover:scale-105 transition-transform">Criar conta grátis</button>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-[#0e0e0e] flex flex-col md:flex-row justify-between items-center px-12 py-16 gap-8 w-full border-t border-zinc-800/20">
+<div class="flex flex-col gap-2">
+<span class="text-lg font-bold text-white uppercase tracking-tighter font-headline">DMTECH SYSTEMS</span>
+<span class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600">v1.0.44_STABLE</span>
+</div>
+<div class="flex gap-8">
+<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">SECURITY</a>
+<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">LEGAL</a>
+<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">STATUS</a>
+<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">API</a>
+</div>
+<div class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600">
+            © 2024 DMTECH SYSTEMS. ALL RIGHTS RESERVED.
+        </div>
+</footer>
+</body></html>
