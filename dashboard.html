@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141943"></script>
-  <script src="js/auth.js?v=04141943"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141943">
+  <script src="js/config.js?v=04141947"></script>
+  <script src="js/auth.js?v=04141947"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141947">
   <style>
     .banner-bv {
       display: none;
@@ -386,6 +386,7 @@
     }
 
     const fmt = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
     function statusOsLabel(s) {
       return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' }[s] || s;
@@ -486,8 +487,8 @@
           const demoTag = o.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
           return `<tr>
             <td>#${o.numero}${demoTag}</td>
-            <td>${o.clients?.name || '—'}</td>
-            <td>${o.notes || '—'}</td>
+            <td>${esc(o.clients?.name) || '—'}</td>
+            <td>${esc(o.notes) || '—'}</td>
             <td><span class="badge ${statusOsBadge(o.status)}">${statusOsLabel(o.status)}</span></td>
             <td>${fmtData(o.created_at)}</td>
           </tr>`;
@@ -501,7 +502,7 @@
           const demoTag = o.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
           return `<tr>
             <td>#${o.numero}${demoTag}</td>
-            <td>${o.clients?.name || '—'}</td>
+            <td>${esc(o.clients?.name) || '—'}</td>
             <td><span class="badge ${statusOrcBadge(o.status)}">${statusOrcLabel(o.status)}</span></td>
             <td>${fmt(o.total)}</td>
             <td>${fmtData(o.validade)}</td>

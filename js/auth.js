@@ -55,7 +55,7 @@ async function requireAuth(redirectTo = 'login.html') {
 
 function checkPlan() {
   const c = APP.company;
-  if (!c) return true;
+  if (!c) { window.location.href = 'login.html'; return false; } // empresa não carregou = sessão inválida
   const plan = c.plan || 'trial';
   if (plan === 'admin' || plan === 'profissional' || plan === 'empresarial') return true;
   if (plan === 'expirado') {

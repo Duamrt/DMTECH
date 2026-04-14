@@ -1,4 +1,5 @@
-const CACHE = 'dmtech-v04141858';
+const VERSION = 'v04141947';
+const CACHE = 'dmtech-' + VERSION;
 
 self.addEventListener('install', e => {
   self.skipWaiting();
