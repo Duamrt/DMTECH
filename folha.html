@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141646"></script>
-  <script src="js/auth.js?v=04141646"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141646">
+  <script src="js/config.js?v=04141716"></script>
+  <script src="js/auth.js?v=04141716"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141716">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -192,6 +192,7 @@
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
+      if (APP.profile?.role === 'tecnico') { window.location.href = 'minha-fila.html'; return; }
       document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
       document.getElementById('nome-empresa').textContent = APP.company?.name || '';
       const agora = new Date();
@@ -237,6 +238,9 @@
       if (!tecnicos.length) {
         document.getElementById('emp-lista').innerHTML = '<div class="empty-state">Nenhum técnico ativo cadastrado.</div>';
         document.getElementById('total-bar').innerHTML = '';
+        ['kpi-salarios','kpi-vr','kpi-vales','kpi-liquido'].forEach(id => {
+          document.getElementById(id).textContent = fmtM(0);
+        });
         _dados = null;
         return;
       }

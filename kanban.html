@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04141646"></script>
-  <script src="js/auth.js?v=04141646"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141646">
+  <script src="js/config.js?v=04141716"></script>
+  <script src="js/auth.js?v=04141716"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141716">
   <style>
     /* Board */
     .board-outer {
@@ -750,8 +750,8 @@
 
     function fmtData(iso) {
       if (!iso) return '—';
-      const d = new Date(iso);
-      return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+      const [y,m,d] = iso.split('T')[0].split('-');
+      return `${d}/${m}/${y.slice(2)}`;
     }
 
     function renderBoard() {
@@ -1555,6 +1555,10 @@
       document.getElementById('nome-empresa').textContent = empresa;
 
       await carregarOS();
+
+      // Abre OS específica se vier de minha-fila
+      const osParam = new URLSearchParams(window.location.search).get('os');
+      if (osParam) await abrirPanel(osParam);
     })();
   </script>
 </body>
