@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Clientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .search-bar .form-input {
+      max-width: 320px;
+    }
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 480px;
+      padding: 28px;
+      position: relative;
+    }
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    .btn-danger {
+      background: none;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: all .12s;
+    }
+    .btn-danger:hover { background: var(--danger-dim); }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-row .form-group { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-name">DMTech</div>
+        <div class="logo-sub" id="nome-empresa">—</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Principal</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="clientes.html" class="nav-item active">
+          <span class="nav-icon">◎</span> Clientes
+        </a>
+        <a href="os.html" class="nav-item">
+          <span class="nav-icon">◈</span> Ordens de Serviço
+        </a>
+        <a href="kanban.html" class="nav-item">
+          <span class="nav-icon">▦</span> Kanban
+        </a>
+        <div class="nav-section">Gestão</div>
+        <a href="financeiro.html" class="nav-item">
+          <span class="nav-icon">◉</span> Financeiro
+        </a>
+        <div class="nav-section">Sistema</div>
+        <a href="config.html" class="nav-item">
+          <span class="nav-icon">⚙</span> Configurações
+        </a>
+      </nav>
+      <div class="sidebar-footer" id="versao-sidebar"></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-title">Clientes</div>
+        <div class="topbar-right">
+          <span class="topbar-user" id="topbar-user"></span>
+          <button class="btn-icon" id="btn-tema" onclick="toggleTema()" title="Alternar tema">◑</button>
+          <button class="btn-sair" onclick="signOut()">Sair</button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+
+        <div class="page-header">
+          <h2>Clientes</h2>
+          <p>Gerencie os clientes da sua empresa.</p>
+        </div>
+
+        <div class="search-bar">
+          <input class="form-input" type="text" id="busca" placeholder="Buscar por nome, telefone ou CPF/CNPJ..." oninput="filtrar()">
+          <button class="btn btn-primary" onclick="abrirModal()">+ Novo cliente</button>
+        </div>
+
+        <div class="section">
+          <div class="section-body">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Telefone</th>
+                  <th>CPF / CNPJ</th>
+                  <th>Cidade</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tabela-clientes">
+                <tr><td colspan="5" class="empty-state">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="versao" id="versao-rodape"></div>
+
+  <!-- Modal cliente -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-titulo">Novo cliente</div>
+
+      <input type="hidden" id="cliente-id">
+
+      <div class="form-group">
+        <label class="form-label">Nome *</label>
+        <input class="form-input" type="text" id="c-name" placeholder="Nome completo ou razão social">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input class="form-input" type="tel" id="c-phone" placeholder="(99) 99999-9999">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF / CNPJ</label>
+          <input class="form-input" type="text" id="c-cpf" placeholder="000.000.000-00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input class="form-input" type="email" id="c-email" placeholder="cliente@email.com">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Endereço</label>
+          <input class="form-input" type="text" id="c-address" placeholder="Rua, número">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cidade</label>
+          <input class="form-input" type="text" id="c-city" placeholder="Cidade">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Observações</label>
+        <input class="form-input" type="text" id="c-notes" placeholder="Anotação livre">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+    document.getElementById('versao-sidebar').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') {
+      document.body.classList.add('light');
+      document.getElementById('btn-tema').textContent = '○';
+    }
+
+    function toggleTema() {
+      const isLight = document.body.classList.toggle('light');
+      localStorage.setItem('dmtech-theme', isLight ? 'light' : 'dark');
+      document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
+    }
+
+    let todosClientes = [];
+
+    (async () => {
+      const ok = await requireAuth();
+      if (!ok) return;
+
+      document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
+      document.getElementById('nome-empresa').textContent = APP.company?.name || '';
+
+      await carregar();
+    })();
+
+    async function carregar() {
+      const { data, error } = await sb.from('clients')
+        .select('*')
+        .eq('company_id', APP.company.id)
+        .order('name');
+
+      if (error) { renderTabela([]); return; }
+      todosClientes = data || [];
+      renderTabela(todosClientes);
+    }
+
+    function filtrar() {
+      const q = document.getElementById('busca').value.toLowerCase().trim();
+      if (!q) { renderTabela(todosClientes); return; }
+      renderTabela(todosClientes.filter(c =>
+        (c.name    || '').toLowerCase().includes(q) ||
+        (c.phone   || '').toLowerCase().includes(q) ||
+        (c.cpf_cnpj|| '').toLowerCase().includes(q)
+      ));
+    }
+
+    function renderTabela(lista) {
+      const tbody = document.getElementById('tabela-clientes');
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum cliente cadastrado ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(c => `
+        <tr style="cursor:pointer" onclick="abrirModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+          <td style="color:var(--text);font-weight:600">${esc(c.name)}</td>
+          <td>${esc(c.phone)}</td>
+          <td class="mono">${esc(c.cpf_cnpj)}</td>
+          <td>${esc(c.city)}</td>
+          <td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>
+        </tr>
+      `).join('');
+    }
+
+    function esc(v) {
+      if (!v) return '<span style="color:var(--text-dim)">—</span>';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function abrirModal(cliente) {
+      const isEdit = !!cliente;
+      document.getElementById('modal-titulo').textContent  = isEdit ? 'Editar cliente' : 'Novo cliente';
+      document.getElementById('cliente-id').value          = isEdit ? cliente.id   : '';
+      document.getElementById('c-name').value              = isEdit ? (cliente.name    || '') : '';
+      document.getElementById('c-phone').value             = isEdit ? (cliente.phone   || '') : '';
+      document.getElementById('c-cpf').value               = isEdit ? (cliente.cpf_cnpj|| '') : '';
+      document.getElementById('c-email').value             = isEdit ? (cliente.email   || '') : '';
+      document.getElementById('c-address').value           = isEdit ? (cliente.address || '') : '';
+      document.getElementById('c-city').value              = isEdit ? (cliente.city    || '') : '';
+      document.getElementById('c-notes').value             = isEdit ? (cliente.notes   || '') : '';
+      document.getElementById('btn-excluir').style.display = isEdit ? 'block' : 'none';
+      document.getElementById('modal-overlay').classList.add('active');
+      document.getElementById('c-name').focus();
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModal();
+    });
+
+    async function salvar() {
+      const id   = document.getElementById('cliente-id').value;
+      const name = document.getElementById('c-name').value.trim();
+      if (!name) { alert('Nome é obrigatório.'); return; }
+
+      const payload = {
+        name,
+        phone:    document.getElementById('c-phone').value.trim()   || null,
+        cpf_cnpj: document.getElementById('c-cpf').value.trim()     || null,
+        email:    document.getElementById('c-email').value.trim()   || null,
+        address:  document.getElementById('c-address').value.trim() || null,
+        city:     document.getElementById('c-city').value.trim()    || null,
+        notes:    document.getElementById('c-notes').value.trim()   || null,
+      };
+
+      const btn = document.getElementById('btn-salvar');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      let error;
+      if (id) {
+        ({ error } = await sb.from('clients').update(payload).eq('id', id));
+      } else {
+        payload.company_id = APP.company.id;
+        ({ error } = await sb.from('clients').insert(payload));
+      }
+
+      btn.disabled = false; btn.textContent = 'Salvar';
+
+      if (error) { alert('Erro ao salvar: ' + error.message); return; }
+      fecharModal();
+      await carregar();
+    }
+
+    async function excluir() {
+      const id = document.getElementById('cliente-id').value;
+      if (!id) return;
+      if (!confirm('Excluir este cliente?')) return;
+
+      const { error } = await sb.from('clients').delete().eq('id', id);
+      if (error) { alert('Erro ao excluir: ' + error.message); return; }
+      fecharModal();
+      await carregar();
+    }
+  </script>
+</body>
+</html>
