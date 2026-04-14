@@ -8,16 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141614"></script>
-  <script src="js/auth.js?v=04141614"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141614">
+  <script src="js/config.js?v=04141618"></script>
+  <script src="js/auth.js?v=04141618"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141618">
   <style>
     /* ── Tabs ── */
-    .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; }
+    .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
     .tab {
-      padding:10px 22px; font-size:13px; font-weight:700; letter-spacing:.04em;
+      padding:10px 18px; font-size:12px; font-weight:700; letter-spacing:.04em;
       color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent;
-      margin-bottom:-2px; transition:color .12s;
+      margin-bottom:-2px; transition:color .12s; white-space:nowrap;
     }
     .tab:hover { color:var(--text); }
     .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
@@ -54,8 +54,33 @@
     .btn-danger:hover { background:rgba(239,68,68,.08); }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .form-row .form-group { margin-bottom:0; }
-
     .actions-cell { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+
+    /* ── DRE ── */
+    .dre-hero { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+    .dre-hero-card { background:var(--surface-2); border:1px solid var(--border); padding:16px; text-align:center; }
+    .dre-hero-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:6px; }
+    .dre-hero-val { font-size:20px; font-weight:800; font-family:'Fira Code',monospace; }
+    .dre-hero-pct { font-size:11px; color:var(--text-muted); margin-top:4px; }
+
+    .dre-tree { background:var(--surface-2); border:1px solid var(--border); padding:4px 0; margin-bottom:16px; }
+    .dre-row { display:flex; justify-content:space-between; align-items:center; padding:9px 20px; transition:background .1s; }
+    .dre-row:hover { background:var(--surface-3); }
+    .dre-row.dre-total { border-top:1px solid var(--border); background:var(--surface-3); }
+    .dre-row.dre-result { border-top:2px solid var(--border); background:var(--surface-2); }
+    .dre-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); }
+    .dre-label.main { color:var(--text); font-size:13px; }
+    .dre-label.indent { padding-left:18px; font-size:11px; color:var(--text-dim); font-weight:600; text-transform:none; letter-spacing:0; }
+    .dre-val { font-family:'Fira Code',monospace; font-size:13px; font-weight:700; }
+    .dre-val.pos { color:#4ade80; }
+    .dre-val.neg { color:#f87171; }
+    .dre-val.neu { color:var(--text-muted); }
+    .dre-pct { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-dim); margin-left:10px; min-width:44px; text-align:right; }
+    .dre-sep { height:1px; background:var(--border); margin:4px 0; opacity:.5; }
+
+    /* ── Lucro Peças ── */
+    .lucro-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
+    .badge-sem-custo { display:inline-block; background:rgba(251,191,36,.12); color:#fbbf24; font-size:10px; padding:2px 6px; font-weight:700; }
   </style>
 </head>
 <body>
@@ -98,20 +123,24 @@
 
       <div class="content">
         <div class="tabs">
-          <div class="tab active" onclick="setTab('resumo',this)" id="tab-resumo">Resumo</div>
-          <div class="tab" onclick="setTab('receitas',this)" id="tab-receitas">Receitas</div>
-          <div class="tab" onclick="setTab('despesas',this)" id="tab-despesas">Despesas</div>
+          <div class="tab active" id="tab-resumo"   onclick="setTab('resumo',this)">Resumo</div>
+          <div class="tab"        id="tab-receitas" onclick="setTab('receitas',this)">Receitas</div>
+          <div class="tab"        id="tab-despesas" onclick="setTab('despesas',this)">Despesas</div>
+          <div class="tab"        id="tab-lucro"    onclick="setTab('lucro',this)">Lucro Peças</div>
+          <div class="tab"        id="tab-dre"      onclick="setTab('dre',this)">DRE</div>
+        </div>
+
+        <!-- PERIOD BAR (compartilhada entre abas, exceto receitas/despesas que têm botões próprios) -->
+        <div class="period-bar" id="period-bar-global">
+          <button class="p-btn active" onclick="setPeriodo('mes',this)">Este mês</button>
+          <button class="p-btn" onclick="setPeriodo('30',this)">30 dias</button>
+          <button class="p-btn" onclick="setPeriodo('90',this)">90 dias</button>
+          <button class="p-btn" onclick="setPeriodo('ano',this)">Este ano</button>
+          <button class="p-btn" onclick="setPeriodo('todos',this)">Tudo</button>
         </div>
 
         <!-- ── TAB RESUMO ── -->
         <div id="pane-resumo">
-          <div class="period-bar">
-            <button class="p-btn active" onclick="setPeriodo('mes',this)">Este mês</button>
-            <button class="p-btn" onclick="setPeriodo('30',this)">30 dias</button>
-            <button class="p-btn" onclick="setPeriodo('90',this)">90 dias</button>
-            <button class="p-btn" onclick="setPeriodo('ano',this)">Este ano</button>
-            <button class="p-btn" onclick="setPeriodo('todos',this)">Tudo</button>
-          </div>
           <div class="caixa-kpis">
             <div class="caixa-kpi">
               <div class="caixa-kpi-label">Saldo</div>
@@ -175,6 +204,68 @@
                 <tbody id="tabela-despesas"><tr><td colspan="6" class="empty-state">Carregando...</td></tr></tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- ── TAB LUCRO PEÇAS ── -->
+        <div id="pane-lucro" style="display:none">
+          <div class="lucro-kpis">
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Vendido (Peças)</div>
+              <div class="caixa-kpi-val accent" id="lp-vendido">—</div>
+              <div class="caixa-kpi-sub" id="lp-qtd-os">no período</div>
+            </div>
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Custo Estimado</div>
+              <div class="caixa-kpi-val vermelho" id="lp-custo">—</div>
+              <div class="caixa-kpi-sub">produtos com custo cadastrado</div>
+            </div>
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Lucro Bruto</div>
+              <div class="caixa-kpi-val verde" id="lp-lucro">—</div>
+              <div class="caixa-kpi-sub" id="lp-margem">margem estimada</div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th style="text-align:right">Qtd</th>
+                    <th style="text-align:right">Vendido</th>
+                    <th style="text-align:right">Custo Unit.</th>
+                    <th style="text-align:right">Lucro</th>
+                    <th style="text-align:right">Margem</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-lucro"><tr><td colspan="6" class="empty-state">Carregando...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--text-dim);margin-top:8px">* Custo buscado do Catálogo por nome do produto. Itens sem correspondência aparecem com custo zero.</p>
+        </div>
+
+        <!-- ── TAB DRE ── -->
+        <div id="pane-dre" style="display:none">
+          <div class="dre-hero">
+            <div class="dre-hero-card">
+              <div class="dre-hero-label">Receita Total</div>
+              <div class="dre-hero-val verde" id="dre-rec">—</div>
+            </div>
+            <div class="dre-hero-card">
+              <div class="dre-hero-label">Despesas Totais</div>
+              <div class="dre-hero-val vermelho" id="dre-desp">—</div>
+            </div>
+            <div class="dre-hero-card">
+              <div class="dre-hero-label">Resultado Líquido</div>
+              <div class="dre-hero-val" id="dre-res">—</div>
+              <div class="dre-hero-pct" id="dre-margem">margem: —</div>
+            </div>
+          </div>
+
+          <div class="dre-tree" id="dre-tree">
+            <div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Carregando...</div>
           </div>
         </div>
 
@@ -257,11 +348,26 @@
       document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
     }
 
-    const CAT_RECEITA  = ['os','servico','outros'];
-    const CAT_DESPESA  = ['aluguel','insumos','fornecedor','vale','salario','servicos','outros'];
-    const CAT_LABEL    = { os:'OS', servico:'Serviço', aluguel:'Aluguel', insumos:'Insumos', fornecedor:'Fornecedor', vale:'Vale', salario:'Salário', servicos:'Serviços', outros:'Outros' };
+    const CAT_RECEITA = ['os','servico','outros'];
+    const CAT_DESPESA = ['aluguel','insumos','fornecedor','vale','salario','servicos','outros'];
+    const CAT_LABEL   = {
+      os:'OS', servico:'Serviço', aluguel:'Aluguel', insumos:'Insumos',
+      fornecedor:'Fornecedor', vale:'Vale', salario:'Salário',
+      servicos:'Serviços', outros:'Outros'
+    };
+    // Agrupamentos para DRE
+    const CAT_DESP_GRUPOS = {
+      fornecedor: 'Fornecedores / Insumos',
+      insumos:    'Fornecedores / Insumos',
+      aluguel:    'Infraestrutura',
+      servicos:   'Infraestrutura',
+      salario:    'Folha de Pagamento',
+      vale:       'Folha de Pagamento',
+      outros:     'Outros'
+    };
 
     let todosLanc = [], periodoAtivo = 'mes', tabAtiva = 'resumo', editandoId = null;
+    let produtosCusto = {}; // mapa nome→cost do catálogo
 
     (async () => {
       const ok = await requireAuth();
@@ -272,26 +378,35 @@
     })();
 
     async function carregar() {
-      const { data } = await sb.from('caixa')
-        .select('*')
-        .eq('company_id', APP.company.id)
-        .order('created_at', { ascending: false });
-      todosLanc = data || [];
-      renderTudo();
-    }
-
-    // ── Tabs ──
-    function setTab(tab, el) {
-      tabAtiva = tab;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      el.classList.add('active');
-      ['resumo','receitas','despesas'].forEach(t => {
-        document.getElementById('pane-'+t).style.display = t === tab ? '' : 'none';
+      const [{ data: lanc }, { data: prods }] = await Promise.all([
+        sb.from('caixa').select('*').eq('company_id', APP.company.id).order('created_at', { ascending: false }),
+        sb.from('products').select('name,cost').eq('company_id', APP.company.id)
+      ]);
+      todosLanc = lanc || [];
+      // Mapa nome (lowercase) → custo
+      produtosCusto = {};
+      (prods || []).forEach(p => {
+        if (p.cost > 0) produtosCusto[p.name.toLowerCase()] = p.cost;
       });
       renderTudo();
     }
 
-    // ── Período ──
+    /* ── Tabs ── */
+    function setTab(tab, el) {
+      tabAtiva = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const allPanes = ['resumo','receitas','despesas','lucro','dre'];
+      allPanes.forEach(t => {
+        document.getElementById('pane-'+t).style.display = t === tab ? '' : 'none';
+      });
+      // Period bar: esconde em receitas/despesas (têm botão próprio de ação)
+      document.getElementById('period-bar-global').style.display =
+        (tab === 'receitas' || tab === 'despesas') ? 'none' : '';
+      renderTudo();
+    }
+
+    /* ── Período ── */
     function setPeriodo(p, btn) {
       periodoAtivo = p;
       document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
@@ -303,15 +418,15 @@
       if (periodoAtivo === 'todos') return lista;
       const agora = new Date();
       let desde;
-      if (periodoAtivo === 'mes')  desde = new Date(agora.getFullYear(), agora.getMonth(), 1);
-      else if (periodoAtivo === '30') { desde = new Date(agora); desde.setDate(desde.getDate()-30); }
-      else if (periodoAtivo === '90') { desde = new Date(agora); desde.setDate(desde.getDate()-90); }
-      else if (periodoAtivo === 'ano') desde = new Date(agora.getFullYear(), 0, 1);
+      if      (periodoAtivo === 'mes')  desde = new Date(agora.getFullYear(), agora.getMonth(), 1);
+      else if (periodoAtivo === '30')   { desde = new Date(agora); desde.setDate(desde.getDate()-30); }
+      else if (periodoAtivo === '90')   { desde = new Date(agora); desde.setDate(desde.getDate()-90); }
+      else if (periodoAtivo === 'ano')  desde = new Date(agora.getFullYear(), 0, 1);
       return lista.filter(l => new Date(l.created_at) >= desde);
     }
 
     function renderTudo() {
-      const lista   = filtrarPeriodo(todosLanc);
+      const lista    = filtrarPeriodo(todosLanc);
       const entradas = lista.filter(l => l.tipo === 'entrada');
       const saidas   = lista.filter(l => l.tipo === 'saida');
       const sapagas  = saidas.filter(l => l.pago);
@@ -336,8 +451,11 @@
       }
       if (tabAtiva === 'receitas') renderTabelaTipo(entradas, 'tabela-receitas', 'entrada');
       if (tabAtiva === 'despesas') renderTabelaTipo(saidas, 'tabela-despesas', 'saida');
+      if (tabAtiva === 'dre')     renderDRE(lista);
+      if (tabAtiva === 'lucro')   carregarLucro();
     }
 
+    /* ── Tabela Resumo ── */
     function renderTabelaResumo(lista) {
       const tbody = document.getElementById('tabela-resumo');
       if (!lista.length) {
@@ -358,6 +476,7 @@
       }).join('');
     }
 
+    /* ── Tabela Receitas / Despesas ── */
     function renderTabelaTipo(lista, tbodyId, tipo) {
       const tbody = document.getElementById(tbodyId);
       if (!lista.length) {
@@ -383,6 +502,178 @@
       }).join('');
     }
 
+    /* ─────────────── DRE ─────────────── */
+    function renderDRE(lista) {
+      const entradas = lista.filter(l => l.tipo === 'entrada');
+      const saidas   = lista.filter(l => l.tipo === 'saida' && l.pago);
+
+      const totalRec = entradas.reduce((s,l) => s+(l.valor||0), 0);
+
+      // Agrupamento de despesas
+      const grupos = {};
+      saidas.forEach(l => {
+        const g = CAT_DESP_GRUPOS[l.categoria] || 'Outros';
+        if (!grupos[g]) grupos[g] = 0;
+        grupos[g] += (l.valor||0);
+      });
+      const totalDesp = Object.values(grupos).reduce((s,v) => s+v, 0);
+      const resultado = totalRec - totalDesp;
+      const margem    = totalRec > 0 ? (resultado / totalRec * 100) : 0;
+
+      // KPIs hero
+      document.getElementById('dre-rec').textContent    = fmtMoeda(totalRec);
+      document.getElementById('dre-desp').textContent   = fmtMoeda(totalDesp);
+      const resEl = document.getElementById('dre-res');
+      resEl.textContent = fmtMoeda(resultado);
+      resEl.className = 'dre-hero-val ' + (resultado >= 0 ? 'verde' : 'vermelho');
+      document.getElementById('dre-margem').textContent = `margem: ${margem.toFixed(1)}%`;
+
+      // Árvore DRE
+      const ordemGrupos = ['Fornecedores / Insumos','Folha de Pagamento','Infraestrutura','Outros'];
+
+      let html = '';
+
+      // Receita
+      html += `<div class="dre-row"><span class="dre-label main">Receita Operacional</span><span class="dre-val pos">${fmtMoeda(totalRec)}</span></div>`;
+      const recPorCat = {};
+      entradas.forEach(l => {
+        const lbl = CAT_LABEL[l.categoria] || l.categoria;
+        recPorCat[lbl] = (recPorCat[lbl]||0) + (l.valor||0);
+      });
+      Object.entries(recPorCat).sort((a,b)=>b[1]-a[1]).forEach(([cat,val]) => {
+        const pct = totalRec > 0 ? (val/totalRec*100).toFixed(0) : 0;
+        html += `<div class="dre-row"><span class="dre-label indent">${cat}</span><div style="display:flex;align-items:center"><span class="dre-val neu">${fmtMoeda(val)}</span><span class="dre-pct">${pct}%</span></div></div>`;
+      });
+
+      html += `<div class="dre-sep"></div>`;
+
+      // Despesas
+      html += `<div class="dre-row"><span class="dre-label main">(−) Despesas Pagas</span><span class="dre-val neg">${fmtMoeda(totalDesp)}</span></div>`;
+      ordemGrupos.forEach(g => {
+        const val = grupos[g];
+        if (!val) return;
+        const pct = totalRec > 0 ? (val/totalRec*100).toFixed(0) : 0;
+        html += `<div class="dre-row"><span class="dre-label indent">${g}</span><div style="display:flex;align-items:center"><span class="dre-val neg">${fmtMoeda(val)}</span><span class="dre-pct">${pct}%</span></div></div>`;
+      });
+
+      html += `<div class="dre-sep"></div>`;
+
+      // Resultado
+      const resCor = resultado >= 0 ? '#4ade80' : '#f87171';
+      html += `<div class="dre-row dre-result">
+        <span class="dre-label main" style="font-size:14px;color:var(--text)">Resultado Líquido</span>
+        <div style="display:flex;align-items:center">
+          <span class="dre-val" style="font-size:16px;color:${resCor}">${fmtMoeda(resultado)}</span>
+          <span class="dre-pct" style="font-size:12px">${margem.toFixed(1)}%</span>
+        </div>
+      </div>`;
+
+      if (!lista.length) {
+        html = '<div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Nenhum lançamento no período.</div>';
+      }
+
+      document.getElementById('dre-tree').innerHTML = html;
+    }
+
+    /* ─────────────── LUCRO PEÇAS ─────────────── */
+    let lucroCarregando = false;
+
+    async function carregarLucro() {
+      if (lucroCarregando) return;
+      lucroCarregando = true;
+      document.getElementById('tabela-lucro').innerHTML =
+        '<tr><td colspan="6" class="empty-state">Carregando itens das OS...</td></tr>';
+
+      try {
+        // Busca OS do período para filtrar
+        const agora = new Date();
+        let dataInicio = null;
+        if      (periodoAtivo === 'mes')  dataInicio = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
+        else if (periodoAtivo === '30')   { const d = new Date(agora); d.setDate(d.getDate()-30); dataInicio = d.toISOString(); }
+        else if (periodoAtivo === '90')   { const d = new Date(agora); d.setDate(d.getDate()-90); dataInicio = d.toISOString(); }
+        else if (periodoAtivo === 'ano')  dataInicio = new Date(agora.getFullYear(), 0, 1).toISOString();
+
+        let qOS = sb.from('ordens_servico').select('id').eq('company_id', APP.company.id);
+        if (dataInicio) qOS = qOS.gte('created_at', dataInicio);
+        const { data: oss } = await qOS;
+        const osIds = (oss||[]).map(o => o.id);
+
+        if (!osIds.length) {
+          document.getElementById('tabela-lucro').innerHTML =
+            '<tr><td colspan="6" class="empty-state">Nenhuma OS no período.</td></tr>';
+          ['lp-vendido','lp-custo','lp-lucro'].forEach(id => document.getElementById(id).textContent = fmtMoeda(0));
+          document.getElementById('lp-margem').textContent = 'margem: 0%';
+          document.getElementById('lp-qtd-os').textContent = '0 OS no período';
+          lucroCarregando = false;
+          return;
+        }
+
+        // Busca itens do tipo produto
+        const { data: itens } = await sb.from('os_items')
+          .select('descricao, quantidade, preco_unit, subtotal')
+          .in('os_id', osIds)
+          .eq('tipo', 'produto');
+
+        document.getElementById('lp-qtd-os').textContent = `${osIds.length} OS no período`;
+        renderLucroPecas(itens || []);
+      } catch(e) {
+        document.getElementById('tabela-lucro').innerHTML =
+          `<tr><td colspan="6" class="empty-state">Erro: ${esc(e.message)}</td></tr>`;
+      }
+
+      lucroCarregando = false;
+    }
+
+    function renderLucroPecas(itens) {
+      // Agrupa por descrição
+      const mapa = {};
+      itens.forEach(i => {
+        const key = (i.descricao||'').toLowerCase().trim();
+        if (!mapa[key]) mapa[key] = { descricao: i.descricao, qtd: 0, vendido: 0 };
+        mapa[key].qtd     += parseFloat(i.quantidade)||0;
+        mapa[key].vendido += parseFloat(i.subtotal)||0;
+      });
+
+      // Anexa custo do catálogo
+      const rows = Object.values(mapa).map(r => {
+        const custoUnit = produtosCusto[r.descricao?.toLowerCase()?.trim()] || 0;
+        const custoTotal = custoUnit * r.qtd;
+        const lucro = r.vendido - custoTotal;
+        const margem = r.vendido > 0 ? (lucro / r.vendido * 100) : 0;
+        return { ...r, custoUnit, custoTotal, lucro, margem, temCusto: custoUnit > 0 };
+      }).sort((a,b) => b.vendido - a.vendido);
+
+      const totalVendido = rows.reduce((s,r) => s+r.vendido, 0);
+      const totalCusto   = rows.reduce((s,r) => s+r.custoTotal, 0);
+      const totalLucro   = totalVendido - totalCusto;
+      const margemGeral  = totalVendido > 0 ? (totalLucro/totalVendido*100) : 0;
+
+      document.getElementById('lp-vendido').textContent = fmtMoeda(totalVendido);
+      document.getElementById('lp-custo').textContent   = fmtMoeda(totalCusto);
+      document.getElementById('lp-lucro').textContent   = fmtMoeda(totalLucro);
+      document.getElementById('lp-margem').textContent  = `margem: ${margemGeral.toFixed(1)}%`;
+
+      if (!rows.length) {
+        document.getElementById('tabela-lucro').innerHTML =
+          '<tr><td colspan="6" class="empty-state">Nenhum produto em OS no período.</td></tr>';
+        return;
+      }
+
+      document.getElementById('tabela-lucro').innerHTML = rows.map(r => {
+        const margemCor = r.margem >= 30 ? '#4ade80' : r.margem >= 15 ? 'var(--accent)' : '#f87171';
+        const semCusto = !r.temCusto
+          ? '<span class="badge-sem-custo">S/ custo</span>' : '';
+        return `<tr>
+          <td style="color:var(--text);font-weight:600">${esc(r.descricao)} ${semCusto}</td>
+          <td style="text-align:right;color:var(--text-muted);font-family:'Fira Code',monospace">${Number(r.qtd).toLocaleString('pt-BR',{maximumFractionDigits:3})}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:var(--accent)">${fmtMoeda(r.vendido)}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:var(--text-muted)">${r.temCusto ? fmtMoeda(r.custoUnit) : '—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:${r.lucro>=0?'#4ade80':'#f87171'}">${fmtMoeda(r.lucro)}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:${margemCor}">${r.margem.toFixed(1)}%</td>
+        </tr>`;
+      }).join('');
+    }
+
     function badgeStatus(l, hoje = new Date().toISOString().slice(0,10)) {
       if (l.pago) return '<span class="badge badge-pago">Pago</span>';
       if (l.tipo === 'entrada') return '<span class="badge badge-pago">Recebido</span>';
@@ -390,7 +681,7 @@
       return '<span class="badge badge-pendente">Pendente</span>';
     }
 
-    // ── Modal ──
+    /* ── Modal ── */
     function abrirModal(tipo) {
       editandoId = null;
       const isEntrada = tipo === 'entrada';
@@ -445,11 +736,11 @@
       const valor = parseFloat(document.getElementById('lc-valor').value);
       if (!desc || !valor || valor <= 0) { dmToast('Preencha descrição e valor', 'error'); return; }
 
-      const tipo       = document.getElementById('lc-tipo').value;
-      const data       = document.getElementById('lc-data').value || null;
-      const forma      = document.getElementById('lc-forma').value || null;
-      const categoria  = document.getElementById('lc-categoria').value;
-      const pago       = document.getElementById('lc-pago').checked;
+      const tipo      = document.getElementById('lc-tipo').value;
+      const data      = document.getElementById('lc-data').value || null;
+      const forma     = document.getElementById('lc-forma').value || null;
+      const categoria = document.getElementById('lc-categoria').value;
+      const pago      = document.getElementById('lc-pago').checked;
 
       const btn = document.getElementById('btn-salvar');
       btn.disabled = true; btn.textContent = 'Salvando...';
