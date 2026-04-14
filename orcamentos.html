@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141349"></script>
-  <script src="js/auth.js?v=04141349"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141349">
+  <script src="js/config.js?v=04141354"></script>
+  <script src="js/auth.js?v=04141354"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141354">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -41,7 +41,7 @@
     /* Modal */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
     .modal-overlay.active { display:flex; }
-    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:860px; padding:28px; position:relative; max-height:90vh; overflow-y:auto; }
+    .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:1060px; padding:32px; position:relative; max-height:92vh; overflow-y:auto; }
     .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
     .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
     .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
@@ -58,8 +58,9 @@
     .items-table th { background:var(--surface-3); padding:7px 10px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); border-bottom:1px solid var(--border); }
     .items-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-muted); }
     .items-table tr:last-child td { border-bottom:none; }
-    .item-add-row { display:grid; grid-template-columns:90px 1fr 80px 110px 90px; gap:8px; margin-top:8px; align-items:start; }
-    .tipo-select { font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; }
+    .items-cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .items-col-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; margin-bottom:6px; }
+    .item-add-row-split { display:grid; grid-template-columns:1fr 58px 88px 52px; gap:6px; margin-top:6px; align-items:start; }
     .ac-wrap { position:relative; }
     .ac-drop { position:absolute; top:100%; left:0; right:0; background:var(--surface-3); border:1px solid var(--border); z-index:300; max-height:200px; overflow-y:auto; display:none; }
     .ac-item { padding:8px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); }
@@ -204,39 +205,53 @@
 
       <!-- Items -->
       <div class="items-section">
-        <div class="items-header">
-          <span class="items-title">Itens</span>
-          <span class="items-total" id="itens-total">Total: R$ 0,00</span>
-        </div>
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th style="width:40%">Descrição</th>
-              <th>Qtd</th>
-              <th>Preço Unit.</th>
-              <th>Subtotal</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="items-tbody">
-            <tr id="items-empty"><td colspan="6" class="empty-state" style="font-size:12px">Nenhum item adicionado.</td></tr>
-          </tbody>
-        </table>
+        <div class="items-cols">
 
-        <div class="item-add-row">
-          <select class="form-input tipo-select" id="item-tipo" onchange="tipoItemAtual=this.value">
-            <option value="servico">Serviço</option>
-            <option value="produto">Peça</option>
-          </select>
-          <div class="ac-wrap">
-            <input class="form-input" type="text" id="item-desc" placeholder="Buscar catálogo ou digitar..."
-              oninput="filtrarAc(this.value)" onblur="setTimeout(esconderAc,150)">
-            <div class="ac-drop" id="ac-drop"></div>
+          <!-- SERVIÇOS -->
+          <div>
+            <div class="items-col-title" style="color:#60a5fa">Serviços</div>
+            <table class="items-table">
+              <thead><tr><th style="width:45%">Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th><th></th></tr></thead>
+              <tbody id="items-tbody-s">
+                <tr><td colspan="5" class="empty-state" style="font-size:12px">Nenhum serviço.</td></tr>
+              </tbody>
+            </table>
+            <div class="item-add-row-split">
+              <div class="ac-wrap">
+                <input class="form-input" type="text" id="item-desc-s" placeholder="Buscar ou digitar..."
+                  oninput="filtrarAcTipo('servico',this.value)" onblur="setTimeout(()=>esconderAcTipo('servico'),150)">
+                <div class="ac-drop" id="ac-drop-s"></div>
+              </div>
+              <input class="form-input" type="number" id="item-qtd-s" value="1" min="0.001" step="any" placeholder="Qtd">
+              <input class="form-input" type="number" id="item-preco-s" placeholder="Preço" min="0" step="0.01">
+              <button class="btn btn-ghost" style="padding:0;font-size:18px;line-height:1" onclick="adicionarItemTipo('servico')">+</button>
+            </div>
           </div>
-          <input class="form-input" type="number" id="item-qtd" placeholder="Qtd" value="1" min="0.001" step="any">
-          <input class="form-input" type="number" id="item-preco" placeholder="Preço" min="0" step="0.01">
-          <button class="btn btn-ghost" onclick="adicionarItem()">+ Item</button>
+
+          <!-- PEÇAS -->
+          <div>
+            <div class="items-col-title" style="color:#4ade80">Peças</div>
+            <table class="items-table">
+              <thead><tr><th style="width:45%">Descrição</th><th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th><th></th></tr></thead>
+              <tbody id="items-tbody-p">
+                <tr><td colspan="5" class="empty-state" style="font-size:12px">Nenhuma peça.</td></tr>
+              </tbody>
+            </table>
+            <div class="item-add-row-split">
+              <div class="ac-wrap">
+                <input class="form-input" type="text" id="item-desc-p" placeholder="Buscar ou digitar..."
+                  oninput="filtrarAcTipo('produto',this.value)" onblur="setTimeout(()=>esconderAcTipo('produto'),150)">
+                <div class="ac-drop" id="ac-drop-p"></div>
+              </div>
+              <input class="form-input" type="number" id="item-qtd-p" value="1" min="0.001" step="any" placeholder="Qtd">
+              <input class="form-input" type="number" id="item-preco-p" placeholder="Preço" min="0" step="0.01">
+              <button class="btn btn-ghost" style="padding:0;font-size:18px;line-height:1" onclick="adicionarItemTipo('produto')">+</button>
+            </div>
+          </div>
+
+        </div>
+        <div style="text-align:right;margin-top:10px">
+          <span class="items-total" id="itens-total">Total: R$ 0,00</span>
         </div>
       </div>
 
@@ -426,13 +441,16 @@
 
     function fecharModal() {
       document.getElementById('modal-overlay').classList.remove('active');
-      esconderAc();
+      esconderAcTipo('servico');
+      esconderAcTipo('produto');
       esconderAcCliente();
     }
 
-    document.getElementById('modal-overlay').addEventListener('click', e => {
-      if (e.target === e.currentTarget) fecharModal();
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') fecharModal();
     });
+
+    // Clicar fora não fecha — só ESC ou botão Cancelar
 
     // ── Autocomplete cliente ──
     let _acCliMatches = [];
@@ -488,66 +506,66 @@
     }
 
     // ── Items ──
-    let acSugs = [];
-    let _acItemQuery = '';
+    let _acSugS = [], _acSugP = [];
+    let _acQryS = '', _acQryP = '';
 
-    function filtrarAc(q) {
-      _acItemQuery = q.trim();
-      if (!_acItemQuery || _acItemQuery.length < 2) { esconderAc(); return; }
-      acSugs = catalogo.filter(c => c.name.toLowerCase().includes(_acItemQuery.toLowerCase())).slice(0, 8);
-      const div = document.getElementById('ac-drop');
-      let html = acSugs.map((c, i) =>
-        `<div class="ac-item" onmousedown="selecionarAc(${i})">[${c.tipo === 'servico' ? 'S' : 'P'}] ${esc(c.name)} — ${fmtMoeda(c.price)}</div>`
+    function filtrarAcTipo(tipo, q) {
+      const sfx = tipo === 'servico' ? 's' : 'p';
+      const cor  = tipo === 'servico' ? '#60a5fa' : '#4ade80';
+      if (tipo === 'servico') _acQryS = q.trim(); else _acQryP = q.trim();
+      const query = tipo === 'servico' ? _acQryS : _acQryP;
+      const drop = document.getElementById('ac-drop-' + sfx);
+      if (!query || query.length < 2) { drop.style.display = 'none'; return; }
+      const matches = catalogo.filter(c => c.tipo === tipo && c.name.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+      if (tipo === 'servico') _acSugS = matches; else _acSugP = matches;
+      let html = matches.map((c, i) =>
+        `<div class="ac-item" onmousedown="selecionarAcTipo('${sfx}',${i})">${esc(c.name)} — ${fmtMoeda(c.price)}</div>`
       ).join('');
-      html += `<div class="ac-item" style="color:#60a5fa;border-top:1px solid var(--border)" onmousedown="criarItemInline('servico')">✚ Serviço "${esc(_acItemQuery)}"</div>`;
-      html += `<div class="ac-item" style="color:#4ade80" onmousedown="criarItemInline('produto')">✚ Peça "${esc(_acItemQuery)}"</div>`;
-      div.innerHTML = html;
-      div.style.display = 'block';
+      html += `<div class="ac-item" style="color:${cor};border-top:1px solid var(--border)" onmousedown="criarItemInline('${tipo}')">✚ "${esc(query)}"</div>`;
+      drop.innerHTML = html;
+      drop.style.display = 'block';
     }
 
-    function selecionarAc(idx) {
-      const item = acSugs[idx];
+    function selecionarAcTipo(sfx, idx) {
+      const matches = sfx === 's' ? _acSugS : _acSugP;
+      const item = matches[idx];
       if (!item) return;
-      document.getElementById('item-desc').value = item.name;
-      document.getElementById('item-preco').value = item.price || '';
-      tipoItemAtual = item.tipo;
-      document.getElementById('item-tipo').value = item.tipo;
-      esconderAc();
-      document.getElementById('item-qtd').focus();
+      document.getElementById('item-desc-' + sfx).value  = item.name;
+      document.getElementById('item-preco-' + sfx).value = item.price || '';
+      esconderAcTipo(sfx === 's' ? 'servico' : 'produto');
+      document.getElementById('item-qtd-' + sfx).focus();
     }
 
-    function esconderAc() {
-      document.getElementById('ac-drop').style.display = 'none';
+    function esconderAcTipo(tipo) {
+      document.getElementById('ac-drop-' + (tipo === 'servico' ? 's' : 'p')).style.display = 'none';
     }
 
     async function criarItemInline(tipo) {
-      const nome = _acItemQuery.trim();
+      const sfx   = tipo === 'servico' ? 's' : 'p';
+      const nome  = (tipo === 'servico' ? _acQryS : _acQryP).trim();
       if (!nome) return;
       const tabela = tipo === 'servico' ? 'services' : 'products';
       const { data, error } = await sb.from(tabela).insert({ company_id: APP.company.id, name: nome, price: 0 }).select('id,name,unit,price').single();
       if (error || !data) { alert('Erro ao criar item.'); return; }
       catalogo.push({ ...data, tipo });
-      document.getElementById('item-desc').value = data.name;
-      document.getElementById('item-preco').value = '';
-      tipoItemAtual = tipo;
-      esconderAc();
-      document.getElementById('item-preco').focus();
+      document.getElementById('item-desc-' + sfx).value  = data.name;
+      document.getElementById('item-preco-' + sfx).value = '';
+      esconderAcTipo(tipo);
+      document.getElementById('item-preco-' + sfx).focus();
     }
 
-    function adicionarItem() {
-      const desc  = document.getElementById('item-desc').value.trim();
-      const qtd   = parseFloat(document.getElementById('item-qtd').value)   || 0;
-      const preco = parseFloat(document.getElementById('item-preco').value) || 0;
+    function adicionarItemTipo(tipo) {
+      const sfx   = tipo === 'servico' ? 's' : 'p';
+      const desc  = document.getElementById('item-desc-'  + sfx).value.trim();
+      const qtd   = parseFloat(document.getElementById('item-qtd-'   + sfx).value) || 0;
+      const preco = parseFloat(document.getElementById('item-preco-' + sfx).value) || 0;
       if (!desc || qtd <= 0) return;
-      tipoItemAtual = document.getElementById('item-tipo').value;
-      itensAtual.push({ tipo: tipoItemAtual, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal: qtd * preco });
-      document.getElementById('item-desc').value  = '';
-      document.getElementById('item-qtd').value   = '1';
-      document.getElementById('item-preco').value = '';
-      document.getElementById('item-tipo').value  = 'servico';
-      tipoItemAtual = 'servico';
+      itensAtual.push({ tipo, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal: qtd * preco });
+      document.getElementById('item-desc-'  + sfx).value = '';
+      document.getElementById('item-qtd-'   + sfx).value = '1';
+      document.getElementById('item-preco-' + sfx).value = '';
       renderItens();
-      document.getElementById('item-desc').focus();
+      document.getElementById('item-desc-' + sfx).focus();
     }
 
     function removerItem(idx) {
@@ -555,23 +573,27 @@
       renderItens();
     }
 
+    function rowItem(it, idx) {
+      return `<tr>
+        <td style="color:var(--text)">${esc(it.descricao)}</td>
+        <td class="mono">${fmtQtd(it.quantidade)}</td>
+        <td class="mono">${fmtMoeda(it.preco_unit)}</td>
+        <td class="mono" style="color:var(--accent)">${fmtMoeda(it.subtotal)}</td>
+        <td><button class="btn-remove" onclick="removerItem(${idx})" title="Remover">×</button></td>
+      </tr>`;
+    }
+
     function renderItens() {
-      const tbody = document.getElementById('items-tbody');
-      if (!itensAtual.length) {
-        tbody.innerHTML = '<tr id="items-empty"><td colspan="6" class="empty-state" style="font-size:12px">Nenhum item adicionado.</td></tr>';
-        document.getElementById('itens-total').textContent = 'Total: R$ 0,00';
-        return;
-      }
-      tbody.innerHTML = itensAtual.map((it, i) => `
-        <tr>
-          <td><span class="badge tipo-badge tipo-${it.tipo === 'servico' ? 's' : 'p'}">${it.tipo === 'servico' ? 'S' : 'P'}</span></td>
-          <td style="color:var(--text)">${esc(it.descricao)}</td>
-          <td class="mono">${fmtQtd(it.quantidade)}</td>
-          <td class="mono">${fmtMoeda(it.preco_unit)}</td>
-          <td class="mono" style="color:var(--accent)">${fmtMoeda(it.subtotal)}</td>
-          <td><button class="btn-remove" onclick="removerItem(${i})" title="Remover">×</button></td>
-        </tr>
-      `).join('');
+      const servicos = itensAtual.filter(i => i.tipo === 'servico');
+      const pecas    = itensAtual.filter(i => i.tipo === 'produto');
+      const tbS = document.getElementById('items-tbody-s');
+      const tbP = document.getElementById('items-tbody-p');
+      tbS.innerHTML = servicos.length
+        ? servicos.map(it => rowItem(it, itensAtual.indexOf(it))).join('')
+        : '<tr><td colspan="5" class="empty-state" style="font-size:12px">Nenhum serviço.</td></tr>';
+      tbP.innerHTML = pecas.length
+        ? pecas.map(it => rowItem(it, itensAtual.indexOf(it))).join('')
+        : '<tr><td colspan="5" class="empty-state" style="font-size:12px">Nenhuma peça.</td></tr>';
       const total = itensAtual.reduce((s, it) => s + it.subtotal, 0);
       document.getElementById('itens-total').textContent = 'Total: ' + fmtMoeda(total);
     }
