@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141336"></script>
-  <script src="js/auth.js?v=04141336"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141336">
+  <script src="js/config.js?v=04141339"></script>
+  <script src="js/auth.js?v=04141339"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141339">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -26,6 +26,17 @@
     .badge-enviado   { background:rgba(59,130,246,.15);  color:#60a5fa; }
     .badge-aprovado  { background:rgba(34,197,94,.15);   color:#4ade80; }
     .badge-reprovado { background:rgba(239,68,68,.15);   color:#f87171; }
+    .badge-vencido   { background:rgba(239,68,68,.15);   color:#f87171; }
+    .badge-vencendo  { background:rgba(234,179,8,.15);   color:#fbbf24; }
+
+    .alerta-validade {
+      display:none; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.3);
+      color:#f87171; padding:10px 16px; font-size:13px; font-weight:600;
+      margin-bottom:16px;
+    }
+    .alerta-validade.show { display:block; }
+    .val-vencido { color:#f87171; font-weight:700; font-size:12px; }
+    .val-vencendo { color:#fbbf24; font-weight:700; font-size:12px; }
 
     /* Modal */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
@@ -115,6 +126,8 @@
           </div>
           <button class="btn btn-primary" onclick="abrirModal()">+ Novo orçamento</button>
         </div>
+        <div class="alerta-validade" id="alerta-validade">
+        </div>
 
         <div class="section">
           <div class="section-body">
@@ -125,12 +138,13 @@
                   <th>Cliente</th>
                   <th>Status</th>
                   <th>Total</th>
+                  <th>Validade</th>
                   <th>Data</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="tabela-orc">
-                <tr><td colspan="6" class="empty-state">Carregando...</td></tr>
+                <tr><td colspan="7" class="empty-state">Carregando...</td></tr>
               </tbody>
             </table>
           </div>
@@ -162,6 +176,13 @@
             <option value="enviado">Enviado ao cliente</option>
           </select>
         </div>
+      </div>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Validade do orçamento</label>
+          <input class="form-input" type="date" id="orc-validade">
+        </div>
+        <div class="form-group"></div>
       </div>
 
       <div class="form-group">
@@ -280,22 +301,50 @@
       renderTabela();
     }
 
+    function validadeInfo(o) {
+      if (!o.validade || o.status === 'aprovado' || o.status === 'reprovado') return { html: '<span style="color:var(--text-dim)">—</span>', vencido: false, vencendo: false };
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const val  = new Date(o.validade + 'T00:00:00');
+      const diff = Math.floor((val - hoje) / 86400000);
+      if (diff < 0)  return { html: `<span class="val-vencido">Vencido</span>`,        vencido: true,  vencendo: false };
+      if (diff <= 3) return { html: `<span class="val-vencendo">Vence em ${diff}d</span>`, vencido: false, vencendo: true  };
+      return { html: `<span style="color:var(--text-muted);font-size:12px">${val.toLocaleDateString('pt-BR')}</span>`, vencido: false, vencendo: false };
+    }
+
     function renderTabela() {
       const lista = filtroAtivo === 'todos' ? todosOrc : todosOrc.filter(o => o.status === filtroAtivo);
       const tbody = document.getElementById('tabela-orc');
+
+      // Alerta de validade
+      const ativos = todosOrc.filter(o => o.status === 'rascunho' || o.status === 'enviado');
+      const vencidos  = ativos.filter(o => validadeInfo(o).vencido).length;
+      const vencendo  = ativos.filter(o => validadeInfo(o).vencendo).length;
+      const alerta = document.getElementById('alerta-validade');
+      if (vencidos || vencendo) {
+        const partes = [];
+        if (vencidos) partes.push(`${vencidos} orçamento(s) vencido(s)`);
+        if (vencendo) partes.push(`${vencendo} vencendo em até 3 dias`);
+        alerta.textContent = '⚠ ' + partes.join(' · ');
+        alerta.classList.add('show');
+      } else {
+        alerta.classList.remove('show');
+      }
+
       if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum orçamento encontrado.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum orçamento encontrado.</td></tr>';
         return;
       }
       tbody.innerHTML = lista.map(o => {
-        const nome = o.clients?.name || '—';
-        const data = new Date(o.created_at).toLocaleDateString('pt-BR');
+        const nome  = o.clients?.name || '—';
+        const data  = new Date(o.created_at).toLocaleDateString('pt-BR');
         const acoes = buildAcoes(o);
+        const vInfo = validadeInfo(o);
         return `<tr>
           <td class="mono" style="color:var(--text-dim);font-size:12px">#${o.numero}</td>
           <td style="font-weight:600;color:var(--text)">${esc(nome)}</td>
           <td><span class="badge badge-${o.status}">${labelStatus(o.status)}</span></td>
           <td style="font-family:'Fira Code',monospace;color:var(--accent)">${fmtMoeda(o.total)}</td>
+          <td>${vInfo.html}</td>
           <td style="color:var(--text-dim);font-size:12px">${data}</td>
           <td><div class="actions-cell">${acoes}</div></td>
         </tr>`;
@@ -330,6 +379,9 @@
       document.getElementById('orc-cliente').value = '';
       document.getElementById('orc-status').value = 'rascunho';
       document.getElementById('orc-notes').value = '';
+      // Validade padrão: 15 dias
+      const d = new Date(); d.setDate(d.getDate() + 15);
+      document.getElementById('orc-validade').value = d.toISOString().split('T')[0];
       document.getElementById('btn-excluir').style.display = 'none';
       document.getElementById('orc-status').disabled = false;
       renderItens();
@@ -344,6 +396,7 @@
       document.getElementById('orc-cliente').value = orc.client_id || '';
       document.getElementById('orc-status').value = orc.status;
       document.getElementById('orc-notes').value = orc.notes || '';
+      document.getElementById('orc-validade').value = orc.validade || '';
       document.getElementById('btn-excluir').style.display = 'block';
       document.getElementById('orc-status').disabled = false;
 
@@ -435,11 +488,12 @@
 
     // ── Salvar ──
     async function salvar() {
-      const id      = document.getElementById('orc-id').value;
+      const id       = document.getElementById('orc-id').value;
       const clientId = document.getElementById('orc-cliente').value || null;
-      const status  = document.getElementById('orc-status').value;
-      const notes   = document.getElementById('orc-notes').value.trim() || null;
-      const total   = itensAtual.reduce((s, it) => s + it.subtotal, 0);
+      const status   = document.getElementById('orc-status').value;
+      const notes    = document.getElementById('orc-notes').value.trim() || null;
+      const validade = document.getElementById('orc-validade').value || null;
+      const total    = itensAtual.reduce((s, it) => s + it.subtotal, 0);
 
       const btn = document.getElementById('btn-salvar');
       btn.disabled = true; btn.textContent = 'Salvando...';
@@ -447,13 +501,13 @@
       let orcId = id;
 
       if (id) {
-        await sb.from('orcamentos').update({ client_id: clientId, status, notes, total }).eq('id', id);
+        await sb.from('orcamentos').update({ client_id: clientId, status, notes, total, validade }).eq('id', id);
         await sb.from('orcamento_items').delete().eq('orcamento_id', id);
       } else {
         const { data: maxN } = await sb.from('orcamentos').select('numero').eq('company_id', APP.company.id).order('numero', { ascending: false }).limit(1);
         const numero = maxN?.length ? maxN[0].numero + 1 : 1;
         const { data: novoOrc } = await sb.from('orcamentos').insert({
-          company_id: APP.company.id, client_id: clientId, status, notes, total, numero
+          company_id: APP.company.id, client_id: clientId, status, notes, total, numero, validade
         }).select().single();
         orcId = novoOrc?.id;
       }
