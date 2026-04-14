@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04141947"></script>
-  <script src="js/auth.js?v=04141947"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141947">
+  <script src="js/config.js?v=04141958"></script>
+  <script src="js/auth.js?v=04141958"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141958">
   <style>
     /* Board */
     .board-outer {
@@ -1471,14 +1471,14 @@
       let blocoPix = null;
       try {
         const emp = APP.company || {};
-        if (emp.pix_chave && totalGeral > 0 && typeof QRCode !== 'undefined') {
-          const emv = _pixEMV(emp.pix_chave, emp.pix_nome||emp.name||'EMPRESA', emp.cidade||'CIDADE', totalGeral, 'OS'+(os.numero||0));
+        if (emp.pix_key && totalGeral > 0 && typeof QRCode !== 'undefined') {
+          const emv = _pixEMV(emp.pix_key, emp.pix_nome||emp.name||'EMPRESA', emp.cidade||'CIDADE', totalGeral, 'OS'+(os.numero||0));
           const qrImg = await _qrPixBase64(emv);
           if (qrImg) blocoPix = {
             stack: [
               { text: 'Pague com PIX', fontSize: 10, bold: true, color: '#1a1a1a', margin: [0,0,0,4] },
               { image: qrImg, width: 85, height: 85 },
-              { text: 'Chave: ' + emp.pix_chave, fontSize: 7, color: '#666', margin: [0,2,0,0] },
+              { text: 'Chave: ' + emp.pix_key, fontSize: 7, color: '#666', margin: [0,2,0,0] },
               { text: emp.pix_nome || emp.name, fontSize: 7, color: '#666' }
             ], alignment: 'center', width: 120
           };
