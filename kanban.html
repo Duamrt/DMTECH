@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141636"></script>
-  <script src="js/auth.js?v=04141636"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141636">
+  <script src="js/config.js?v=04141641"></script>
+  <script src="js/auth.js?v=04141641"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141641">
   <style>
     /* Board */
     .board-outer {
@@ -462,6 +462,28 @@
     .btn-ai:hover { border-color: var(--accent); color: var(--accent); }
     .btn-ai:disabled { opacity: .5; cursor: not-allowed; }
 
+    /* Docs row */
+    .panel-docs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 20px 0;
+      flex-shrink: 0;
+    }
+    .btn-doc {
+      flex: 1;
+      padding: 8px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .12s;
+      white-space: nowrap;
+    }
+    .btn-doc:hover { border-color: var(--border-strong); color: var(--text); }
+
     .ai-result {
       display: none;
       background: var(--surface-3);
@@ -673,6 +695,11 @@
         </div>
       </div>
 
+    </div>
+    <div class="panel-docs">
+      <button class="btn-doc" onclick="pdfOS()">📄 Arquivo OS</button>
+      <button class="btn-doc" onclick="pdfRecibo()">🧾 Recibo</button>
+      <button class="btn-doc" onclick="pdfDemanda()">🔧 Demanda</button>
     </div>
     <div class="panel-actions">
       <button class="btn-ver-os" onclick="irParaOS()">Ver OS →</button>
@@ -1062,49 +1089,199 @@
       window.location.href = 'os.html';
     }
 
-    const SUPABASE_FN = `${SUPABASE_URL}/functions/v1/ai-assist`;
-
-    async function gerarIA(action) {
+    function gerarIA(action) {
       if (!osAtual) return;
       const btnId = action === 'checklist' ? 'btn-checklist' : 'btn-whatsapp';
       const btn = document.getElementById(btnId);
       const result = document.getElementById('ai-result');
       const textEl = document.getElementById('ai-text');
 
-      btn.disabled = true;
-      btn.innerHTML = '<span class="ai-spin">↻</span> Gerando...';
       result.classList.remove('show');
 
-      try {
-        const { data: { session } } = await sb.auth.getSession();
-        const res = await fetch(SUPABASE_FN, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            action,
-            os: {
-              numero: osAtual.numero,
-              client_name: osAtual.clients?.name || '',
-              notes: document.getElementById('p-notes').value || osAtual.notes || '',
-              status: osAtual.status,
-            }
-          })
-        });
-        const { text, error } = await res.json();
-        if (error) throw new Error(error);
-        textEl.textContent = text;
-        result.classList.add('show');
-      } catch (e) {
-        textEl.textContent = 'Erro: ' + e.message;
-        result.classList.add('show');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = action === 'checklist' ? '<span>☑</span> Checklist' : '<span>✉</span> Msg WA';
+      const notas  = document.getElementById('p-notes').value || osAtual.notes || '';
+      const cliente = osAtual.clients?.name || 'cliente';
+      const numOS   = String(osAtual.numero || '').padStart(3, '0');
+      const empresa = APP.company?.name || '';
+
+      let texto = '';
+
+      if (action === 'checklist') {
+        const linhas = [];
+        linhas.push(`CHECKLIST — OS #${numOS} | ${cliente}`);
+        linhas.push('');
+        linhas.push('[ ] Diagnóstico inicial concluído');
+        linhas.push('[ ] Materiais e ferramentas separados');
+        linhas.push('');
+        if (itensPanel.length) {
+          linhas.push('ITENS A EXECUTAR:');
+          itensPanel.forEach(it => {
+            const tipo = it.tipo === 'servico' ? 'Serviço' : 'Produto';
+            linhas.push(`[ ] [${tipo}] ${it.descricao} (${fmtN(it.quantidade)}x)`);
+          });
+          linhas.push('');
+        }
+        if (notas) { linhas.push('OBS: ' + notas); linhas.push(''); }
+        linhas.push('[ ] Execução concluída conforme solicitado');
+        linhas.push('[ ] Teste final realizado');
+        linhas.push('[ ] Registro fotográfico feito');
+        linhas.push('[ ] Cliente notificado');
+        texto = linhas.join('\n');
+      } else {
+        // WA: usa template da empresa se disponível
+        const tpl = APP.company?.mensagens?.conclusao;
+        if (tpl) {
+          texto = tpl
+            .replace(/{cliente}/gi, cliente)
+            .replace(/{nome_cliente}/gi, cliente)
+            .replace(/{os}/gi, `#${numOS}`)
+            .replace(/{numero_os}/gi, `#${numOS}`)
+            .replace(/{empresa}/gi, empresa);
+        } else {
+          texto = `Olá, ${cliente}!\n\nPassando para informar que o serviço referente à OS #${numOS} foi concluído com sucesso.\n\nFicamos à disposição para qualquer dúvida.\n\n${empresa}`;
+        }
       }
+
+      textEl.textContent = texto;
+      result.classList.add('show');
+    }
+
+    // ── PDFs ──────────────────────────────────────────────────────────────────
+
+    function _pdfBase(titulo, corpo) {
+      const emp = APP.company || {};
+      const cabecalho = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:14px">
+          <div>
+            <div style="font-size:18px;font-weight:900">${emp.name || ''}</div>
+            ${emp.cnpj   ? `<div>CNPJ: ${emp.cnpj}</div>` : ''}
+            ${emp.whatsapp ? `<div>Tel: ${emp.whatsapp}</div>` : ''}
+            ${emp.email  ? `<div>${emp.email}</div>` : ''}
+            ${emp.endereco ? `<div>${emp.endereco}</div>` : ''}
+          </div>
+          <div style="text-align:right;font-size:20px;font-weight:900">${titulo}</div>
+        </div>`;
+      const w = window.open('', '_blank', 'width=780,height=900');
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>${titulo}</title>
+        <style>
+          * { box-sizing:border-box; margin:0; padding:0; }
+          body { font-family: Arial, sans-serif; font-size: 13px; color:#000; padding:28px; }
+          table { width:100%; border-collapse:collapse; margin-top:10px; }
+          th { background:#000; color:#fff; padding:6px 8px; text-align:left; font-size:12px; }
+          td { padding:5px 8px; border-bottom:1px solid #ddd; font-size:12px; }
+          .label { color:#555; font-size:11px; }
+          .total-row td { font-weight:900; border-top:2px solid #000; border-bottom:none; }
+          @media print { body { padding:10px; } }
+        </style>
+      </head><body>${cabecalho}${corpo}</body></html>`);
+      w.document.close();
+      setTimeout(() => w.print(), 400);
+    }
+
+    function pdfOS() {
+      if (!osAtual) return;
+      const numOS   = String(osAtual.numero || '').padStart(3, '0');
+      const cliente = osAtual.clients?.name || '—';
+      const data    = fmtData(osAtual.created_at);
+      const notas   = document.getElementById('p-notes').value || osAtual.notes || '';
+      const total   = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+
+      const linhasItens = itensPanel.map(it => `
+        <tr>
+          <td>${it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
+          <td>${it.descricao}</td>
+          <td style="text-align:right">${fmtN(it.quantidade)}</td>
+          <td style="text-align:right">${fmtMoeda(it.preco_unit || 0)}</td>
+          <td style="text-align:right">${fmtMoeda(it.subtotal || 0)}</td>
+        </tr>`).join('');
+
+      const corpo = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <div><span class="label">Nº OS</span><br><strong>#${numOS}</strong></div>
+          <div><span class="label">Data</span><br>${data}</div>
+          <div><span class="label">Cliente</span><br><strong>${cliente}</strong></div>
+          <div><span class="label">Status</span><br>${osAtual.status || '—'}</div>
+        </div>
+        <table>
+          <thead><tr><th>Tipo</th><th>Descrição</th><th style="text-align:right">Qtd</th><th style="text-align:right">Unit.</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            ${linhasItens || '<tr><td colspan="5">Sem itens</td></tr>'}
+            <tr class="total-row"><td colspan="4">TOTAL</td><td style="text-align:right">${fmtMoeda(total)}</td></tr>
+          </tbody>
+        </table>
+        ${notas ? `<div style="margin-top:14px"><span class="label">Observações</span><br>${notas}</div>` : ''}
+        <div style="margin-top:30px;border-top:1px solid #000;padding-top:10px;font-size:11px;color:#555">
+          Documento gerado em ${new Date().toLocaleString('pt-BR')}
+        </div>`;
+
+      _pdfBase(`OS #${numOS}`, corpo);
+    }
+
+    function pdfRecibo() {
+      if (!osAtual) return;
+      const numOS   = String(osAtual.numero || '').padStart(3, '0');
+      const cliente = osAtual.clients?.name || '—';
+      const data    = new Date().toLocaleDateString('pt-BR');
+      const total   = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+      const servicos = itensPanel
+        .filter(i => i.tipo === 'servico')
+        .map(i => i.descricao).join(', ') || 'Serviços prestados';
+
+      const corpo = `
+        <div style="text-align:center;margin-bottom:20px;font-size:16px;font-weight:900;letter-spacing:1px">RECIBO DE PAGAMENTO</div>
+        <p style="line-height:1.8;font-size:13px">
+          Recebi(mos) de <strong>${cliente}</strong> a importância de
+          <strong>${fmtMoeda(total)}</strong>
+          referente a: <em>${servicos}</em> — OS #${numOS}.
+        </p>
+        <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+          <div><span class="label">Data</span><br>${data}</div>
+          <div><span class="label">Valor</span><br><strong>${fmtMoeda(total)}</strong></div>
+        </div>
+        <div style="margin-top:50px;display:flex;justify-content:space-between">
+          <div style="border-top:1px solid #000;padding-top:6px;width:45%;text-align:center;font-size:11px">Assinatura do Prestador</div>
+          <div style="border-top:1px solid #000;padding-top:6px;width:45%;text-align:center;font-size:11px">Assinatura do Cliente</div>
+        </div>`;
+
+      _pdfBase(`Recibo OS #${numOS}`, corpo);
+    }
+
+    function pdfDemanda() {
+      if (!osAtual) return;
+      const numOS    = String(osAtual.numero || '').padStart(3, '0');
+      const cliente  = osAtual.clients?.name || '—';
+      const data     = fmtData(osAtual.created_at);
+      const resp     = osAtual.responsavel?.name || osAtual.responsavel?.email || '—';
+      const notas    = document.getElementById('p-notes').value || osAtual.notes || '';
+
+      const linhasItens = itensPanel.map(it => `
+        <tr>
+          <td>${it.tipo === 'servico' ? 'Serviço' : 'Produto'}</td>
+          <td>${it.descricao}</td>
+          <td style="text-align:right">${fmtN(it.quantidade)}</td>
+          <td style="text-align:center">[ ]</td>
+        </tr>`).join('');
+
+      const corpo = `
+        <div style="text-align:center;margin-bottom:16px;font-size:14px;font-weight:900;letter-spacing:1px">ORDEM DE SERVIÇO — USO INTERNO</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <div><span class="label">Nº OS</span><br><strong>#${numOS}</strong></div>
+          <div><span class="label">Data</span><br>${data}</div>
+          <div><span class="label">Cliente</span><br><strong>${cliente}</strong></div>
+          <div><span class="label">Responsável</span><br>${resp}</div>
+        </div>
+        <table>
+          <thead><tr><th>Tipo</th><th>Descrição</th><th style="text-align:right">Qtd</th><th style="text-align:center">OK</th></tr></thead>
+          <tbody>
+            ${linhasItens || '<tr><td colspan="4">Sem itens</td></tr>'}
+          </tbody>
+        </table>
+        ${notas ? `<div style="margin-top:14px"><span class="label">Observações</span><br>${notas}</div>` : ''}
+        <div style="margin-top:30px;border-top:1px solid #000;padding-top:10px;font-size:11px;color:#555">
+          Gerado em ${new Date().toLocaleString('pt-BR')} — NÃO CONTÉM VALORES
+        </div>`;
+
+      _pdfBase(`Demanda OS #${numOS}`, corpo);
     }
 
     function copiarIA() {
