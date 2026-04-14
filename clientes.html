@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141749"></script>
-  <script src="js/auth.js?v=04141749"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141749">
+  <script src="js/config.js?v=04141752"></script>
+  <script src="js/auth.js?v=04141752"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141752">
   <style>
     .search-bar {
       display: flex;
@@ -107,6 +107,69 @@
     }
     .import-info span { color: var(--accent); font-weight: 700; }
     .modal-import { max-width: 700px; }
+    /* Tabs do modal */
+    .modal-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+      margin-top: -4px;
+    }
+    .modal-tab {
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: color .12s;
+    }
+    .modal-tab:hover { color: var(--text); }
+    .modal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    /* Histórico OS */
+    .hist-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .hist-kpi {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .hist-kpi-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .hist-kpi-lbl {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .hist-lista { max-height: 240px; overflow-y: auto; }
+    .hist-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-num { font-family: 'Fira Code', monospace; color: var(--text-dim); width: 36px; flex-shrink: 0; }
+    .hist-desc { flex: 1; color: var(--text-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hist-val { font-weight: 700; color: var(--text); flex-shrink: 0; }
+    .hist-link { color: var(--accent); font-weight: 700; flex-shrink: 0; text-decoration: none; font-size: 11px; }
+    .hist-link:hover { opacity: .8; }
+    .hist-vazio { text-align: center; padding: 32px 0; color: var(--text-dim); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -218,6 +281,14 @@
 
       <input type="hidden" id="cliente-id">
 
+      <!-- Tabs (só aparecem na edição) -->
+      <div class="modal-tabs" id="modal-tabs" style="display:none">
+        <button class="modal-tab active" id="tab-dados" onclick="trocarAba('dados')">Dados</button>
+        <button class="modal-tab" id="tab-historico" onclick="trocarAba('historico')">Histórico de OS</button>
+      </div>
+
+      <!-- Aba Dados -->
+      <div id="aba-dados">
       <div class="form-group">
         <label class="form-label">Nome *</label>
         <input class="form-input" type="text" id="c-name" placeholder="Nome completo ou razão social">
@@ -250,6 +321,19 @@
         <label class="form-label">Observações</label>
         <input class="form-input" type="text" id="c-notes" placeholder="Anotação livre">
       </div>
+      </div><!-- /aba-dados -->
+
+      <!-- Aba Histórico -->
+      <div id="aba-historico" style="display:none">
+        <div class="hist-kpis" id="hist-kpis">
+          <div class="hist-kpi"><div class="hist-kpi-val" id="hk-qtd">—</div><div class="hist-kpi-lbl">OS realizadas</div></div>
+          <div class="hist-kpi"><div class="hist-kpi-val" id="hk-total">—</div><div class="hist-kpi-lbl">Total gasto</div></div>
+          <div class="hist-kpi"><div class="hist-kpi-val" id="hk-ultima">—</div><div class="hist-kpi-lbl">Última visita</div></div>
+        </div>
+        <div class="hist-lista" id="hist-lista">
+          <div class="hist-vazio">Carregando...</div>
+        </div>
+      </div><!-- /aba-historico -->
 
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
@@ -368,12 +452,75 @@
       document.getElementById('c-city').value              = isEdit ? (cliente.city    || '') : '';
       document.getElementById('c-notes').value             = isEdit ? (cliente.notes   || '') : '';
       document.getElementById('btn-excluir').style.display = isEdit ? 'block' : 'none';
+      document.getElementById('modal-tabs').style.display  = isEdit ? 'flex' : 'none';
+      // reset para aba dados
+      trocarAba('dados');
       document.getElementById('modal-overlay').classList.add('active');
       document.getElementById('c-name').focus();
     }
 
     function fecharModal() {
       document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    function trocarAba(aba) {
+      document.getElementById('aba-dados').style.display     = aba === 'dados' ? '' : 'none';
+      document.getElementById('aba-historico').style.display = aba === 'historico' ? '' : 'none';
+      document.getElementById('tab-dados').classList.toggle('active', aba === 'dados');
+      document.getElementById('tab-historico').classList.toggle('active', aba === 'historico');
+      if (aba === 'historico') {
+        const cid = document.getElementById('cliente-id').value;
+        if (cid) carregarHistorico(cid);
+      }
+    }
+
+    async function carregarHistorico(clienteId) {
+      document.getElementById('hist-lista').innerHTML = '<div class="hist-vazio">Carregando...</div>';
+
+      const { data, error } = await sb.from('ordens_servico')
+        .select('id, numero, status, notes, total, created_at, updated_at')
+        .eq('client_id', clienteId)
+        .eq('company_id', APP.company.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error || !data) {
+        document.getElementById('hist-lista').innerHTML = '<div class="hist-vazio">Erro ao carregar histórico.</div>';
+        return;
+      }
+
+      const STATUS_LABEL = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' };
+      const STATUS_BADGE = { aberta:'badge-orange', em_andamento:'badge-yellow', pronta:'badge-green', entregue:'badge-muted', aguardando_peca:'badge-red' };
+
+      const qtd   = data.length;
+      const total = data.reduce((s, o) => s + (o.total || 0), 0);
+      const ultima = data.find(o => o.status === 'entregue');
+      const ultimaDt = ultima
+        ? new Date(ultima.updated_at).toLocaleDateString('pt-BR')
+        : (qtd ? new Date(data[0].created_at).toLocaleDateString('pt-BR') : '—');
+
+      document.getElementById('hk-qtd').textContent   = qtd;
+      document.getElementById('hk-total').textContent = total.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+      document.getElementById('hk-ultima').textContent = ultimaDt;
+
+      if (!qtd) {
+        document.getElementById('hist-lista').innerHTML = '<div class="hist-vazio">Nenhuma OS encontrada para este cliente.</div>';
+        return;
+      }
+
+      document.getElementById('hist-lista').innerHTML = data.map(o => {
+        const escDesc = (o.notes || '—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const val = (o.total || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+        return `
+          <div class="hist-item">
+            <span class="hist-num">#${String(o.numero).padStart(3,'0')}</span>
+            <span class="badge ${STATUS_BADGE[o.status] || ''}" style="flex-shrink:0">${STATUS_LABEL[o.status] || o.status}</span>
+            <span class="hist-desc">${escDesc}</span>
+            <span class="hist-val">${val}</span>
+            <a class="hist-link" href="kanban.html?os=${o.id}" target="_blank">Abrir →</a>
+          </div>
+        `;
+      }).join('');
     }
 
     document.getElementById('modal-overlay').addEventListener('click', e => {
