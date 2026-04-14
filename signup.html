@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTechApp — Criar conta</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04141744"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141744">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .signup-wrap {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+    .signup-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .signup-logo .name {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .signup-logo .sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    .signup-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 28px;
+    }
+    .signup-card .btn {
+      width: 100%;
+      justify-content: center;
+      padding: 12px;
+      font-size: 14px;
+    }
+    .signup-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+    .signup-secao {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .signup-link {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .signup-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .signup-link a:hover { opacity: .8; }
+    .signup-footer {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 10px;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-dim);
+    }
+    /* Tela de confirmação */
+    .confirm-card {
+      display: none;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      text-align: center;
+    }
+    .confirm-card.show { display: block; }
+    .confirm-icon { font-size: 32px; margin-bottom: 16px; }
+    .confirm-titulo { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .confirm-texto { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .confirm-email { font-family: 'Fira Code', monospace; color: var(--accent); font-size: 13px; }
+    .confirm-voltar { margin-top: 20px; font-size: 12px; color: var(--text-dim); }
+    .confirm-voltar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="signup-wrap">
+    <div class="signup-logo">
+      <div class="name">DMTech</div>
+      <div class="sub">Gestão de ordens de serviço</div>
+    </div>
+
+    <!-- Formulário de cadastro -->
+    <div class="signup-card" id="form-card">
+      <div class="alert alert-error" id="erro"></div>
+
+      <div class="signup-secao">Sua empresa</div>
+      <div class="form-group">
+        <label class="form-label">Nome da empresa</label>
+        <input class="form-input" type="text" id="nome-empresa" placeholder="Ex: Manutenções do José" maxlength="80" autocomplete="organization">
+      </div>
+
+      <hr class="signup-divider">
+
+      <div class="signup-secao">Seu acesso</div>
+      <div class="form-group">
+        <label class="form-label">Seu nome</label>
+        <input class="form-input" type="text" id="nome-user" placeholder="Como prefere ser chamado" maxlength="60" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input class="form-input" type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input class="form-input" type="password" id="senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label class="form-label">Confirmar senha</label>
+        <input class="form-input" type="password" id="senha2" placeholder="Repita a senha" autocomplete="new-password">
+      </div>
+
+      <button class="btn btn-primary" id="btn-criar" onclick="criarConta()">Criar conta grátis</button>
+    </div>
+
+    <div class="signup-link" id="link-login">
+      Já tem conta? <a href="login.html">Entrar</a>
+    </div>
+
+    <!-- Confirmação de e-mail pendente -->
+    <div class="confirm-card" id="confirm-card">
+      <div class="confirm-icon">✉</div>
+      <div class="confirm-titulo">Verifique seu e-mail</div>
+      <div class="confirm-texto">
+        Enviamos um link de confirmação para<br>
+        <span class="confirm-email" id="confirm-email-label"></span><br><br>
+        Clique no link para ativar sua conta e ser redirecionado ao painel.
+      </div>
+      <div class="confirm-voltar">
+        <a href="login.html">← Voltar ao login</a>
+      </div>
+    </div>
+
+    <div class="signup-footer" id="versao-rodape"></div>
+  </div>
+
+  <script>
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+    document.getElementById('versao-rodape').textContent = VERSION;
+
+    if (localStorage.getItem('dmtech-theme') === 'light') document.body.classList.add('light');
+
+    // Se já logado, vai pro dashboard
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = 'dashboard.html';
+    });
+
+    // Enter no último campo submete
+    document.getElementById('senha2').addEventListener('keydown', e => {
+      if (e.key === 'Enter') criarConta();
+    });
+
+    async function criarConta() {
+      const nomeEmpresa = document.getElementById('nome-empresa').value.trim();
+      const nomeUser    = document.getElementById('nome-user').value.trim();
+      const email       = document.getElementById('email').value.trim();
+      const senha       = document.getElementById('senha').value;
+      const senha2      = document.getElementById('senha2').value;
+
+      ocultarErro();
+
+      if (!nomeEmpresa) { mostrarErro('Informe o nome da sua empresa.'); return; }
+      if (!nomeUser)    { mostrarErro('Informe o seu nome.'); return; }
+      if (!email)       { mostrarErro('Informe o e-mail.'); return; }
+      if (senha.length < 6) { mostrarErro('A senha deve ter pelo menos 6 caracteres.'); return; }
+      if (senha !== senha2) { mostrarErro('As senhas não coincidem.'); return; }
+
+      const btn = document.getElementById('btn-criar');
+      btn.disabled    = true;
+      btn.textContent = 'Criando conta...';
+
+      // 1. Criar usuário no auth
+      const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
+
+      if (authErr) {
+        mostrarErro(traduzirErro(authErr.message));
+        btn.disabled    = false;
+        btn.textContent = 'Criar conta grátis';
+        return;
+      }
+
+      // 2. Se sessão disponível (email confirm desativado): criar empresa + profile via RPC
+      if (authData.session) {
+        btn.textContent = 'Configurando ambiente...';
+        const { error: rpcErr } = await sb.rpc('create_company_with_owner', {
+          p_company_name: nomeEmpresa,
+          p_owner_name:   nomeUser
+        });
+
+        if (rpcErr) {
+          mostrarErro('Conta criada, mas houve erro ao configurar empresa: ' + rpcErr.message);
+          btn.disabled    = false;
+          btn.textContent = 'Criar conta grátis';
+          return;
+        }
+
+        // Salva pendência no localStorage caso o wizard precise checar
+        localStorage.removeItem('dmtech-wizard-' + authData.session.user.id);
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      // 3. E-mail de confirmação pendente
+      document.getElementById('form-card').style.display   = 'none';
+      document.getElementById('link-login').style.display  = 'none';
+      document.getElementById('confirm-email-label').textContent = email;
+      document.getElementById('confirm-card').classList.add('show');
+
+      // Salva dados pendentes para completar setup após confirmação
+      localStorage.setItem('dmtech-pending-setup', JSON.stringify({ nomeEmpresa, nomeUser, email }));
+    }
+
+    function traduzirErro(msg) {
+      if (msg.includes('already registered') || msg.includes('User already registered')) return 'Este e-mail já está cadastrado.';
+      if (msg.includes('invalid email'))    return 'E-mail inválido.';
+      if (msg.includes('weak password'))    return 'Senha muito fraca. Use pelo menos 6 caracteres.';
+      return 'Erro ao criar conta. Tente novamente.';
+    }
+
+    function mostrarErro(msg) {
+      const el = document.getElementById('erro');
+      el.textContent   = msg;
+      el.style.display = 'block';
+    }
+
+    function ocultarErro() {
+      document.getElementById('erro').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

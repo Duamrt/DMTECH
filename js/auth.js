@@ -23,6 +23,22 @@ async function getProfile() {
 async function requireAuth(redirectTo = 'login.html') {
   const profile = await getProfile();
   if (!profile) {
+    // Setup pendente: signup com confirmação de e-mail ativada no Supabase
+    const pending = localStorage.getItem('dmtech-pending-setup');
+    if (pending && APP.user) {
+      try {
+        const { nomeEmpresa, nomeUser } = JSON.parse(pending);
+        const { error } = await sb.rpc('create_company_with_owner', {
+          p_company_name: nomeEmpresa,
+          p_owner_name:   nomeUser
+        });
+        if (!error) {
+          localStorage.removeItem('dmtech-pending-setup');
+          const p2 = await getProfile();
+          if (p2) return true;
+        }
+      } catch(e) { /* silencioso */ }
+    }
     window.location.href = redirectTo;
     return false;
   }
