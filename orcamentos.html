@@ -10,10 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
-  <script src="js/config.js?v=04141716"></script>
-  <script src="js/auth.js?v=04141716"></script>
-  <script src="js/pdf-orc.js?v=04141716"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141716">
+  <script src="js/config.js?v=04141723"></script>
+  <script src="js/auth.js?v=04141723"></script>
+  <script src="js/pdf-orc.js?v=04141723"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141723">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -420,7 +420,7 @@
         html += `<button class="btn-reprove" onclick="reprovar('${o.id}')">✕</button>`;
       }
       if (o.status === 'aprovado') {
-        html += `<a href="os.html" class="btn btn-ghost" style="font-size:11px;padding:4px 10px;text-decoration:none">Ver OS →</a>`;
+        html += `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="irParaOS('${o.id}')">Ver OS →</button>`;
       }
       return html;
     }
@@ -712,9 +712,36 @@
             quantidade: i.quantidade, preco_unit: i.preco_unit, subtotal: i.subtotal
           })));
         }
-        await carregarOrc();
-        dmToast(`✓ OS #${proximoOs} criada com sucesso!`);
+        dmToast(`✓ OS #${proximoOs} criada! Abrindo kanban...`);
+        setTimeout(() => { window.location.href = `kanban.html?os=${novaOs.id}`; }, 800);
       }, 'Aprovar');
+    }
+
+    async function irParaOS(orcId) {
+      const { data } = await sb.from('ordens_servico').select('id').eq('orcamento_id', orcId).limit(1).single();
+      if (data?.id) {
+        window.location.href = `kanban.html?os=${data.id}`;
+      } else {
+        // OS não encontrada — oferece criar
+        dmConfirm('Nenhuma OS vinculada encontrada. Criar nova OS para este orçamento?', async () => {
+          const orc = todosOrc.find(o => o.id === orcId);
+          const { data: items } = await sb.from('orcamento_items').select('*').eq('orcamento_id', orcId);
+          const { data: maxOs } = await sb.from('ordens_servico').select('numero').eq('company_id', APP.company.id).order('numero', { ascending: false }).limit(1);
+          const proximoOs = maxOs?.length ? maxOs[0].numero + 1 : 1;
+          const total = (items || []).reduce((s, i) => s + parseFloat(i.subtotal), 0);
+          const { data: novaOs } = await sb.from('ordens_servico').insert({
+            company_id: APP.company.id, client_id: orc?.client_id || null,
+            orcamento_id: orcId, numero: proximoOs, status: 'aberta', notes: orc?.notes || null, total
+          }).select().single();
+          if (items?.length && novaOs) {
+            await sb.from('os_items').insert(items.map(i => ({
+              os_id: novaOs.id, tipo: i.tipo, descricao: i.descricao,
+              quantidade: i.quantidade, preco_unit: i.preco_unit, subtotal: i.subtotal
+            })));
+          }
+          window.location.href = `kanban.html?os=${novaOs.id}`;
+        }, 'Criar OS');
+      }
     }
 
     function reprovar(id) {

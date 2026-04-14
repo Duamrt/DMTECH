@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04141716"></script>
-  <script src="js/auth.js?v=04141716"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141716">
+  <script src="js/config.js?v=04141723"></script>
+  <script src="js/auth.js?v=04141723"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141723">
   <style>
     /* Board */
     .board-outer {
@@ -635,14 +635,6 @@
         </div>
       </div>
 
-      <div>
-        <div class="p-section-title">Avançar</div>
-        <div class="mover-bar">
-          <button class="btn-mover" id="btn-voltar"  onclick="moverStatus(-1)">← Voltar</button>
-          <button class="btn-mover avancar" id="btn-avancar" onclick="moverStatus(1)">Avançar →</button>
-        </div>
-      </div>
-
       <!-- Responsável -->
       <div>
         <div class="p-section-title">Responsável</div>
@@ -1080,12 +1072,28 @@
         .update({ status: statusSelecionado, notes, responsavel_id: responsavelId })
         .eq('id', osAtual.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
+
+      // Lançar receita no caixa ao entregar
+      if (statusSelecionado === 'entregue' && osAtual.status !== 'entregue') {
+        const totalOS = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+        const dataHoje = new Date().toISOString().split('T')[0];
+        await sb.from('caixa').insert({
+          company_id: APP.company.id,
+          tipo: 'receita',
+          descricao: `OS #${String(osAtual.numero).padStart(3,'0')} — ${osAtual.clients?.name || 'Cliente'}`,
+          valor: totalOS || 0,
+          data_vencimento: dataHoje,
+          categoria: 'servico',
+          pago: false
+        });
+      }
+
       osAtual.status        = statusSelecionado;
       osAtual.notes         = notes;
       osAtual.responsavel_id = responsavelId;
       fecharPanel();
       await carregarOS();
-      dmToast('OS atualizada!');
+      dmToast(statusSelecionado === 'entregue' ? 'OS entregue — receita lançada no caixa!' : 'OS atualizada!');
     }
 
     function irParaOS() {
