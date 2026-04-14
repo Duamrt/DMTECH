@@ -1,398 +1,796 @@
 <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTech — Gestão de Ordens de Serviço</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<html class="dark" lang="pt-BR"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&amp;family=Fira+Code:wght@400;500&amp;family=Space+Grotesk:wght@400;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                "outline": "#a78b7d",
-                "outline-variant": "#584237",
-                "on-primary-fixed": "#341100",
-                "surface-bright": "#3a3939",
-                "on-tertiary-container": "#003554",
-                "on-tertiary": "#003351",
-                "primary-container": "#f97316",
-                "surface-tint": "#ffb690",
-                "inverse-on-surface": "#313030",
-                "tertiary-container": "#00a2f4",
-                "on-error-container": "#ffdad6",
-                "on-tertiary-fixed-variant": "#004b74",
-                "on-secondary-container": "#b6b5b4",
-                "on-primary-fixed-variant": "#783200",
-                "on-primary": "#552100",
-                "surface-variant": "#353534",
-                "on-error": "#690005",
-                "error": "#ffb4ab",
-                "surface-container-lowest": "#0e0e0e",
-                "surface-container-high": "#2a2a2a",
-                "surface": "#131313",
-                "on-primary-container": "#582200",
-                "on-tertiary-fixed": "#001d32",
-                "on-secondary-fixed": "#1b1c1c",
-                "inverse-primary": "#9d4300",
-                "surface-container": "#201f1f",
-                "primary-fixed": "#ffdbca",
-                "tertiary": "#93ccff",
-                "error-container": "#93000a",
-                "primary": "#ffb690",
-                "background": "#131313",
-                "surface-container-highest": "#353534",
-                "primary-fixed-dim": "#ffb690",
-                "secondary": "#c8c6c5",
-                "secondary-fixed": "#e4e2e1",
-                "secondary-fixed-dim": "#c8c6c5",
-                "tertiary-fixed": "#cde5ff",
-                "on-surface": "#e5e2e1",
-                "on-secondary-fixed-variant": "#474746",
-                "inverse-surface": "#e5e2e1",
-                "secondary-container": "#474746",
-                "surface-container-low": "#1c1b1b",
-                "tertiary-fixed-dim": "#93ccff",
-                "surface-dim": "#131313",
-                "on-surface-variant": "#e0c0b1",
-                "on-secondary": "#303030",
-                "on-background": "#e5e2e1"
-            },
-            "borderRadius": {
-                "none": "0px",
-                "DEFAULT": "0px",
-                "lg": "0px",
-                "xl": "0px",
-                "full": "0px"
-            },
-            "fontFamily": {
-                "headline": ["Manrope"],
-                "body": ["Manrope"],
-                "label": ["Fira Code"]
-            }
-          }
-        }
-      }
-    </script>
-<style>body {
-    background-color: #131313;
-    color: #e5e2e1;
-    font-family: "Manrope", sans-serif
+    :root {
+      --bg: #0d0d0d;
+      --bg2: #111111;
+      --bg3: #141414;
+      --bg4: #1a1a1a;
+      --border: #2a2a2a;
+      --border2: #1e1e1e;
+      --accent: #f97316;
+      --text: #f0f0f0;
+      --text-muted: #888888;
+      --text-dim: #555555;
     }
-.material-symbols-outlined {
-    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
-.grain-overlay {
-    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCq7pjZN-vMh7ajPYfftNm1gUeoddavD850vIP-YvdJXoO-pq-8cT626b2fPyyL1ClGgkgNQa1L3J_JApxMmUKbYlf84zESGnsOKcNaJTsR0qAraR3vP1O-MQouetH_VGRE0EezDZj2_skX1aJOFnpkE0dOrDyWPKfrqLlLNwcGZq1PqGHcPXwMULlNlzemPwpssEA7JGvaKKd7s_u7YvB6Tj8YpTd__tHgdQ_xy-LoOKZNQlDytT0s2cKV6vJkiLYA5QtJkVF4DiI);
-    opacity: 0.03
+
+    a { text-decoration: none; color: inherit; }
+
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: #0d0d0d;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      border-radius: 0;
+      border: none;
+      cursor: pointer;
+      transition: opacity .15s;
     }
-::-webkit-scrollbar {
-    width: 4px
+    .btn-primary:hover { opacity: .85; }
+
+    .btn-secondary {
+      display: inline-block;
+      background: transparent;
+      color: var(--accent);
+      font-family: 'Manrope', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      border-radius: 0;
+      border: 1px solid var(--accent);
+      cursor: pointer;
+      transition: opacity .15s;
     }
-::-webkit-scrollbar-track {
-    background: #0e0e0e
+    .btn-secondary:hover { opacity: .75; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,13,13,.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border2);
     }
-::-webkit-scrollbar-thumb {
-    background: #f97316
-    }</style>
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -.5px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .nav-links a.nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color .12s;
+    }
+    .nav-links a.nav-link:hover { color: var(--text); }
+
+    @media (max-width: 768px) {
+      .nav-link { display: none !important; }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 100px 0 80px;
+      text-align: center;
+      border-bottom: 1px solid var(--border2);
+    }
+    .hero-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(44px, 7vw, 72px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+    .hero-sub {
+      font-size: 18px;
+      color: #aaaaaa;
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .hero-note {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 48px;
+    }
+    .hero-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 auto 48px;
+      max-width: 700px;
+    }
+
+    /* Kanban preview */
+    .kanban-preview {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .kp-header {
+      background: var(--bg4);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kp-dot { width: 8px; height: 8px; background: var(--border); display: inline-block; }
+    .kp-title {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: 8px;
+    }
+    .kp-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+    .kp-col { background: var(--bg3); padding: 14px; }
+    .kp-col-title {
+      font-family: 'Fira Code', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kp-col-title::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+    }
+    .kp-col:nth-child(1) .kp-col-title::before { background: #f97316; }
+    .kp-col:nth-child(2) .kp-col-title::before { background: #eab308; }
+    .kp-col:nth-child(3) .kp-col-title::before { background: #22c55e; }
+    .kp-card {
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .kp-card-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .kp-card-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+    .kp-card-foot { display: flex; align-items: center; justify-content: space-between; }
+    .kp-maps { font-family: 'Fira Code', monospace; font-size: 10px; color: #60a5fa; }
+    .kp-num { font-family: 'Fira Code', monospace; font-size: 10px; color: var(--text-dim); }
+
+    /* ── SECTION COMMONS ── */
+    section { border-bottom: 1px solid var(--border2); }
+    .section-pad { padding: 96px 0; }
+    .section-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .section-h2 {
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -.5px;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .section-sub {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+      max-width: 540px;
+    }
+
+    /* ── DOR ── */
+    .dor-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .dor-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 28px 24px;
+    }
+    .dor-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+    }
+    .dor-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── COMO FUNCIONA ── */
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 48px;
+    }
+    .flow-step {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-right: none;
+      padding: 28px 24px;
+    }
+    .flow-step:last-child { border-right: 1px solid var(--border); }
+    .flow-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 48px;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 16px;
+      opacity: .9;
+    }
+    .flow-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .flow-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    .feat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-top: 48px;
+    }
+    .feat-card { background: var(--bg3); padding: 28px 32px; }
+    .feat-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .feat-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .feat-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── WIZARD ── */
+    .wizard-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .wizard-step {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .wizard-num {
+      font-family: 'Fira Code', monospace;
+      font-size: 56px;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 14px;
+      opacity: .85;
+    }
+    .wizard-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .wizard-note {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    /* ── DEPOIMENTOS ── */
+    .dep-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .dep-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 28px 24px;
+    }
+    .dep-quote { font-size: 15px; font-style: italic; color: var(--text); line-height: 1.7; margin-bottom: 20px; }
+    .dep-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .dep-role { font-family: 'Fira Code', monospace; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── PLANOS ── */
+    .planos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .plano-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+    }
+    .plano-card.destaque { border-color: var(--accent); }
+    .plano-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .plano-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .plano-price { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 24px; }
+    .plano-price span { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+    .plano-features { list-style: none; margin-bottom: 28px; flex: 1; }
+    .plano-features li {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .plano-features li::before {
+      content: '→';
+      color: var(--accent);
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .plano-note {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 10px;
+      text-align: center;
+    }
+    .btn-full { width: 100%; text-align: center; display: block; }
+
+    /* ── CTA FINAL ── */
+    .cta-final {
+      padding: 120px 0;
+      text-align: center;
+      background: var(--bg2);
+      border-bottom: none !important;
+    }
+    .cta-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .cta-final h2 {
+      font-size: clamp(28px, 4.5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .cta-sub { font-size: 17px; color: var(--text-muted); margin-bottom: 36px; }
+    .cta-note {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 16px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid var(--border2);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .footer-logo { font-size: 16px; font-weight: 800; color: var(--accent); }
+    .footer-copy { font-size: 12px; color: var(--text-dim); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 12px; color: var(--text-muted); transition: color .12s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-version {
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      width: 100%;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border2);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .dor-cards, .dep-grid, .planos-grid { grid-template-columns: 1fr; }
+      .feat-grid { grid-template-columns: 1fr; }
+      .flow-steps { grid-template-columns: 1fr; }
+      .flow-step { border-right: 1px solid var(--border); border-top: none; }
+      .flow-step:first-child { border-top: 1px solid var(--border); }
+      .wizard-steps { grid-template-columns: repeat(2, 1fr); }
+      .kp-body { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
-<body class="antialiased overflow-x-hidden">
-<!-- TopNavBar -->
-<nav class="fixed top-0 w-full border-b-0 rounded-none z-50 bg-[#131313]/80 backdrop-blur-md flex justify-between items-center px-8 h-20 max-w-full">
-<div class="flex items-center gap-8">
-<span class="text-xl font-bold tracking-tighter text-white font-['Manrope'] uppercase">DMTECH // ANALYTICS</span>
-<div class="hidden md:flex gap-6">
-<a class="text-orange-500 border-b-2 border-orange-500 pb-1 font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">PLATFORM</a>
-<a class="text-zinc-500 hover:text-zinc-200 transition-colors font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">ARCHITECTURE</a>
-<a class="text-zinc-500 hover:text-zinc-200 transition-colors font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">PRICING</a>
-<a class="text-zinc-500 hover:text-zinc-200 transition-colors font-['Manrope'] uppercase tracking-widest text-xs font-semibold" href="#">DOCS</a>
-</div>
-</div>
-<button class="bg-[#f97316] text-[#0d0d0d] px-6 py-3 font-['Fira_Code'] text-xs font-bold tracking-widest hover:bg-orange-400 transition-all active:scale-95">
-            INITIALIZE_SYSTEM
-        </button>
-</nav>
-<!-- Hero Section -->
-<header class="pt-40 pb-20 px-8 max-w-7xl mx-auto">
-<div class="flex flex-col items-start gap-4">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// GESTÃO DE OS</span>
-<h1 class="text-7xl md:text-9xl font-extrabold tracking-tighter text-white leading-none">
-                Chega de<br/>caderninho.
-            </h1>
-<p class="text-zinc-500 max-w-xl text-lg mt-4 font-body leading-relaxed">
-                Transforme o caos operacional em precisão cirúrgica. O DMTech automatiza o fluxo de ordens de serviço do orçamento ao faturamento em uma interface terminal de alta performance.
-            </p>
-<div class="flex gap-4 mt-8">
-<button class="bg-primary-container text-black px-10 py-4 font-bold uppercase tracking-widest text-sm hover:brightness-110">Criar conta grátis</button>
-<button class="border border-primary-container text-primary-container px-10 py-4 font-bold uppercase tracking-widest text-sm hover:bg-primary-container/10">Ver Demo</button>
-</div>
-<!-- ASCII Rule Decoration -->
-<div class="w-full mt-12 text-zinc-800 font-['Fira_Code'] text-[10px] overflow-hidden whitespace-nowrap opacity-50">
-                [SYSTEM_ACTIVE] ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            </div>
-<!-- Terminal UI Preview -->
-<div class="w-full mt-12 bg-surface-container-lowest border border-zinc-800 p-1">
-<div class="bg-zinc-900 px-4 py-2 flex items-center justify-between border-b border-zinc-800">
-<div class="flex gap-2">
-<div class="w-3 h-3 bg-zinc-800"></div>
-<div class="w-3 h-3 bg-zinc-800"></div>
-<div class="w-3 h-3 bg-zinc-800"></div>
-</div>
-<span class="font-['Fira_Code'] text-[10px] text-zinc-500">DMTECH_CONSOLE_V1.04 -- OS_BOARD</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-1 bg-zinc-800 p-1 min-h-[400px]">
-<!-- Column 1 -->
-<div class="bg-surface-dim p-4 flex flex-col gap-4">
-<span class="font-['Fira_Code'] text-[10px] text-primary-container uppercase">01_PENDENTE [03]</span>
-<div class="bg-surface-container-high p-4 border-l-2 border-primary-container">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-500">#OS-8922</span>
-<h4 class="text-sm font-bold mt-1 text-white uppercase">Reparo de Unidade Hidráulica</h4>
-<p class="text-[11px] text-zinc-500 mt-2 font-['Fira_Code']">CLIENTE: INDUSTRIAS_ALFA</p>
-</div>
-<div class="bg-surface-container-high p-4 border-l-2 border-zinc-700 opacity-50">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-500">#OS-8923</span>
-<h4 class="text-sm font-bold mt-1 text-white uppercase">Manutenção de Turbina</h4>
-</div>
-</div>
-<!-- Column 2 -->
-<div class="bg-surface-dim p-4 flex flex-col gap-4">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-500 uppercase">02_EXECUTANDO [01]</span>
-<div class="bg-surface-container-high p-4 border-l-2 border-orange-500">
-<span class="font-['Fira_Code'] text-[10px] text-orange-500">EXECUTANDO...</span>
-<h4 class="text-sm font-bold mt-1 text-white uppercase">Calibragem de Sensores</h4>
-<div class="w-full h-1 bg-zinc-800 mt-4">
-<div class="bg-orange-500 h-full w-[65%]"></div>
-</div>
-</div>
-</div>
-<!-- Column 3 -->
-<div class="bg-surface-dim p-4 flex flex-col gap-4">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-500 uppercase">03_FINALIZADO [12]</span>
-<img class="w-full h-32 object-cover grayscale opacity-50 filter grayscale contrast-125" data-alt="Close-up of industrial machinery gear with orange neon lighting highlight in dark factory setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk15DcFBQVPyfiVh32GgK0ntw3fduwszrA7hAqb5zacZlw4pm1B5r-OfqimpR6SSgVrk3vBSIYY3cTZWuEDEe23fCBXndpykJR4OCOpdOZYIQ4Wa3f9dj_mHV9JuH_CReolBT4fMa_kI_9v-IAI0Hztwvn6jQMUGFwJN-sPdRuDDDMwC4g7OvTMsebHWKxPKr6Q6aoru5SKw_iAabqSf602q0jmWkr9FEvBeznwlJJmXtSjIYb7PumnRfB4KUlac11FC_c1Ft21Sc"/>
-<div class="bg-surface-container-high p-4 border-l-2 border-zinc-700">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-400">#OS-8901 - CONCLUÍDO</span>
-<h4 class="text-sm font-bold mt-1 text-zinc-400 uppercase">Substituição de Rolamentos</h4>
-</div>
-</div>
-</div>
-</div>
-</div>
-</header>
-<!-- Problem Section -->
-<section class="bg-surface-container-low py-32 px-8">
-<div class="max-w-7xl mx-auto">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// VOCÊ CONHECE ESSE PROBLEMA</span>
-<h2 class="text-5xl font-extrabold text-white mt-4 mb-16 tracking-tighter uppercase">O gargalo operacional<br/>está matando seu lucro.</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-<div class="bg-surface-dim p-8 border-l-[3px] border-primary-container">
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Informação Fragmentada</h3>
-<p class="text-zinc-500 text-sm leading-relaxed">Dados espalhados em papéis, planilhas e grupos de mensagens. A falta de centralização impede a visão real do negócio.</p>
-</div>
-<div class="bg-surface-dim p-8 border-l-[3px] border-primary-container">
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Atrasos de Faturamento</h3>
-<p class="text-zinc-500 text-sm leading-relaxed">Ordens de serviço esquecidas no fundo da gaveta significam dinheiro parado e fluxo de caixa comprometido.</p>
-</div>
-<div class="bg-surface-dim p-8 border-l-[3px] border-primary-container">
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Incerteza de Custos</h3>
-<p class="text-zinc-500 text-sm leading-relaxed">Sem o controle de peças e horas técnicas, você nunca sabe se está lucrando ou pagando para trabalhar.</p>
-</div>
-</div>
-</div>
-</section>
-<!-- How it Works -->
-<section class="py-32 px-8 max-w-7xl mx-auto">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// DO ORÇAMENTO AO PAGAMENTO</span>
-<h2 class="text-5xl font-extrabold text-white mt-4 mb-24 tracking-tighter uppercase">Protocolo de Operação</h2>
-<div class="grid grid-cols-1 md:grid-cols-4 gap-0 relative">
-<!-- Connector Line -->
-<div class="hidden md:block absolute top-12 left-0 w-full h-[1px] bg-zinc-800 z-0"></div>
-<div class="flex flex-col gap-6 relative z-10 pr-8 pb-12 md:pb-0">
-<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">01</span>
-<h3 class="text-xl font-bold text-white uppercase mt-4">Orçamento</h3>
-<p class="text-zinc-500 text-sm">Geração de propostas técnicas precisas em menos de 2 minutos através de presets inteligentes.</p>
-</div>
-<div class="flex flex-col gap-6 relative z-10 pr-8 pb-12 md:pb-0">
-<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">02</span>
-<h3 class="text-xl font-bold text-white uppercase mt-4">Aprovação</h3>
-<p class="text-zinc-500 text-sm">Workflow digital para aceite do cliente. Sem assinaturas físicas, sem burocracia desnecessária.</p>
-</div>
-<div class="flex flex-col gap-6 relative z-10 pr-8 pb-12 md:pb-0">
-<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">03</span>
-<h3 class="text-xl font-bold text-white uppercase mt-4">Execução</h3>
-<p class="text-zinc-500 text-sm">Acompanhamento em tempo real via terminal Kanban. Controle total sobre prazos e equipe técnica.</p>
-</div>
-<div class="flex flex-col gap-6 relative z-10 pr-8">
-<span class="font-['Fira_Code'] text-5xl font-bold text-primary-container bg-surface-dim inline-block pr-4">04</span>
-<h3 class="text-xl font-bold text-white uppercase mt-4">Pagamento</h3>
-<p class="text-zinc-500 text-sm">Fechamento automático. A OS aprovada vira fatura instantaneamente no seu ERP.</p>
-</div>
-</div>
-</section>
-<!-- Features -->
-<section class="bg-surface-container-high py-32 px-8">
-<div class="max-w-7xl mx-auto">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// O QUE ESTÁ INCLUÍDO</span>
-<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Infraestrutura Operacional</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-zinc-800">
-<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_KANBAN.OS</span>
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Visualização de Fluxo</h3>
-<p class="text-zinc-500 text-sm">Interface drag-and-drop inspirada em IDEs para gerenciar status de ordens.</p>
-</div>
-<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_INVENTORY.CTRL</span>
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Gestão de Estoque</h3>
-<p class="text-zinc-500 text-sm">Baixa automática de peças no momento do orçamento para evitar rupturas.</p>
-</div>
-<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_TEAM.SYNC</span>
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Apontamento de Horas</h3>
-<p class="text-zinc-500 text-sm">Registro técnico preciso via aplicativo mobile com validação por geolocalização.</p>
-</div>
-<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_DOCS.GEN</span>
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Laudos Automáticos</h3>
-<p class="text-zinc-500 text-sm">Geração de PDFs técnicos customizados com logs de fotos e assinaturas.</p>
-</div>
-<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_FINANCE.BRIDGE</span>
-<h3 class="text-xl font-bold text-white mb-4 uppercase">Integração Bancária</h3>
-<p class="text-zinc-500 text-sm">Conciliação direta com bancos para emissão de boletos e notas fiscais.</p>
-</div>
-<div class="bg-surface-dim p-10 hover:bg-zinc-900 transition-colors">
-<span class="font-['Fira_Code'] text-[10px] text-zinc-600 mb-4 block">MOD_API.ACCESS</span>
-<h3 class="text-xl font-bold text-white mb-4 uppercase">API Aberta</h3>
-<p class="text-zinc-500 text-sm">Conecte o DMTech com qualquer ferramenta de BI ou CRM do mercado.</p>
-</div>
-</div>
-</div>
-</section>
-<!-- Wizard Section -->
-<section class="py-32 px-8 max-w-7xl mx-auto">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// PRIMEIRO ACESSO</span>
-<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Deployment em Minutos</h2>
-<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-<div class="bg-surface-container-low p-8 relative overflow-hidden">
-<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">1</span>
-<h4 class="text-lg font-bold text-white uppercase relative z-10">Create Profile</h4>
-<p class="text-zinc-500 text-sm mt-4 relative z-10">Defina sua estrutura de serviços e categorias técnicas iniciais.</p>
-</div>
-<div class="bg-surface-container-low p-8 relative overflow-hidden">
-<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">2</span>
-<h4 class="text-lg font-bold text-white uppercase relative z-10">Import Data</h4>
-<p class="text-zinc-500 text-sm mt-4 relative z-10">Suba seu catálogo de peças e clientes via CSV em segundos.</p>
-</div>
-<div class="bg-surface-container-low p-8 relative overflow-hidden">
-<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">3</span>
-<h4 class="text-lg font-bold text-white uppercase relative z-10">Setup Team</h4>
-<p class="text-zinc-500 text-sm mt-4 relative z-10">Convide seus técnicos e atribua permissões de visualização.</p>
-</div>
-<div class="bg-surface-container-low p-8 relative overflow-hidden">
-<span class="absolute -right-4 -bottom-10 font-['Fira_Code'] text-9xl font-black text-zinc-800/20">4</span>
-<h4 class="text-lg font-bold text-white uppercase relative z-10">System Live</h4>
-<p class="text-zinc-500 text-sm mt-4 relative z-10">Comece a emitir ordens de serviço digitais imediatamente.</p>
-</div>
-</div>
-</section>
-<!-- Social Proof -->
-<section class="bg-surface-container-lowest py-32 px-8">
-<div class="max-w-7xl mx-auto">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// QUEM USA</span>
-<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Feedback de Operação</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-<div class="border-l-[3px] border-primary-container pl-8">
-<p class="text-zinc-300 text-lg italic leading-relaxed">"O DMTech removeu o atrito da nossa comunicação. Hoje sabemos exatamente onde cada técnico está e qual o lucro de cada OS em tempo real."</p>
-<div class="mt-6">
-<p class="text-white font-bold uppercase tracking-tighter">Ricardo Silveira</p>
-<p class="text-zinc-600 font-['Fira_Code'] text-[10px]">CTO // ALFA_LOGISTICS</p>
-</div>
-</div>
-<div class="border-l-[3px] border-primary-container pl-8">
-<p class="text-zinc-300 text-lg italic leading-relaxed">"Paramos de perder dinheiro com peças esquecidas. O controle de estoque integrado à OS é o divisor de águas que precisávamos."</p>
-<div class="mt-6">
-<p class="text-white font-bold uppercase tracking-tighter">Mariana Costa</p>
-<p class="text-zinc-600 font-['Fira_Code'] text-[10px]">OPS_DIR // TECH_REPAIR</p>
-</div>
-</div>
-<div class="border-l-[3px] border-primary-container pl-8">
-<p class="text-zinc-300 text-lg italic leading-relaxed">"Sistema brutalmente eficiente. A interface limpa ajuda a focar no que importa: executar o serviço e faturar."</p>
-<div class="mt-6">
-<p class="text-white font-bold uppercase tracking-tighter">Carlos Nobrega</p>
-<p class="text-zinc-600 font-['Fira_Code'] text-[10px]">OWNER // NOBREGA_MEC</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Pricing -->
-<section class="py-32 px-8 max-w-7xl mx-auto">
-<span class="font-['Fira_Code'] text-primary-container text-xs tracking-widest">// PREÇOS</span>
-<h2 class="text-5xl font-extrabold text-white mt-4 mb-20 tracking-tighter uppercase">Planos de Escalabilidade</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-zinc-800 border border-zinc-800">
-<!-- Free -->
-<div class="bg-surface-dim p-12 flex flex-col items-start">
-<span class="font-['Fira_Code'] text-xs text-zinc-500 uppercase tracking-widest">01_STARTUP</span>
-<h3 class="text-4xl font-extrabold text-white mt-4 mb-8 tracking-tighter uppercase">FREE</h3>
-<ul class="flex flex-col gap-4 mb-12 text-sm text-zinc-400">
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Até 50 OS / mês</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> 1 Usuário admin</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Relatórios básicos</li>
-</ul>
-<button class="w-full py-4 border border-zinc-800 text-zinc-400 font-bold uppercase tracking-widest text-xs hover:border-zinc-500 transition-colors mt-auto">Initialize Free</button>
-</div>
-<!-- Pro -->
-<div class="bg-surface-container-high p-12 flex flex-col items-start border-[1px] border-primary-container relative">
-<div class="absolute top-0 right-0 bg-primary-container text-black px-4 py-1 text-[10px] font-bold uppercase font-['Fira_Code']">Recommended</div>
-<span class="font-['Fira_Code'] text-xs text-primary-container uppercase tracking-widest">02_ENTERPRISE</span>
-<h3 class="text-4xl font-extrabold text-white mt-4 mb-2 tracking-tighter uppercase">R$ 199<span class="text-lg text-zinc-500">/mês</span></h3>
-<p class="text-zinc-500 text-xs mb-8">Faturado anualmente</p>
-<ul class="flex flex-col gap-4 mb-12 text-sm text-zinc-300">
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> OS Ilimitadas</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Até 10 usuários</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> API &amp; Integrações</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Suporte prioritário</li>
-</ul>
-<button class="w-full py-4 bg-primary-container text-black font-bold uppercase tracking-widest text-xs hover:brightness-110 mt-auto">Select Pro</button>
-</div>
-<!-- Business -->
-<div class="bg-surface-dim p-12 flex flex-col items-start">
-<span class="font-['Fira_Code'] text-xs text-zinc-500 uppercase tracking-widest">03_ARCHITECTURE</span>
-<h3 class="text-4xl font-extrabold text-white mt-4 mb-8 tracking-tighter uppercase">CUSTOM</h3>
-<ul class="flex flex-col gap-4 mb-12 text-sm text-zinc-400">
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Usuários ilimitados</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Deployment On-Premise</li>
-<li class="flex items-center gap-2"><span class="material-symbols-outlined text-xs text-primary-container">check</span> Whitelabel completo</li>
-</ul>
-<button class="w-full py-4 border border-zinc-800 text-zinc-400 font-bold uppercase tracking-widest text-xs hover:border-zinc-500 transition-colors mt-auto">Contact Sales</button>
-</div>
-</div>
-</section>
-<!-- Final CTA -->
-<section class="py-40 bg-primary-container text-black text-center px-8 relative overflow-hidden">
-<div class="grain-overlay absolute inset-0 pointer-events-none"></div>
-<div class="max-w-4xl mx-auto relative z-10">
-<h2 class="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-none mb-8">Assuma o controle agora.</h2>
-<p class="text-black/70 text-lg font-bold mb-12 uppercase tracking-tight">Menos papel. Mais execução. Resultado imediato.</p>
-<button class="bg-black text-white px-16 py-6 font-bold uppercase tracking-[0.2em] text-lg hover:scale-105 transition-transform">Criar conta grátis</button>
-</div>
-</section>
-<!-- Footer -->
-<footer class="bg-[#0e0e0e] flex flex-col md:flex-row justify-between items-center px-12 py-16 gap-8 w-full border-t border-zinc-800/20">
-<div class="flex flex-col gap-2">
-<span class="text-lg font-bold text-white uppercase tracking-tighter font-headline">DMTECH SYSTEMS</span>
-<span class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600">v1.0.44_STABLE</span>
-</div>
-<div class="flex gap-8">
-<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">SECURITY</a>
-<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">LEGAL</a>
-<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">STATUS</a>
-<a class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600 hover:text-orange-400 transition-colors" href="#">API</a>
-</div>
-<div class="font-['Fira_Code'] text-[10px] uppercase tracking-wider text-zinc-600">
-            © 2024 DMTECH SYSTEMS. ALL RIGHTS RESERVED.
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="wrap nav-inner">
+      <div class="nav-logo">DMTech</div>
+      <div class="nav-links">
+        <a href="#como-funciona" class="nav-link">Como funciona</a>
+        <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+        <a href="#planos" class="nav-link">Planos</a>
+        <a href="signup.html" class="btn-primary">Criar conta grátis</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-label">// gestão de OS para quem vai até o cliente</div>
+      <h1>Chega de caderninho.</h1>
+      <p class="hero-sub">DMTech organiza suas ordens de serviço do orçamento ao recibo — para técnico que trabalha na rua.</p>
+      <div class="hero-btns">
+        <a href="signup.html" class="btn-primary">Criar conta grátis →</a>
+        <a href="#como-funciona" class="btn-secondary">Ver como funciona ↓</a>
+      </div>
+      <div class="hero-note">// sem cartão. sem contrato. começa em 4 passos.</div>
+      <hr class="hero-rule">
+
+      <!-- Kanban preview -->
+      <div class="kanban-preview">
+        <div class="kp-header">
+          <div class="kp-dot"></div>
+          <div class="kp-dot"></div>
+          <div class="kp-dot"></div>
+          <span class="kp-title">dmtech.kanban — ordens de serviço</span>
         </div>
-</footer>
-</body></html>
+        <div class="kp-body">
+          <div class="kp-col">
+            <div class="kp-col-title">Aberta</div>
+            <div class="kp-card">
+              <div class="kp-card-name">Carlos Mendes</div>
+              <div class="kp-card-desc">Instalação de ar condicionado</div>
+              <div class="kp-card-foot">
+                <span class="kp-num">#012</span>
+                <span class="kp-maps">→ Maps</span>
+              </div>
+            </div>
+            <div class="kp-card">
+              <div class="kp-card-name">Fernanda Lima</div>
+              <div class="kp-card-desc">Troca de disjuntores</div>
+              <div class="kp-card-foot">
+                <span class="kp-num">#013</span>
+                <span class="kp-maps">→ Maps</span>
+              </div>
+            </div>
+          </div>
+          <div class="kp-col">
+            <div class="kp-col-title">Em andamento</div>
+            <div class="kp-card">
+              <div class="kp-card-name">Ricardo Souza</div>
+              <div class="kp-card-desc">Conserto de celular — tela</div>
+              <div class="kp-card-foot">
+                <span class="kp-num">#010</span>
+                <span class="kp-maps">→ Maps</span>
+              </div>
+            </div>
+            <div class="kp-card">
+              <div class="kp-card-name">Ana Paula</div>
+              <div class="kp-card-desc">Desentupimento cozinha</div>
+              <div class="kp-card-foot">
+                <span class="kp-num">#011</span>
+                <span class="kp-maps">→ Maps</span>
+              </div>
+            </div>
+          </div>
+          <div class="kp-col">
+            <div class="kp-col-title">Entregue</div>
+            <div class="kp-card">
+              <div class="kp-card-name">José Barros</div>
+              <div class="kp-card-desc">Manutenção geladeira</div>
+              <div class="kp-card-foot">
+                <span class="kp-num">#008</span>
+                <span class="kp-maps" style="color:var(--text-dim)">✓ PIX</span>
+              </div>
+            </div>
+            <div class="kp-card">
+              <div class="kp-card-name">Mariana Costa</div>
+              <div class="kp-card-desc">Instalação câmeras</div>
+              <div class="kp-card-foot">
+                <span class="kp-num">#009</span>
+                <span class="kp-maps" style="color:var(--text-dim)">✓ PIX</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOR -->
+  <section id="dor">
+    <div class="wrap section-pad">
+      <div class="section-label">// você conhece esse problema</div>
+      <h2 class="section-h2">Se você se reconhece aqui,<br>o DMTech é pra você</h2>
+      <div class="dor-cards">
+        <div class="dor-card">
+          <div class="dor-tag">PROBLEMA_01</div>
+          <p class="dor-text">Combinei um valor com o cliente e ele disse que era diferente do que conversamos.</p>
+        </div>
+        <div class="dor-card">
+          <div class="dor-tag">PROBLEMA_02</div>
+          <p class="dor-text">Perco tempo ligando pro meu técnico só pra passar o endereço do chamado.</p>
+        </div>
+        <div class="dor-card">
+          <div class="dor-tag">PROBLEMA_03</div>
+          <p class="dor-text">No fim do mês não sei exatamente quanto cada OS rendeu e quanto devo de comissão.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section id="como-funciona" style="background:#0f0f0f">
+    <div class="wrap section-pad">
+      <div class="section-label">// do orçamento ao pagamento</div>
+      <h2 class="section-h2">De 0 a OS entregue em menos de 5 minutos</h2>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-num">01</div>
+          <div class="flow-title">Orçamento</div>
+          <p class="flow-desc">Cria o orçamento, define itens e valores, manda pro cliente.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">02</div>
+          <div class="flow-title">Aprovação</div>
+          <p class="flow-desc">Cliente aprova. A OS já abre automaticamente — sem redigitar nada.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">03</div>
+          <div class="flow-title">Execução</div>
+          <p class="flow-desc">Técnico vê a fila, clica no endereço, navega até o cliente e registra o andamento.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">04</div>
+          <div class="flow-title">Pagamento</div>
+          <p class="flow-desc">Gera o recibo com QR PIX na hora. Recebe antes de sair.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="funcionalidades">
+    <div class="wrap section-pad">
+      <div class="section-label">// o que está incluído</div>
+      <h2 class="section-h2">Tudo que um técnico precisa.<br>Nada que atrapalha.</h2>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-tag">kanban.os</div>
+          <div class="feat-title">Kanban de OS com painel lateral</div>
+          <p class="feat-desc">Arraste entre status. Clique no card e veja fotos, itens, histórico — sem abrir outra tela.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-tag">acesso.por.role</div>
+          <div class="feat-title">Minha Fila — só o que é seu</div>
+          <p class="feat-desc">O técnico vê apenas os chamados atribuídos a ele. O dono vê tudo. Sem confusão, sem acesso indevido.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-tag">navegacao.direta</div>
+          <div class="feat-title">Link direto pro Maps no card</div>
+          <p class="feat-desc">O endereço do cliente vira botão de navegação. O técnico clica e já está indo — sem ligar, sem copiar e colar.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-tag">pix.recibo</div>
+          <div class="feat-title">Recibo com QR PIX gerado na hora</div>
+          <p class="feat-desc">Fecha a OS, gera o recibo, o cliente escaneia e paga. Profissional do começo ao fim.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-tag">financeiro.auto</div>
+          <div class="feat-title">Comissão automática</div>
+          <p class="feat-desc">Define o percentual de cada técnico. O sistema calcula pelas OS entregues no mês. Sem planilha, sem briga.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-tag">audit.log</div>
+          <div class="feat-title">Audit log completo</div>
+          <p class="feat-desc">Registro imutável de tudo: quem criou, editou, entregou. Se aconteceu no sistema, tem prova.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WIZARD -->
+  <section id="wizard">
+    <div class="wrap section-pad">
+      <div class="section-label">// primeiro acesso</div>
+      <h2 class="section-h2">Em 4 passos, seu sistema está pronto</h2>
+      <p class="section-sub">Sem consultor, sem vídeo de 2 horas, sem suporte técnico.</p>
+      <div class="wizard-steps">
+        <div class="wizard-step">
+          <div class="wizard-num">1</div>
+          <div class="wizard-label">Dados da empresa</div>
+        </div>
+        <div class="wizard-step">
+          <div class="wizard-num">2</div>
+          <div class="wizard-label">Catálogo de serviços</div>
+        </div>
+        <div class="wizard-step">
+          <div class="wizard-num">3</div>
+          <div class="wizard-label">Primeiro cliente</div>
+        </div>
+        <div class="wizard-step">
+          <div class="wizard-num">4</div>
+          <div class="wizard-label">Primeira OS aberta</div>
+        </div>
+      </div>
+      <div class="wizard-note">// em média: 4 minutos. sem ajuda externa.</div>
+    </div>
+  </section>
+
+  <!-- DEPOIMENTOS -->
+  <section id="depoimentos" style="background:#0f0f0f">
+    <div class="wrap section-pad">
+      <div class="section-label">// quem usa</div>
+      <h2 class="section-h2">Quem usa não volta pro caderninho</h2>
+      <div class="dep-grid">
+        <div class="dep-card">
+          <p class="dep-quote">"Antes eu anotava tudo no WhatsApp. Agora o cliente recebe o orçamento, aprova pelo link e a OS já aparece no sistema."</p>
+          <div class="dep-name">João R.</div>
+          <div class="dep-role">// técnico de refrigeração</div>
+        </div>
+        <div class="dep-card">
+          <p class="dep-quote">"Meu técnico parou de me ligar pra pedir endereço. Ele abre o app, vê o card e já sai navegando."</p>
+          <div class="dep-name">Marcos T.</div>
+          <div class="dep-role">// dono de assistência de celular</div>
+        </div>
+        <div class="dep-card">
+          <p class="dep-quote">"Fim de mês eu calculava comissão na mão, sempre dava conflito. Agora é automático e ninguém questiona mais."</p>
+          <div class="dep-name">Rita M.</div>
+          <div class="dep-role">// elétrica predial</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLANOS -->
+  <section id="planos">
+    <div class="wrap section-pad">
+      <div class="section-label">// preços</div>
+      <h2 class="section-h2">Começa grátis. Cresce quando quiser.</h2>
+      <div class="planos-grid">
+        <div class="plano-card">
+          <div class="plano-title">Gratuito</div>
+          <div class="plano-price">R$ 0<span>/mês</span></div>
+          <ul class="plano-features">
+            <li>1 usuário técnico</li>
+            <li>Até 20 OS por mês</li>
+            <li>Kanban e Orçamentos</li>
+            <li>QR PIX no recibo</li>
+          </ul>
+          <a href="signup.html" class="btn-primary btn-full">Criar conta grátis →</a>
+          <div class="plano-note">// sem cartão</div>
+        </div>
+        <div class="plano-card destaque">
+          <div class="plano-tag">// mais popular</div>
+          <div class="plano-title">Pro</div>
+          <div class="plano-price">R$ 49<span>/mês</span></div>
+          <ul class="plano-features">
+            <li>Técnicos ilimitados</li>
+            <li>OS ilimitadas</li>
+            <li>Comissão automática</li>
+            <li>Audit log</li>
+            <li>Suporte por e-mail</li>
+          </ul>
+          <a href="signup.html" class="btn-primary btn-full">Assinar →</a>
+        </div>
+        <div class="plano-card">
+          <div class="plano-title">Business</div>
+          <div class="plano-price">R$ 99<span>/mês</span></div>
+          <ul class="plano-features">
+            <li>Tudo do Pro</li>
+            <li>Multi-filial</li>
+            <li>Relatórios avançados</li>
+            <li>Nota Fiscal integrada</li>
+            <li>Suporte prioritário</li>
+          </ul>
+          <a href="signup.html" class="btn-primary btn-full">Assinar →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="cta-final">
+    <div class="wrap">
+      <div class="cta-label">// comece agora</div>
+      <h2>Seu próximo serviço já pode<br>estar no sistema.</h2>
+      <p class="cta-sub">Cria sua conta em 2 minutos. Sem cartão. Sem compromisso.</p>
+      <a href="signup.html" class="btn-primary" style="font-size:14px;padding:16px 40px">Criar conta grátis →</a>
+      <div class="cta-note">// gratuito para sempre no plano free</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-logo">DMTech</span>
+          <span class="footer-copy">© 2026 DMTech. Todos os direitos reservados.</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Termos</a>
+          <a href="#">Privacidade</a>
+          <a href="#">Contato</a>
+        </div>
+      </div>
+      <div class="footer-version">// v1.0 — feito para técnico de verdade</div>
+    </div>
+  </footer>
+
+</body>
+</html>
