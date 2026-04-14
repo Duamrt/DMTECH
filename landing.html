@@ -899,6 +899,9 @@
   </footer>
 
   <script>
+    const VERSION = 'v04141825';
+    console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
+
     // Rastreio de eventos — integra com GA4 quando ativado
     function trackEvt(name, params) {
       if (typeof gtag === 'function') gtag('event', name, params || {});
