@@ -39,3 +39,10 @@ function isPlatformAdmin() {
   return APP.profile?.role === 'dono' &&
     APP.profile?.company_id === 'aaaa0001-0000-0000-0000-000000000001';
 }
+
+// ESC fecha qualquer modal aberto em qualquer página
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (typeof fecharModal === 'function') { fecharModal(); return; }
+  document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+});

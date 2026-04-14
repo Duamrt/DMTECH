@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141354"></script>
-  <script src="js/auth.js?v=04141354"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141354">
+  <script src="js/config.js?v=04141357"></script>
+  <script src="js/auth.js?v=04141357"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141357">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -69,6 +69,10 @@
     .tipo-badge { font-size:10px; font-weight:800; padding:1px 5px; }
     .tipo-s { background:rgba(59,130,246,.2); color:#60a5fa; }
     .tipo-p { background:rgba(34,197,94,.2); color:#4ade80; }
+    .mini-form-cli { display:none; position:absolute; top:100%; left:0; right:0; background:var(--surface-3); border:1px solid var(--border); z-index:300; padding:14px; }
+    .mini-form-cli.show { display:block; }
+    .mini-form-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); margin-bottom:10px; }
+    .mini-form-fields { display:grid; gap:8px; }
     .btn-remove { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; }
     .btn-remove:hover { color:var(--danger); }
     .btn-mic { background:none; border:1px solid var(--accent); color:var(--accent); padding:8px 12px; font-size:16px; cursor:pointer; transition:all .15s; flex-shrink:0; }
@@ -177,6 +181,19 @@
               oninput="filtrarCliente(this.value)" onblur="setTimeout(esconderAcCliente,150)">
             <input type="hidden" id="orc-cliente">
             <div class="ac-drop" id="ac-drop-cli"></div>
+            <div class="mini-form-cli" id="mini-form-cli">
+              <div class="mini-form-title">Novo cliente</div>
+              <div class="mini-form-fields">
+                <input class="form-input" type="text"  id="ncli-nome"    placeholder="Nome *">
+                <input class="form-input" type="tel"   id="ncli-phone"   placeholder="WhatsApp (ex: 87991234567)">
+                <input class="form-input" type="email" id="ncli-email"   placeholder="E-mail">
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:6px">Outros dados podem ser completados em Clientes.</div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="btn btn-primary" style="flex:1;font-size:12px;padding:8px" onclick="confirmarCriarCliente()">Criar cliente</button>
+                <button class="btn btn-ghost"   style="font-size:12px;padding:8px"         onclick="cancelarCriarCliente()">Cancelar</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -446,11 +463,7 @@
       esconderAcCliente();
     }
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') fecharModal();
-    });
-
-    // Clicar fora não fecha — só ESC ou botão Cancelar
+    // Clicar fora não fecha — só ESC (auth.js) ou botão Cancelar
 
     // ── Autocomplete cliente ──
     let _acCliMatches = [];
@@ -486,9 +499,8 @@
       document.getElementById('ac-drop-cli').style.display = 'none';
     }
 
-    async function criarClienteInline() {
+    function criarClienteInline() {
       const nome = _acCliQuery.trim();
-      if (!nome) return;
       const existe = clientes.find(c => c.name.toLowerCase() === nome.toLowerCase());
       if (existe) {
         document.getElementById('orc-cliente-txt').value = existe.name;
@@ -496,13 +508,43 @@
         esconderAcCliente();
         return;
       }
-      const { data, error } = await sb.from('clients').insert({ company_id: APP.company.id, name: nome }).select('id,name').single();
+      esconderAcCliente();
+      document.getElementById('ncli-nome').value  = nome;
+      document.getElementById('ncli-phone').value = '';
+      document.getElementById('ncli-email').value = '';
+      document.getElementById('mini-form-cli').classList.add('show');
+      setTimeout(() => document.getElementById('ncli-phone').focus(), 50);
+    }
+
+    function cancelarCriarCliente() {
+      document.getElementById('mini-form-cli').classList.remove('show');
+      document.getElementById('orc-cliente-txt').value = '';
+      document.getElementById('orc-cliente').value = '';
+    }
+
+    async function confirmarCriarCliente() {
+      const nome = document.getElementById('ncli-nome').value.trim();
+      if (!nome) { document.getElementById('ncli-nome').focus(); return; }
+      const existe = clientes.find(c => c.name.toLowerCase() === nome.toLowerCase());
+      if (existe) {
+        document.getElementById('orc-cliente-txt').value = existe.name;
+        document.getElementById('orc-cliente').value = existe.id;
+        document.getElementById('mini-form-cli').classList.remove('show');
+        return;
+      }
+      const payload = {
+        company_id: APP.company.id,
+        name:  nome,
+        phone: document.getElementById('ncli-phone').value.trim() || null,
+        email: document.getElementById('ncli-email').value.trim() || null,
+      };
+      const { data, error } = await sb.from('clients').insert(payload).select('id,name,phone').single();
       if (error || !data) { alert('Erro ao criar cliente.'); return; }
       clientes.push(data);
       clientes.sort((a, b) => a.name.localeCompare(b.name));
       document.getElementById('orc-cliente-txt').value = data.name;
       document.getElementById('orc-cliente').value = data.id;
-      esconderAcCliente();
+      document.getElementById('mini-form-cli').classList.remove('show');
     }
 
     // ── Items ──
