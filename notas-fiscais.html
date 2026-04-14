@@ -8,13 +8,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141606"></script>
-  <script src="js/auth.js?v=04141606"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141606">
+  <script src="js/config.js?v=04141614"></script>
+  <script src="js/auth.js?v=04141614"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141614">
   <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
     .modal-overlay.active { display:flex; }
     .modal { background:var(--surface-2); border:1px solid var(--border); width:100%; max-width:560px; padding:28px; position:relative; max-height:90vh; overflow-y:auto; }
+    .modal-xl { max-width:720px; }
     .modal-title { font-size:15px; font-weight:800; color:var(--text); margin-bottom:20px; }
     .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
     .btn-danger { background:none; border:1px solid var(--danger); color:var(--danger); padding:9px 18px; font-size:13px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
@@ -22,18 +23,12 @@
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .form-row .form-group { margin-bottom:0; }
 
-    .nf-badge {
-      display:inline-block; padding:2px 8px; font-size:10px; font-weight:700;
-      letter-spacing:.04em; text-transform:uppercase;
-    }
+    .nf-badge { display:inline-block; padding:2px 8px; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
     .nf-badge-sim { background:rgba(74,222,128,.12); color:#4ade80; }
     .nf-badge-nao { background:rgba(107,114,128,.12); color:#9ca3af; }
 
     .ac-wrap { position:relative; }
-    .ac-drop {
-      position:absolute; top:100%; left:0; right:0; background:var(--surface-3);
-      border:1px solid var(--border); z-index:300; max-height:200px; overflow-y:auto; display:none;
-    }
+    .ac-drop { position:absolute; top:100%; left:0; right:0; background:var(--surface-3); border:1px solid var(--border); z-index:300; max-height:200px; overflow-y:auto; display:none; }
     .ac-item { padding:8px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; border-bottom:1px solid var(--border); }
     .ac-item:hover { background:var(--surface-2); color:var(--text); }
     .ac-item:last-child { border-bottom:none; }
@@ -43,6 +38,24 @@
     .filter-btn { padding:6px 14px; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; background:none; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; transition:all .12s; }
     .filter-btn:hover { border-color:var(--accent); color:var(--accent); }
     .filter-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* XML Review modal */
+    .xml-bloco { padding:12px 14px; background:var(--surface-3); border:1px solid var(--border); margin-bottom:14px; }
+    .xml-bloco-titulo { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); margin-bottom:8px; }
+    .xml-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; }
+    .xml-campo label { font-size:10px; color:var(--text-dim); display:block; margin-bottom:1px; }
+    .xml-campo span { font-size:13px; font-weight:600; color:var(--text); }
+    .xml-badge-novo { background:rgba(251,191,36,.15); color:#fbbf24; font-size:10px; padding:2px 7px; font-weight:700; margin-left:6px; }
+    .xml-badge-ok { background:rgba(74,222,128,.12); color:#4ade80; font-size:10px; padding:2px 7px; font-weight:700; margin-left:6px; }
+
+    .itens-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .itens-table th { background:var(--surface-3); padding:6px 10px; text-align:left; color:var(--text-muted); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+    .itens-table td { padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-muted); vertical-align:middle; }
+    .itens-table tr:last-child td { border-bottom:none; }
+    .itens-table .nome-prod { font-weight:600; color:var(--text); }
+    .badge-catalogo-novo { display:inline-block; background:rgba(251,191,36,.15); color:#fbbf24; font-size:10px; padding:2px 7px; font-weight:700; }
+    .badge-catalogo-match { display:inline-block; background:rgba(74,222,128,.12); color:#4ade80; font-size:10px; padding:2px 7px; font-weight:700; }
+    .aviso-xml { padding:10px 14px; background:rgba(249,115,22,.08); border:1px solid rgba(249,115,22,.3); color:#f97316; font-size:12px; margin-bottom:14px; }
   </style>
 </head>
 <body>
@@ -86,7 +99,7 @@
       <div class="content">
         <div class="page-header">
           <h2>Notas Fiscais</h2>
-          <p>Registro de NFs de compra vinculadas a fornecedores.</p>
+          <p>Registro de NFs de compra. Importe XML para lançar estoque automaticamente.</p>
         </div>
 
         <div class="filter-bar">
@@ -94,6 +107,8 @@
           <button class="filter-btn" onclick="setFiltro('pendente',this)">A Pagar</button>
           <button class="filter-btn" onclick="setFiltro('pago',this)">Pagas</button>
           <div style="flex:1"></div>
+          <button class="btn btn-ghost" onclick="document.getElementById('input-xml').click()">⇪ Importar XML</button>
+          <input type="file" id="input-xml" accept=".xml" style="display:none" onchange="lerXML(this)">
           <button class="btn btn-primary" onclick="abrirModal()">+ Nova NF</button>
         </div>
 
@@ -106,13 +121,14 @@
                   <th>Fornecedor</th>
                   <th>Data</th>
                   <th>Vencimento</th>
+                  <th>Itens</th>
                   <th>Caixa</th>
                   <th style="text-align:right">Total</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="tabela-nf">
-                <tr><td colspan="7" class="empty-state">Carregando...</td></tr>
+                <tr><td colspan="8" class="empty-state">Carregando...</td></tr>
               </tbody>
             </table>
           </div>
@@ -123,7 +139,7 @@
 
   <div class="versao" id="versao-rodape"></div>
 
-  <!-- Modal NF -->
+  <!-- Modal NF manual -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
       <div class="modal-title" id="modal-titulo">Nova Nota Fiscal</div>
@@ -195,6 +211,87 @@
     </div>
   </div>
 
+  <!-- Modal revisão XML -->
+  <div class="modal-overlay" id="modal-xml">
+    <div class="modal modal-xl">
+      <div class="modal-title">Revisão de Importação XML</div>
+
+      <div id="xml-aviso-dup" class="aviso-xml" style="display:none"></div>
+
+      <!-- Fornecedor -->
+      <div class="xml-bloco">
+        <div class="xml-bloco-titulo">Fornecedor</div>
+        <div class="xml-grid">
+          <div class="xml-campo">
+            <label>Nome</label>
+            <span id="xml-emit-nome">—</span>
+            <span id="xml-forn-badge"></span>
+          </div>
+          <div class="xml-campo">
+            <label>CNPJ</label>
+            <span id="xml-emit-cnpj" class="mono" style="font-size:12px">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dados NF -->
+      <div class="xml-bloco">
+        <div class="xml-bloco-titulo">Nota Fiscal</div>
+        <div class="xml-grid">
+          <div class="xml-campo">
+            <label>Número</label>
+            <span id="xml-nf-numero">—</span>
+          </div>
+          <div class="xml-campo">
+            <label>Emissão</label>
+            <span id="xml-nf-data">—</span>
+          </div>
+          <div class="xml-campo" style="margin-top:6px">
+            <label>Valor Total</label>
+            <span id="xml-nf-total" style="color:var(--accent)">—</span>
+          </div>
+          <div class="xml-campo" style="margin-top:6px">
+            <label>Vencimento</label>
+            <input class="form-input" type="date" id="xml-vencimento" style="margin-top:2px;height:32px;font-size:12px">
+          </div>
+        </div>
+      </div>
+
+      <!-- Itens -->
+      <div class="xml-bloco" style="margin-bottom:14px">
+        <div class="xml-bloco-titulo">Itens — <span id="xml-qtd-itens">0</span> produto(s) · estoque será atualizado</div>
+        <div style="overflow-x:auto">
+          <table class="itens-table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Cód</th>
+                <th style="text-align:right">Qtd</th>
+                <th>Un</th>
+                <th style="text-align:right">Custo Unit.</th>
+                <th style="text-align:right">Total</th>
+                <th>Catálogo</th>
+              </tr>
+            </thead>
+            <tbody id="xml-itens-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px">
+        <input type="checkbox" id="xml-lancou-caixa" checked style="width:16px;height:16px;cursor:pointer">
+        <label for="xml-lancou-caixa" style="font-size:13px;color:var(--text-muted);cursor:pointer">
+          Registrar no Caixa como despesa
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="fecharModalXml()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirmar-xml" onclick="confirmarXml()">Confirmar Importação</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
     document.getElementById('versao-rodape').textContent = VERSION;
@@ -210,8 +307,12 @@
       document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
     }
 
-    let todasNf = [], fornecedores = [], acSugs = [], filtroAtivo = 'todos', editandoId = null;
+    let todasNf = [], fornecedores = [], nfsNoCaixa = new Set();
+    let acSugs = [], filtroAtivo = 'todos', editandoId = null;
+    // Estado do XML em revisão
+    let xmlDados = null; // { nNF, dhEmi, cnpjEmit, nomeEmit, vNF, itens, fornMatch }
 
+    /* ── Init ── */
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
@@ -221,11 +322,12 @@
     })();
 
     async function carregarNFs() {
-      const { data } = await sb.from('notas_fiscais')
-        .select('*, fornecedores(nome)')
-        .eq('company_id', APP.company.id)
-        .order('created_at', { ascending: false });
-      todasNf = data || [];
+      const [{ data: nfs }, { data: cxNfs }] = await Promise.all([
+        sb.from('notas_fiscais').select('*, fornecedores(nome)').eq('company_id', APP.company.id).order('created_at', { ascending: false }),
+        sb.from('caixa').select('nf_id').eq('company_id', APP.company.id).not('nf_id', 'is', null)
+      ]);
+      todasNf = nfs || [];
+      nfsNoCaixa = new Set((cxNfs || []).map(c => c.nf_id));
       renderTabela();
     }
 
@@ -234,6 +336,7 @@
       fornecedores = data || [];
     }
 
+    /* ── Filtro ── */
     function setFiltro(f, btn) {
       filtroAtivo = f;
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -241,29 +344,35 @@
       renderTabela();
     }
 
+    /* ── Render tabela ── */
     function renderTabela() {
       let lista = todasNf;
-      if (filtroAtivo === 'pendente') lista = lista.filter(n => n.vencimento && !_nfPago(n));
-      else if (filtroAtivo === 'pago')   lista = lista.filter(n => _nfPago(n));
+      if (filtroAtivo === 'pendente') lista = lista.filter(n => !nfsNoCaixa.has(n.id));
+      else if (filtroAtivo === 'pago')   lista = lista.filter(n =>  nfsNoCaixa.has(n.id));
 
       const tbody = document.getElementById('tabela-nf');
       if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma NF encontrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhuma NF encontrada.</td></tr>';
         return;
       }
       tbody.innerHTML = lista.map(n => {
-        const forn  = n.fornecedores?.nome || '<span style="color:var(--text-dim)">—</span>';
-        const data  = n.data ? new Date(n.data+'T12:00:00').toLocaleDateString('pt-BR') : '—';
-        const venc  = n.vencimento ? new Date(n.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
-        const pago  = _nfPago(n);
-        const badge = pago
+        const forn   = n.fornecedores?.nome || '<span style="color:var(--text-dim)">—</span>';
+        const data   = n.data ? new Date(n.data+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        const venc   = n.vencimento ? new Date(n.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        const pago   = nfsNoCaixa.has(n.id);
+        const badge  = pago
           ? '<span class="nf-badge nf-badge-sim">No Caixa</span>'
           : '<span class="nf-badge nf-badge-nao">Pendente</span>';
+        const qtdItens = Array.isArray(n.itens) ? n.itens.length : 0;
+        const itensCell = qtdItens > 0
+          ? `<span style="color:var(--text-muted);font-size:12px">${qtdItens} item${qtdItens>1?'s':''}</span>`
+          : '<span style="color:var(--text-dim)">—</span>';
         return `<tr>
           <td class="mono" style="color:var(--text-dim);font-size:12px">${esc(n.numero||'—')}</td>
           <td style="font-weight:600;color:var(--text)">${esc(forn)}</td>
           <td style="color:var(--text-dim);font-size:12px">${data}</td>
           <td style="color:var(--text-dim);font-size:12px">${venc}</td>
+          <td>${itensCell}</td>
           <td>${badge}</td>
           <td style="font-family:'Fira Code',monospace;color:var(--accent);text-align:right;font-weight:700">${fmtMoeda(n.valor_total)}</td>
           <td><div class="actions-cell">
@@ -274,36 +383,272 @@
       }).join('');
     }
 
-    // Checa se já tem lançamento no caixa p/ esta NF
-    function _nfPago(n) {
-      // Simplificado: se obs ou campo caixa_id existisse poderíamos checar. Por ora usa campo na tabela.
-      return n._lancou_caixa || false;
+    /* ─────────────── XML IMPORT ─────────────── */
+
+    function lerXML(input) {
+      const file = input.files[0]; if (!file) return; input.value = '';
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const parsed = parseNFe(e.target.result);
+        if (!parsed) { dmToast('XML inválido ou não reconhecido como NF-e', 'error'); return; }
+        // Match itens ao catálogo
+        parsed.itens = await matchItensAoCatalogo(parsed.itens);
+        // Match fornecedor pelo CNPJ
+        parsed.fornMatch = await matchFornecedor(parsed.cnpjEmit, parsed.nomeEmit);
+        xmlDados = parsed;
+        preencherRevisao(parsed);
+        document.getElementById('modal-xml').classList.add('active');
+      };
+      reader.readAsText(file, 'UTF-8');
     }
 
-    // Autocomplete fornecedor
+    function parseNFe(xmlStr) {
+      try {
+        const doc = new DOMParser().parseFromString(xmlStr, 'text/xml');
+        const g   = (node, tag) => node?.getElementsByTagName(tag)?.[0]?.textContent?.trim() || '';
+
+        const infNFe = doc.getElementsByTagName('infNFe')[0];
+        if (!infNFe) return null;
+
+        const ide   = infNFe.getElementsByTagName('ide')[0];
+        const emit  = infNFe.getElementsByTagName('emit')[0];
+        const tot   = infNFe.getElementsByTagName('ICMSTot')[0];
+        const dets  = infNFe.getElementsByTagName('det');
+
+        const nNF     = g(ide, 'nNF');
+        const dhEmiRaw = g(ide, 'dhEmi') || g(ide, 'dEmi') || '';
+        const dhEmi   = dhEmiRaw.slice(0, 10);
+        const cnpjEmit = g(emit, 'CNPJ').replace(/\D/g, '');
+        const nomeEmit = g(emit, 'xNome') || g(emit, 'xFant') || '';
+        const vNF     = parseFloat(g(tot, 'vNF')) || 0;
+
+        const itens = [];
+        for (const det of dets) {
+          const prod = det.getElementsByTagName('prod')[0];
+          const cEAN = g(prod, 'cEAN').replace(/^SEM GTIN$|^0{8,}$/, '');
+          itens.push({
+            xProd:   g(prod, 'xProd'),
+            cProd:   g(prod, 'cProd'),
+            cEAN,
+            uCom:    g(prod, 'uCom'),
+            qCom:    parseFloat(g(prod, 'qCom')) || 0,
+            vUnCom:  parseFloat(g(prod, 'vUnCom')) || 0,
+            vProd:   parseFloat(g(prod, 'vProd')) || 0,
+            produtoId:   null,
+            produtoNome: null,
+            isNovo: true
+          });
+        }
+
+        return { nNF, dhEmi, cnpjEmit, nomeEmit, vNF, itens };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function matchFornecedor(cnpj, nome) {
+      if (!cnpj) return { id: null, nome, cnpj: '', isNovo: true };
+      const { data } = await sb.from('fornecedores')
+        .select('id,nome')
+        .eq('company_id', APP.company.id)
+        .eq('cnpj', cnpj)
+        .limit(1);
+      if (data?.[0]) return { id: data[0].id, nome: data[0].nome, cnpj, isNovo: false };
+      return { id: null, nome, cnpj, isNovo: true };
+    }
+
+    async function matchItensAoCatalogo(itens) {
+      const { data: prods } = await sb.from('products').select('id,name,barcode').eq('company_id', APP.company.id);
+      if (!prods?.length) return itens;
+      return itens.map(item => {
+        if (item.cEAN) {
+          const p = prods.find(x => x.barcode && x.barcode === item.cEAN);
+          if (p) return { ...item, produtoId: p.id, produtoNome: p.name, isNovo: false };
+        }
+        const pNome = prods.find(x => x.name.toLowerCase() === item.xProd.toLowerCase());
+        if (pNome) return { ...item, produtoId: pNome.id, produtoNome: pNome.name, isNovo: false };
+        return item;
+      });
+    }
+
+    function preencherRevisao(d) {
+      // Fornecedor
+      document.getElementById('xml-emit-nome').textContent = d.nomeEmit || '—';
+      document.getElementById('xml-emit-cnpj').textContent = fmtCNPJ(d.cnpjEmit);
+      const fbadge = document.getElementById('xml-forn-badge');
+      fbadge.innerHTML = d.fornMatch.isNovo
+        ? '<span class="xml-badge-novo">NOVO</span>'
+        : '<span class="xml-badge-ok">VINCULADO</span>';
+
+      // NF
+      document.getElementById('xml-nf-numero').textContent = d.nNF || '—';
+      document.getElementById('xml-nf-data').textContent   = d.dhEmi ? new Date(d.dhEmi+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      document.getElementById('xml-nf-total').textContent  = fmtMoeda(d.vNF);
+      document.getElementById('xml-vencimento').value = '';
+
+      // Itens
+      document.getElementById('xml-qtd-itens').textContent = d.itens.length;
+      const tbody = document.getElementById('xml-itens-tbody');
+      tbody.innerHTML = d.itens.map(item => `
+        <tr>
+          <td class="nome-prod">${esc(item.xProd)}</td>
+          <td class="mono" style="font-size:11px;color:var(--text-dim)">${esc(item.cProd)||'—'}</td>
+          <td style="text-align:right;font-weight:700;color:var(--text)">${Number(item.qCom).toLocaleString('pt-BR',{maximumFractionDigits:3})}</td>
+          <td style="color:var(--text-dim);font-size:11px">${esc(item.uCom)||'—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;font-size:11px">${fmtMoeda(item.vUnCom)}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;font-size:11px;color:var(--accent)">${fmtMoeda(item.vProd)}</td>
+          <td>${item.isNovo ? '<span class="badge-catalogo-novo">CRIAR</span>' : `<span class="badge-catalogo-match">ATUALIZAR</span>`}</td>
+        </tr>`).join('');
+
+      document.getElementById('xml-aviso-dup').style.display = 'none';
+    }
+
+    function fecharModalXml() {
+      document.getElementById('modal-xml').classList.remove('active');
+      xmlDados = null;
+    }
+    document.getElementById('modal-xml').addEventListener('click', e => {
+      if (e.target === e.currentTarget) fecharModalXml();
+    });
+
+    async function confirmarXml() {
+      if (!xmlDados) return;
+      const d = xmlDados;
+      const btn = document.getElementById('btn-confirmar-xml');
+      btn.disabled = true; btn.textContent = 'Processando...';
+
+      try {
+        // 1. Garantir fornecedor
+        let fornId = d.fornMatch.id;
+        if (d.fornMatch.isNovo) {
+          // Checar novamente por CNPJ (evitar duplicata)
+          if (d.cnpjEmit) {
+            const { data: exist } = await sb.from('fornecedores').select('id').eq('company_id', APP.company.id).eq('cnpj', d.cnpjEmit).limit(1);
+            if (exist?.[0]) {
+              fornId = exist[0].id;
+            } else {
+              const { data: novo } = await sb.from('fornecedores').insert({
+                company_id: APP.company.id,
+                nome: d.nomeEmit,
+                cnpj: d.cnpjEmit
+              }).select('id').single();
+              fornId = novo?.id || null;
+            }
+          } else {
+            const { data: novo } = await sb.from('fornecedores').insert({
+              company_id: APP.company.id,
+              nome: d.nomeEmit || 'Fornecedor importado'
+            }).select('id').single();
+            fornId = novo?.id || null;
+          }
+        }
+
+        // 2. Verificar duplicata de NF (mesmo fornecedor + mesmo número)
+        if (d.nNF && fornId) {
+          const { data: dup } = await sb.from('notas_fiscais')
+            .select('id,numero')
+            .eq('company_id', APP.company.id)
+            .eq('fornecedor_id', fornId)
+            .eq('numero', d.nNF)
+            .limit(1);
+          if (dup?.length) {
+            const aviso = document.getElementById('xml-aviso-dup');
+            aviso.textContent = `NF nº ${d.nNF} deste fornecedor já foi lançada. Importação bloqueada para evitar duplicata.`;
+            aviso.style.display = 'block';
+            btn.disabled = false; btn.textContent = 'Confirmar Importação';
+            return;
+          }
+        }
+
+        // 3. Inserir NF
+        const vencXml = document.getElementById('xml-vencimento').value || null;
+        const { data: nfNova, error: errNf } = await sb.from('notas_fiscais').insert({
+          company_id:      APP.company.id,
+          fornecedor_id:   fornId,
+          numero:          d.nNF || null,
+          data:            d.dhEmi || null,
+          vencimento:      vencXml,
+          valor_total:     d.vNF,
+          itens:           d.itens.map(i => ({
+            xProd: i.xProd, cProd: i.cProd, cEAN: i.cEAN,
+            uCom: i.uCom, qCom: i.qCom, vUnCom: i.vUnCom, vProd: i.vProd
+          }))
+        }).select('id').single();
+        if (errNf) throw new Error(errNf.message);
+
+        // 4. Atualizar/criar produtos no catálogo
+        await processarEstoque(d.itens);
+
+        // 5. Lançar no Caixa (opcional)
+        if (document.getElementById('xml-lancou-caixa').checked && nfNova?.id) {
+          const fornNome = d.fornMatch.isNovo ? d.nomeEmit : d.fornMatch.nome;
+          await sb.from('caixa').insert({
+            company_id:      APP.company.id,
+            tipo:            'saida',
+            descricao:       `NF ${d.nNF||'s/n'} — ${fornNome || 'Fornecedor'}`,
+            valor:           d.vNF,
+            data_vencimento: vencXml || d.dhEmi || null,
+            pago:            false,
+            categoria:       'fornecedor',
+            nf_id:           nfNova.id
+          });
+        }
+
+        dmToast(`NF importada · ${d.itens.length} item(s) no estoque`);
+        fecharModalXml();
+        await Promise.all([carregarNFs(), carregarFornecedores()]);
+      } catch(e) {
+        dmToast('Erro: ' + e.message, 'error');
+      }
+
+      btn.disabled = false; btn.textContent = 'Confirmar Importação';
+    }
+
+    async function processarEstoque(itens) {
+      for (const item of itens) {
+        if (!item.qCom || item.qCom <= 0) continue;
+        if (item.produtoId) {
+          // Produto existente: incrementar estoque e atualizar custo
+          const { data: p } = await sb.from('products').select('stock').eq('id', item.produtoId).single();
+          const novoStock = (parseFloat(p?.stock) || 0) + item.qCom;
+          await sb.from('products').update({ stock: novoStock, cost: item.vUnCom }).eq('id', item.produtoId).eq('company_id', APP.company.id);
+        } else {
+          // Produto novo: inserir no catálogo
+          await sb.from('products').insert({
+            company_id: APP.company.id,
+            name:       item.xProd,
+            code:       item.cProd || null,
+            barcode:    item.cEAN  || null,
+            unit:       item.uCom  || null,
+            cost:       item.vUnCom,
+            price:      0,
+            stock:      item.qCom,
+            stock_min:  0
+          });
+        }
+      }
+    }
+
+    /* ─────────────── MODAL MANUAL ─────────────── */
+
     function acFornecedor(q) {
       document.getElementById('nf-fornecedor-id').value = '';
-      if (!q || q.length < 1) { esconderAcForn(); return; }
-      acSugs = fornecedores.filter(f => f.nome.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+      if (!q) { esconderAcForn(); return; }
+      acSugs = fornecedores.filter(f => f.nome.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
       const drop = document.getElementById('ac-forn-drop');
-      if (!acSugs.length) { drop.style.display='none'; return; }
-      drop.innerHTML = acSugs.map((f,i) =>
+      if (!acSugs.length) { drop.style.display = 'none'; return; }
+      drop.innerHTML = acSugs.map((f, i) =>
         `<div class="ac-item" onmousedown="selecionarForn(${i})">${esc(f.nome)}</div>`
       ).join('');
       drop.style.display = 'block';
     }
-
     function selecionarForn(idx) {
-      const f = acSugs[idx];
-      if (!f) return;
+      const f = acSugs[idx]; if (!f) return;
       document.getElementById('nf-fornecedor-nome').value = f.nome;
       document.getElementById('nf-fornecedor-id').value   = f.id;
       esconderAcForn();
     }
-
-    function esconderAcForn() {
-      document.getElementById('ac-forn-drop').style.display = 'none';
-    }
+    function esconderAcForn() { document.getElementById('ac-forn-drop').style.display = 'none'; }
 
     function abrirModal() {
       editandoId = null;
@@ -311,7 +656,7 @@
       ['nf-id','nf-numero','nf-obs'].forEach(id => { document.getElementById(id).value = ''; });
       document.getElementById('nf-fornecedor-nome').value = '';
       document.getElementById('nf-fornecedor-id').value   = '';
-      document.getElementById('nf-data').value       = new Date().toISOString().slice(0,10);
+      document.getElementById('nf-data').value       = new Date().toISOString().slice(0, 10);
       document.getElementById('nf-vencimento').value = '';
       document.getElementById('nf-valor').value      = '';
       document.getElementById('nf-forma').value      = '';
@@ -323,16 +668,16 @@
     function abrirEditar(n) {
       editandoId = n.id;
       document.getElementById('modal-titulo').textContent = 'Editar NF';
-      document.getElementById('nf-id').value             = n.id;
+      document.getElementById('nf-id').value              = n.id;
       document.getElementById('nf-fornecedor-nome').value = n.fornecedores?.nome || '';
-      document.getElementById('nf-fornecedor-id').value  = n.fornecedor_id || '';
-      document.getElementById('nf-numero').value         = n.numero || '';
-      document.getElementById('nf-data').value           = n.data || '';
-      document.getElementById('nf-vencimento').value     = n.vencimento || '';
-      document.getElementById('nf-valor').value          = n.valor_total || '';
-      document.getElementById('nf-forma').value          = n.forma_pagamento || '';
-      document.getElementById('nf-obs').value            = n.obs || '';
-      document.getElementById('nf-lancou-caixa').checked = false;
+      document.getElementById('nf-fornecedor-id').value   = n.fornecedor_id || '';
+      document.getElementById('nf-numero').value          = n.numero || '';
+      document.getElementById('nf-data').value            = n.data || '';
+      document.getElementById('nf-vencimento').value      = n.vencimento || '';
+      document.getElementById('nf-valor').value           = n.valor_total || '';
+      document.getElementById('nf-forma').value           = n.forma_pagamento || '';
+      document.getElementById('nf-obs').value             = n.obs || '';
+      document.getElementById('nf-lancou-caixa').checked  = false;
       document.getElementById('btn-excluir').style.display = 'block';
       document.getElementById('modal-overlay').classList.add('active');
     }
@@ -341,7 +686,6 @@
       document.getElementById('modal-overlay').classList.remove('active');
       editandoId = null;
     }
-
     document.getElementById('modal-overlay').addEventListener('click', e => {
       if (e.target === e.currentTarget) fecharModal();
     });
@@ -359,6 +703,20 @@
       const lancarCx  = document.getElementById('nf-lancou-caixa').checked;
       const fornNome  = document.getElementById('nf-fornecedor-nome').value.trim();
 
+      // Verificar duplicata de NF (apenas nova — não ao editar)
+      if (!editandoId && numero && fornId) {
+        const { data: dup } = await sb.from('notas_fiscais')
+          .select('id')
+          .eq('company_id', APP.company.id)
+          .eq('fornecedor_id', fornId)
+          .eq('numero', numero)
+          .limit(1);
+        if (dup?.length) {
+          dmToast(`NF nº ${numero} deste fornecedor já existe`, 'error');
+          return;
+        }
+      }
+
       const btn = document.getElementById('btn-salvar');
       btn.disabled = true; btn.textContent = 'Salvando...';
 
@@ -374,19 +732,17 @@
 
       if (error) { btn.disabled=false; btn.textContent='Salvar'; dmToast('Erro: '+error.message,'error'); return; }
 
-      // Lançar no caixa automaticamente
       if (lancarCx && nfId && !editandoId) {
-        const descCaixa = `NF ${numero||'s/n'} — ${fornNome || 'Fornecedor'}`;
         await sb.from('caixa').insert({
-          company_id: APP.company.id,
-          tipo: 'saida',
-          descricao: descCaixa,
+          company_id:      APP.company.id,
+          tipo:            'saida',
+          descricao:       `NF ${numero||'s/n'} — ${fornNome || 'Fornecedor'}`,
           valor,
           data_vencimento: vencimento || data,
-          pago: false,
+          pago:            false,
           forma_pagamento: forma,
-          categoria: 'fornecedor',
-          nf_id: nfId
+          categoria:       'fornecedor',
+          nf_id:           nfId
         });
       }
 
@@ -400,14 +756,14 @@
       const nf = todasNf.find(n => n.id === nfId);
       const desc = `NF ${nf?.numero||'s/n'} — ${fornNome || 'Fornecedor'}`;
       const { error } = await sb.from('caixa').insert({
-        company_id: APP.company.id,
-        tipo: 'saida',
-        descricao: desc,
-        valor: parseFloat(valor),
+        company_id:      APP.company.id,
+        tipo:            'saida',
+        descricao:       desc,
+        valor:           parseFloat(valor),
         data_vencimento: vencimento || null,
-        pago: false,
-        categoria: 'fornecedor',
-        nf_id: nfId
+        pago:            false,
+        categoria:       'fornecedor',
+        nf_id:           nfId
       });
       if (error) { dmToast('Erro: '+error.message,'error'); return; }
       dmToast('Despesa lançada no Caixa');
@@ -424,8 +780,12 @@
       }, 'Excluir', true);
     }
 
-    function fmtMoeda(v) {
-      return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v||0);
+    /* ── Helpers ── */
+    function fmtMoeda(v) { return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v||0); }
+    function fmtCNPJ(c) {
+      if (!c) return '—';
+      const d = c.replace(/\D/g,'');
+      return d.length===14 ? d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5') : c;
     }
     function esc(v) {
       if (!v) return '';
