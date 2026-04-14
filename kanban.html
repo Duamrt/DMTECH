@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141415"></script>
-  <script src="js/auth.js?v=04141415"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141415">
+  <script src="js/config.js?v=04141422"></script>
+  <script src="js/auth.js?v=04141422"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141422">
   <style>
     /* Board */
     .board-outer {
@@ -127,6 +127,11 @@
       -webkit-box-orient: vertical;
       line-height: 1.4;
       margin-bottom: 6px;
+    }
+    .k-card-resp {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
     }
     .k-card-date {
       font-family: 'Fira Code', monospace;
@@ -338,6 +343,72 @@
     }
     .btn-ver-os:hover { border-color: var(--border-strong); color: var(--text); }
 
+    /* Responsável select */
+    .panel-select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+    .panel-select:focus { outline: none; border-color: var(--accent); }
+
+    /* Itens panel */
+    .p-item-row {
+      display: grid;
+      grid-template-columns: 22px 1fr 36px 60px 18px;
+      gap: 4px;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .p-item-row:last-child { border-bottom: none; }
+    .p-item-tipo { font-size: 10px; font-weight: 800; text-align: center; }
+    .p-item-desc { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .p-item-qtd  { color: var(--text-muted); text-align: right; }
+    .p-item-val  { color: var(--text-muted); text-align: right; font-size: 11px; }
+    .p-item-del  { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 0; line-height: 1; text-align: center; }
+    .p-item-del:hover { color: #f87171; }
+    .p-item-empty { font-size: 12px; color: var(--text-dim); padding: 6px 0; }
+
+    .p-item-add {
+      display: grid;
+      grid-template-columns: 30px 1fr 38px 58px 28px;
+      gap: 4px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    .p-add-sel, .p-add-inp {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-size: 12px;
+      padding: 6px 6px;
+      width: 100%;
+    }
+    .p-add-sel:focus, .p-add-inp:focus { outline: none; border-color: var(--accent); }
+    .p-add-btn {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      height: 100%;
+      line-height: 1;
+    }
+    .p-add-btn:hover { opacity: .85; }
+    .p-itens-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
     /* AI section */
     .ai-btns {
       display: flex;
@@ -514,6 +585,33 @@
         </div>
       </div>
 
+      <!-- Responsável -->
+      <div>
+        <div class="p-section-title">Responsável</div>
+        <select class="panel-select" id="p-responsavel">
+          <option value="">— sem responsável —</option>
+        </select>
+      </div>
+
+      <!-- Itens -->
+      <div>
+        <div class="p-section-title p-itens-total-row">
+          <span>Itens da OS</span>
+          <span id="p-itens-total" style="color:var(--accent);font-weight:800;font-size:11px">R$ 0,00</span>
+        </div>
+        <div id="p-itens-lista"><div class="p-item-empty">Nenhum item.</div></div>
+        <div class="p-item-add">
+          <select class="p-add-sel" id="p-add-tipo" title="Tipo">
+            <option value="servico">S</option>
+            <option value="produto">P</option>
+          </select>
+          <input class="p-add-inp" id="p-add-desc" placeholder="Descrição..." type="text">
+          <input class="p-add-inp" id="p-add-qtd"  placeholder="Qtd" type="number" value="1" min="0.01" step="any">
+          <input class="p-add-inp" id="p-add-preco" placeholder="R$" type="number" value="0" min="0" step="any">
+          <button class="p-add-btn" onclick="adicionarItem()" title="Adicionar">+</button>
+        </div>
+      </div>
+
       <div>
         <div class="p-section-title">Observações</div>
         <textarea class="panel-textarea" id="p-notes" placeholder="Observações sobre o serviço..."></textarea>
@@ -567,9 +665,14 @@
       { status: 'entregue',        label: 'Entregue'      },
     ];
 
-    let todasOS         = [];
-    let osAtual         = null;
+    let todasOS           = [];
+    let osAtual           = null;
     let statusSelecionado = null;
+    let itensPanel        = [];
+    let equipe            = [];
+
+    const fmtMoeda = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const fmtN     = v => (v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
 
     function fmtData(iso) {
       if (!iso) return '—';
@@ -608,7 +711,8 @@
       const tag = o.orcamentos
         ? `<span class="k-card-tag">ORC #${String(o.orcamentos.numero).padStart(3,'0')}</span>`
         : `<span class="k-card-tag">Direta</span>`;
-      const notes = o.notes ? o.notes.substring(0, 90) : '';
+      const notes = o.notes ? o.notes.substring(0, 80) : '';
+      const resp  = o.responsavel ? `<div class="k-card-resp">👤 ${o.responsavel.name || o.responsavel.email}</div>` : '';
 
       return `
         <div class="k-card" onclick="abrirPanel('${o.id}')">
@@ -617,13 +721,14 @@
             ${tag}
           </div>
           <div class="k-card-client">${o.clients?.name || '—'}</div>
+          ${resp}
           ${notes ? `<div class="k-card-notes">${notes}</div>` : ''}
           <div class="k-card-date">${fmtData(o.created_at)}</div>
         </div>
       `;
     }
 
-    function abrirPanel(id) {
+    async function abrirPanel(id) {
       osAtual = todasOS.find(o => o.id === id);
       if (!osAtual) return;
 
@@ -643,8 +748,82 @@
       selecionarStatus(osAtual.status);
       atualizarBotoesMover();
 
+      // Carrega equipe (uma vez)
+      if (!equipe.length) {
+        const { data } = await sb.from('profiles').select('id, name, email').eq('company_id', APP.company.id);
+        equipe = data || [];
+        const sel = document.getElementById('p-responsavel');
+        sel.innerHTML = '<option value="">— sem responsável —</option>';
+        equipe.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.name || p.email;
+          sel.appendChild(opt);
+        });
+      }
+      document.getElementById('p-responsavel').value = osAtual.responsavel_id || '';
+
+      // Carrega itens
+      const { data: items } = await sb.from('os_items').select('*').eq('os_id', id).order('id');
+      itensPanel = items || [];
+      renderItensPanel();
+
       document.getElementById('side-panel').classList.add('open');
       document.getElementById('panel-overlay').classList.add('open');
+    }
+
+    function renderItensPanel() {
+      const lista = document.getElementById('p-itens-lista');
+      if (!itensPanel.length) {
+        lista.innerHTML = '<div class="p-item-empty">Nenhum item.</div>';
+        document.getElementById('p-itens-total').textContent = 'R$ 0,00';
+        return;
+      }
+      lista.innerHTML = itensPanel.map((it, idx) => `
+        <div class="p-item-row">
+          <span class="p-item-tipo" style="color:${it.tipo==='servico'?'#60a5fa':'#4ade80'}">${it.tipo==='servico'?'S':'P'}</span>
+          <span class="p-item-desc" title="${it.descricao}">${it.descricao}</span>
+          <span class="p-item-qtd">${fmtN(it.quantidade)}</span>
+          <span class="p-item-val">${fmtMoeda(it.subtotal)}</span>
+          <button class="p-item-del" onclick="excluirItem(${idx},'${it.id}')" title="Remover">×</button>
+        </div>
+      `).join('');
+      const total = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+      document.getElementById('p-itens-total').textContent = fmtMoeda(total);
+    }
+
+    async function adicionarItem() {
+      if (!osAtual) return;
+      const tipo  = document.getElementById('p-add-tipo').value;
+      const desc  = document.getElementById('p-add-desc').value.trim();
+      const qtd   = parseFloat(document.getElementById('p-add-qtd').value) || 1;
+      const preco = parseFloat(document.getElementById('p-add-preco').value) || 0;
+      if (!desc) { dmToast('Informe a descrição do item', 'info'); return; }
+
+      const subtotal = qtd * preco;
+      const { data, error } = await sb.from('os_items').insert({
+        os_id: osAtual.id, tipo, descricao: desc, quantidade: qtd, preco_unit: preco, subtotal
+      }).select().single();
+      if (error) { dmToast('Erro ao adicionar item', 'error'); return; }
+
+      itensPanel.push(data);
+      renderItensPanel();
+      document.getElementById('p-add-desc').value  = '';
+      document.getElementById('p-add-qtd').value   = '1';
+      document.getElementById('p-add-preco').value = '0';
+
+      // Atualiza total na OS
+      const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+      await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+    }
+
+    async function excluirItem(idx, itemId) {
+      const { error } = await sb.from('os_items').delete().eq('id', itemId);
+      if (error) { dmToast('Erro ao remover item', 'error'); return; }
+      itensPanel.splice(idx, 1);
+      renderItensPanel();
+      const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+      await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
     }
 
     function fecharPanel() {
@@ -681,16 +860,19 @@
 
     async function salvarStatus() {
       if (!osAtual || !statusSelecionado) return;
-      const notes = document.getElementById('p-notes').value.trim();
+      const notes        = document.getElementById('p-notes').value.trim();
+      const responsavelId = document.getElementById('p-responsavel').value || null;
       const { error } = await sb
         .from('ordens_servico')
-        .update({ status: statusSelecionado, notes })
+        .update({ status: statusSelecionado, notes, responsavel_id: responsavelId })
         .eq('id', osAtual.id);
-      if (error) { alert('Erro: ' + error.message); return; }
-      osAtual.status = statusSelecionado;
-      osAtual.notes  = notes;
+      if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
+      osAtual.status        = statusSelecionado;
+      osAtual.notes         = notes;
+      osAtual.responsavel_id = responsavelId;
       fecharPanel();
       await carregarOS();
+      dmToast('OS atualizada!');
     }
 
     function irParaOS() {
@@ -754,7 +936,7 @@
     async function carregarOS() {
       const { data, error } = await sb
         .from('ordens_servico')
-        .select('*, clients(name), orcamentos(numero)')
+        .select('*, clients(name), orcamentos(numero), responsavel:profiles(id,name,email)')
         .order('numero', { ascending: false });
       if (error) { console.error(error); return; }
       todasOS = data || [];
