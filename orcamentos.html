@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141339"></script>
-  <script src="js/auth.js?v=04141339"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141339">
+  <script src="js/config.js?v=04141343"></script>
+  <script src="js/auth.js?v=04141343"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141343">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -165,9 +165,12 @@
       <div class="form-row" style="margin-bottom:12px">
         <div class="form-group">
           <label class="form-label">Cliente</label>
-          <select class="form-input" id="orc-cliente">
-            <option value="">Selecionar cliente...</option>
-          </select>
+          <div class="ac-wrap">
+            <input class="form-input" type="text" id="orc-cliente-txt" placeholder="Buscar ou criar cliente..." autocomplete="off"
+              oninput="filtrarCliente(this.value)" onblur="setTimeout(esconderAcCliente,150)">
+            <input type="hidden" id="orc-cliente">
+            <div class="ac-drop" id="ac-drop-cli"></div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Status</label>
@@ -268,9 +271,6 @@
     async function carregarClientes() {
       const { data } = await sb.from('clients').select('id,name').eq('company_id', APP.company.id).order('name');
       clientes = data || [];
-      const sel = document.getElementById('orc-cliente');
-      sel.innerHTML = '<option value="">Selecionar cliente...</option>' +
-        clientes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
     }
 
     async function carregarCatalogo() {
@@ -376,6 +376,7 @@
       tipoItemAtual = 'servico';
       document.getElementById('modal-titulo').textContent = 'Novo orçamento';
       document.getElementById('orc-id').value = '';
+      document.getElementById('orc-cliente-txt').value = '';
       document.getElementById('orc-cliente').value = '';
       document.getElementById('orc-status').value = 'rascunho';
       document.getElementById('orc-notes').value = '';
@@ -393,6 +394,7 @@
       tipoItemAtual = 'servico';
       document.getElementById('modal-titulo').textContent = `Editar orçamento #${orc.numero}`;
       document.getElementById('orc-id').value = orc.id;
+      document.getElementById('orc-cliente-txt').value = orc.clients?.name || '';
       document.getElementById('orc-cliente').value = orc.client_id || '';
       document.getElementById('orc-status').value = orc.status;
       document.getElementById('orc-notes').value = orc.notes || '';
@@ -412,23 +414,81 @@
     function fecharModal() {
       document.getElementById('modal-overlay').classList.remove('active');
       esconderAc();
+      esconderAcCliente();
     }
 
     document.getElementById('modal-overlay').addEventListener('click', e => {
       if (e.target === e.currentTarget) fecharModal();
     });
 
+    // ── Autocomplete cliente ──
+    let _acCliMatches = [];
+    let _acCliQuery = '';
+
+    function filtrarCliente(q) {
+      _acCliQuery = q.trim();
+      document.getElementById('orc-cliente').value = ''; // limpa seleção enquanto digita
+      const drop = document.getElementById('ac-drop-cli');
+      if (!_acCliQuery) { drop.style.display = 'none'; return; }
+      _acCliMatches = clientes.filter(c => c.name.toLowerCase().includes(_acCliQuery.toLowerCase())).slice(0, 8);
+      const existe = clientes.find(c => c.name.toLowerCase() === _acCliQuery.toLowerCase());
+      let html = _acCliMatches.map((c, i) =>
+        `<div class="ac-item" onmousedown="selecionarAcCliente(${i})">${esc(c.name)}</div>`
+      ).join('');
+      if (!existe) {
+        html += `<div class="ac-item" style="color:#60a5fa;border-top:1px solid var(--border)" onmousedown="criarClienteInline()">✚ Criar "${esc(_acCliQuery)}"</div>`;
+      }
+      if (!html) { drop.style.display = 'none'; return; }
+      drop.innerHTML = html;
+      drop.style.display = 'block';
+    }
+
+    function selecionarAcCliente(idx) {
+      const c = _acCliMatches[idx];
+      if (!c) return;
+      document.getElementById('orc-cliente-txt').value = c.name;
+      document.getElementById('orc-cliente').value = c.id;
+      esconderAcCliente();
+    }
+
+    function esconderAcCliente() {
+      document.getElementById('ac-drop-cli').style.display = 'none';
+    }
+
+    async function criarClienteInline() {
+      const nome = _acCliQuery.trim();
+      if (!nome) return;
+      const existe = clientes.find(c => c.name.toLowerCase() === nome.toLowerCase());
+      if (existe) {
+        document.getElementById('orc-cliente-txt').value = existe.name;
+        document.getElementById('orc-cliente').value = existe.id;
+        esconderAcCliente();
+        return;
+      }
+      const { data, error } = await sb.from('clients').insert({ company_id: APP.company.id, name: nome }).select('id,name').single();
+      if (error || !data) { alert('Erro ao criar cliente.'); return; }
+      clientes.push(data);
+      clientes.sort((a, b) => a.name.localeCompare(b.name));
+      document.getElementById('orc-cliente-txt').value = data.name;
+      document.getElementById('orc-cliente').value = data.id;
+      esconderAcCliente();
+    }
+
     // ── Items ──
     let acSugs = [];
+    let _acItemQuery = '';
 
     function filtrarAc(q) {
-      if (!q || q.length < 2) { esconderAc(); return; }
-      acSugs = catalogo.filter(c => c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+      _acItemQuery = q.trim();
+      if (!_acItemQuery || _acItemQuery.length < 2) { esconderAc(); return; }
+      acSugs = catalogo.filter(c => c.name.toLowerCase().includes(_acItemQuery.toLowerCase())).slice(0, 8);
       const div = document.getElementById('ac-drop');
-      if (!acSugs.length) { div.style.display = 'none'; return; }
-      div.innerHTML = acSugs.map((c, i) =>
+      let html = acSugs.map((c, i) =>
         `<div class="ac-item" onmousedown="selecionarAc(${i})">[${c.tipo === 'servico' ? 'S' : 'P'}] ${esc(c.name)} — ${fmtMoeda(c.price)}</div>`
       ).join('');
+      html += `<div class="ac-item" style="color:#60a5fa;border-top:1px solid var(--border)" onmousedown="criarItemInline('servico')">✚ Serviço "${esc(_acItemQuery)}"</div>`;
+      html += `<div class="ac-item" style="color:#4ade80" onmousedown="criarItemInline('produto')">✚ Peça "${esc(_acItemQuery)}"</div>`;
+      div.innerHTML = html;
       div.style.display = 'block';
     }
 
@@ -444,6 +504,20 @@
 
     function esconderAc() {
       document.getElementById('ac-drop').style.display = 'none';
+    }
+
+    async function criarItemInline(tipo) {
+      const nome = _acItemQuery.trim();
+      if (!nome) return;
+      const tabela = tipo === 'servico' ? 'services' : 'products';
+      const { data, error } = await sb.from(tabela).insert({ company_id: APP.company.id, name: nome, price: 0 }).select('id,name,unit,price').single();
+      if (error || !data) { alert('Erro ao criar item.'); return; }
+      catalogo.push({ ...data, tipo });
+      document.getElementById('item-desc').value = data.name;
+      document.getElementById('item-preco').value = '';
+      tipoItemAtual = tipo;
+      esconderAc();
+      document.getElementById('item-preco').focus();
     }
 
     function adicionarItem() {
