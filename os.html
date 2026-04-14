@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141727"></script>
-  <script src="js/auth.js?v=04141727"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141727">
+  <script src="js/config.js?v=04141730"></script>
+  <script src="js/auth.js?v=04141730"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141730">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -270,7 +270,7 @@
 
     async function carregarOs() {
       const { data } = await sb.from('ordens_servico')
-        .select('*, clients(name), orcamentos(numero)')
+        .select('*, is_demo, clients(name), orcamentos(numero)')
         .eq('company_id', APP.company.id)
         .order('numero', { ascending: false });
       todasOs = data || [];
@@ -295,8 +295,9 @@
         const nome   = o.clients?.name || '—';
         const origem = o.orcamentos ? `<span class="origem-tag">ORC #${o.orcamentos.numero}</span>` : '<span style="color:var(--text-dim);font-size:11px">Direta</span>';
         const data   = new Date(o.created_at).toLocaleDateString('pt-BR');
+        const demoTag = o.is_demo ? '<span style="font-size:10px;font-weight:800;color:#fbbf24;background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);padding:1px 5px;margin-left:5px">DEMO</span>' : '';
         return `<tr>
-          <td class="mono" style="color:var(--text-dim);font-size:12px">#${o.numero}</td>
+          <td class="mono" style="color:var(--text-dim);font-size:12px">#${o.numero}${demoTag}</td>
           <td style="font-weight:600;color:var(--text)">${esc(nome)}</td>
           <td>${origem}</td>
           <td><span class="badge badge-${o.status}">${labelStatus(o.status)}</span></td>

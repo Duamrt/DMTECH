@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04141727"></script>
-  <script src="js/auth.js?v=04141727"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141727">
+  <script src="js/config.js?v=04141730"></script>
+  <script src="js/auth.js?v=04141730"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141730">
   <style>
     /* Board */
     .board-outer {
@@ -781,10 +781,10 @@
       const resp  = o.responsavel ? `<div class="k-card-resp">👤 ${o.responsavel.name || o.responsavel.email}</div>` : '';
 
       return `
-        <div class="k-card" onclick="abrirPanel('${o.id}')">
+        <div class="k-card${o.is_demo ? ' k-card-demo' : ''}" onclick="abrirPanel('${o.id}')">
           <div class="k-card-num">
             <span>OS #${String(o.numero).padStart(3,'0')}</span>
-            ${tag}
+            ${tag}${o.is_demo ? '<span style="font-size:9px;font-weight:800;color:#fbbf24;background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);padding:1px 4px;margin-left:4px">DEMO</span>' : ''}
           </div>
           <div class="k-card-client">${o.clients?.name || '—'}</div>
           ${resp}
@@ -1541,7 +1541,7 @@
     async function carregarOS() {
       const { data, error } = await sb
         .from('ordens_servico')
-        .select('*, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
+        .select('*, is_demo, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
         .order('numero', { ascending: false });
       if (error) { console.error(error); return; }
       todasOS = data || [];

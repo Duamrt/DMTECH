@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141727"></script>
-  <script src="js/auth.js?v=04141727"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141727">
+  <script src="js/config.js?v=04141730"></script>
+  <script src="js/auth.js?v=04141730"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141730">
   <style>
     .banner-bv {
       display: none;
@@ -28,6 +28,44 @@
     .banner-bv-texto  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
     .banner-bv-fechar { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; flex-shrink: 0; line-height: 1; padding: 2px 4px; }
     .banner-bv-fechar:hover { color: var(--text); }
+    .banner-bv-btn {
+      margin-top: 10px;
+      padding: 7px 14px;
+      background: rgba(34,197,94,.15);
+      border: 1px solid rgba(34,197,94,.4);
+      color: #4ade80;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: opacity .12s;
+    }
+    .banner-bv-btn:hover { opacity: .8; }
+    /* Banner demo ativo */
+    .banner-demo {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(234,179,8,.06);
+      border: 1px solid rgba(234,179,8,.35);
+      margin-bottom: 20px;
+    }
+    .banner-demo.show { display: flex; }
+    .banner-demo-texto { flex: 1; font-size: 12px; color: #fbbf24; font-weight: 600; }
+    .banner-demo-sub   { font-weight: 400; color: var(--text-muted); margin-top: 2px; font-size: 11px; }
+    .banner-demo-btn {
+      padding: 6px 12px;
+      background: rgba(234,179,8,.12);
+      border: 1px solid rgba(234,179,8,.4);
+      color: #fbbf24;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .badge-demo { background: rgba(234,179,8,.15); color: #fbbf24; border: 1px solid rgba(234,179,8,.3); font-size: 10px; font-weight: 800; padding: 1px 5px; margin-left: 6px; vertical-align: middle; }
   </style>
 </head>
 <body>
@@ -102,8 +140,19 @@
           <div class="banner-bv-body">
             <div class="banner-bv-titulo" id="banner-bv-titulo">Bem-vindo!</div>
             <div class="banner-bv-texto">Seu ambiente está pronto e <strong>totalmente isolado</strong>. Nenhum dado de outros clientes é visível aqui — cada empresa acessa apenas os seus próprios registros.</div>
+            <button class="banner-bv-btn" id="btn-carregar-demo" onclick="carregarDemo()">Carregar dados de demonstração</button>
           </div>
           <button class="banner-bv-fechar" onclick="fecharBanner()" title="Fechar">✕</button>
+        </div>
+
+        <!-- Banner demo ativo -->
+        <div class="banner-demo" id="banner-demo">
+          <div>⚠</div>
+          <div style="flex:1">
+            <div class="banner-demo-texto">Você está visualizando dados de demonstração</div>
+            <div class="banner-demo-sub">Estes registros são fictícios e não representam operações reais. Remova antes de começar a usar de verdade.</div>
+          </div>
+          <button class="banner-demo-btn" onclick="limparDemo()">Remover dados demo</button>
         </div>
 
         <!-- KPIs -->
@@ -285,15 +334,18 @@
       const fatMes = (osConcluidas || []).reduce((a, o) => a + (o.total || 0), 0);
       document.getElementById('fat-mes').textContent = fmt(fatMes);
 
-      // Tabela OS Recentes
+      // Tabela OS Recentes — inclui is_demo para badge
+      const osRecentesComDemo = await sb.from('ordens_servico')
+        .select('id,numero,status,total,created_at,notes,is_demo,clients(name)')
+        .eq('company_id', cid).order('created_at', { ascending: false }).limit(5);
       const tbOs = document.getElementById('tabela-os');
-      if (osRecentes?.length) {
-        tbOs.innerHTML = osRecentes.map(o => {
-          const servico = o.notes || '—';
+      if (osRecentesComDemo.data?.length) {
+        tbOs.innerHTML = osRecentesComDemo.data.map(o => {
+          const demoTag = o.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
           return `<tr>
-            <td>#${o.numero}</td>
+            <td>#${o.numero}${demoTag}</td>
             <td>${o.clients?.name || '—'}</td>
-            <td>${servico}</td>
+            <td>${o.notes || '—'}</td>
             <td><span class="badge ${statusOsBadge(o.status)}">${statusOsLabel(o.status)}</span></td>
             <td>${fmtData(o.created_at)}</td>
           </tr>`;
@@ -303,14 +355,20 @@
       // Tabela Orçamentos em Aberto
       const tbOrc = document.getElementById('tabela-orc');
       if (orcRecentes?.length) {
-        tbOrc.innerHTML = orcRecentes.map(o => `<tr>
-          <td>#${o.numero}</td>
-          <td>${o.clients?.name || '—'}</td>
-          <td><span class="badge ${statusOrcBadge(o.status)}">${statusOrcLabel(o.status)}</span></td>
-          <td>${fmt(o.total)}</td>
-          <td>${fmtData(o.validade)}</td>
-        </tr>`).join('');
+        tbOrc.innerHTML = orcRecentes.map(o => {
+          const demoTag = o.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
+          return `<tr>
+            <td>#${o.numero}${demoTag}</td>
+            <td>${o.clients?.name || '—'}</td>
+            <td><span class="badge ${statusOrcBadge(o.status)}">${statusOrcLabel(o.status)}</span></td>
+            <td>${fmt(o.total)}</td>
+            <td>${fmtData(o.validade)}</td>
+          </tr>`;
+        }).join('');
       }
+
+      // Verificar se há dados demo ativos
+      await verificarDemo(cid);
 
       // Banner boas-vindas: mostra quando dashboard vazio e não foi dispensado
       const bannerKey = `dmtech-bv-${cid}`;
@@ -324,6 +382,94 @@
       const cid = APP.company?.id;
       if (cid) localStorage.setItem(`dmtech-bv-${cid}`, '1');
       document.getElementById('banner-bv').classList.remove('show');
+    }
+
+    async function verificarDemo(cid) {
+      const { data } = await sb.from('ordens_servico').select('id').eq('company_id', cid).eq('is_demo', true).limit(1);
+      if (data?.length) {
+        document.getElementById('banner-demo').classList.add('show');
+        document.getElementById('banner-bv').classList.remove('show');
+      }
+    }
+
+    async function carregarDemo() {
+      const btn = document.getElementById('btn-carregar-demo');
+      btn.disabled = true; btn.textContent = 'Carregando...';
+      const cid = APP.company?.id;
+
+      // Cliente demo
+      const { data: c1 } = await sb.from('clients').insert({
+        company_id: cid, name: 'João Silva (Demo)', phone: '(11) 99999-0001',
+        email: 'joao@demo.com', is_demo: true
+      }).select().single();
+
+      const { data: c2 } = await sb.from('clients').insert({
+        company_id: cid, name: 'Maria Souza (Demo)', phone: '(11) 99999-0002',
+        is_demo: true
+      }).select().single();
+
+      // Próximo número OS
+      const { data: maxOs } = await sb.from('ordens_servico').select('numero').eq('company_id', cid).order('numero', { ascending: false }).limit(1);
+      let numOs = maxOs?.length ? maxOs[0].numero + 1 : 1;
+
+      // OS 1 — em andamento
+      const { data: os1 } = await sb.from('ordens_servico').insert({
+        company_id: cid, client_id: c1?.id || null, numero: numOs++,
+        status: 'em_andamento', notes: 'Instalação de ar-condicionado split 12.000 BTUs', total: 850, is_demo: true
+      }).select().single();
+      if (os1) await sb.from('os_items').insert([
+        { os_id: os1.id, tipo: 'servico', descricao: 'Instalação ar-condicionado', quantidade: 1, preco_unit: 350, subtotal: 350 },
+        { os_id: os1.id, tipo: 'produto', descricao: 'Suporte externo + tubulação', quantidade: 1, preco_unit: 500, subtotal: 500 }
+      ]);
+
+      // OS 2 — pronta
+      const { data: os2 } = await sb.from('ordens_servico').insert({
+        company_id: cid, client_id: c2?.id || null, numero: numOs++,
+        status: 'pronta', notes: 'Manutenção preventiva e limpeza completa', total: 280, is_demo: true
+      }).select().single();
+      if (os2) await sb.from('os_items').insert([
+        { os_id: os2.id, tipo: 'servico', descricao: 'Manutenção preventiva', quantidade: 1, preco_unit: 180, subtotal: 180 },
+        { os_id: os2.id, tipo: 'produto', descricao: 'Gás R-410A (carga)', quantidade: 1, preco_unit: 100, subtotal: 100 }
+      ]);
+
+      // Orçamento demo
+      const { data: maxOrc } = await sb.from('orcamentos').select('numero').eq('company_id', cid).order('numero', { ascending: false }).limit(1);
+      const numOrc = maxOrc?.length ? maxOrc[0].numero + 1 : 1;
+      const validade = new Date(); validade.setDate(validade.getDate() + 15);
+      const { data: orc1 } = await sb.from('orcamentos').insert({
+        company_id: cid, client_id: c1?.id || null, numero: numOrc,
+        status: 'enviado', notes: 'Proposta para instalação de 3 splits', total: 2400,
+        validade: validade.toISOString().split('T')[0], is_demo: true
+      }).select().single();
+      if (orc1) await sb.from('orcamento_items').insert([
+        { orcamento_id: orc1.id, tipo: 'servico', descricao: 'Instalação (3 unidades)', quantidade: 3, preco_unit: 350, subtotal: 1050 },
+        { orcamento_id: orc1.id, tipo: 'produto', descricao: 'Split 12.000 BTU Inverter', quantidade: 3, preco_unit: 450, subtotal: 1350 }
+      ]);
+
+      dmToast('Dados de demonstração carregados!');
+      location.reload();
+    }
+
+    async function limparDemo() {
+      const cid = APP.company?.id;
+      dmConfirm('Remover todos os dados de demonstração?', async () => {
+        // Ordem: itens → os/orc/caixa → clientes
+        const { data: osDemo } = await sb.from('ordens_servico').select('id').eq('company_id', cid).eq('is_demo', true);
+        const { data: orcDemo } = await sb.from('orcamentos').select('id').eq('company_id', cid).eq('is_demo', true);
+
+        const osIds  = (osDemo  || []).map(r => r.id);
+        const orcIds = (orcDemo || []).map(r => r.id);
+
+        if (osIds.length)  await sb.from('os_items').delete().in('os_id', osIds);
+        if (orcIds.length) await sb.from('orcamento_items').delete().in('orcamento_id', orcIds);
+        if (osIds.length)  await sb.from('ordens_servico').delete().in('id', osIds);
+        if (orcIds.length) await sb.from('orcamentos').delete().in('id', orcIds);
+        await sb.from('caixa').delete().eq('company_id', cid).eq('is_demo', true);
+        await sb.from('clients').delete().eq('company_id', cid).eq('is_demo', true);
+
+        dmToast('Dados de demonstração removidos.');
+        location.reload();
+      }, 'Remover', true);
     }
   </script>
 </body>
