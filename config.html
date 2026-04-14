@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141600"></script>
-  <script src="js/auth.js?v=04141600"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141600">
+  <script src="js/config.js?v=04141509"></script>
+  <script src="js/auth.js?v=04141509"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141509">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -238,11 +238,21 @@
           <input class="form-input" type="tel" id="m-whatsapp" placeholder="(99) 99999-9999">
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:0">
+      <div class="form-group">
         <label class="form-label">Senha temporária *</label>
         <div class="input-wrap">
           <input class="form-input" type="password" id="m-senha" placeholder="Mínimo 6 caracteres">
           <button class="btn-eye" onclick="toggleSenha()" type="button" id="btn-eye">◉</button>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Salário base (R$)</label>
+          <input class="form-input" type="number" id="m-salario" placeholder="0,00" min="0" step="50">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Vale refeição / dia (R$)</label>
+          <input class="form-input" type="number" id="m-vr" placeholder="0,00" min="0" step="5">
         </div>
       </div>
       <div class="wa-block" id="wa-block">
@@ -970,7 +980,7 @@
     async function renderEquipe(ct) {
       ct.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:40px;text-align:center">Carregando...</div>';
       const { data, error } = await sb.from('profiles')
-        .select('id, name, email, whatsapp, role')
+        .select('id, name, email, whatsapp, role, salario_base, vale_refeicao')
         .eq('company_id', APP.company.id)
         .order('name');
       if (error || !data?.length) {
@@ -997,6 +1007,7 @@
             <div class="eq-info">
               <div class="eq-nome">${esc(primeiro)}</div>
               <div class="eq-sub">${esc(sub)}</div>
+              ${!isDono && (m.salario_base||m.vale_refeicao) ? `<div class="eq-sub" style="margin-top:2px;color:var(--text-dim)">Sal. R$${(m.salario_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} · VR R$${(m.vale_refeicao||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/dia</div>` : ''}
             </div>
             <span class="eq-papel ${isDono?'dono':''}">${isDono?'Dono':'Técnico'}</span>
             ${!isDono ? `<button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="removerMembro('${m.id}','${esc(primeiro)}')">Remover</button>` : ''}
@@ -1093,7 +1104,7 @@
     // MODAL NOVO TÉCNICO
     // ══════════════════════════════════════════
     function abrirModalMembro() {
-      ['m-nome','m-email','m-whatsapp','m-senha'].forEach(id => document.getElementById(id).value='');
+      ['m-nome','m-email','m-whatsapp','m-senha','m-salario','m-vr'].forEach(id => document.getElementById(id).value='');
       document.getElementById('wa-block').classList.remove('show');
       document.getElementById('modal-membro-actions').style.display = 'flex';
       document.getElementById('btn-criar-membro').disabled = false;
@@ -1132,6 +1143,12 @@
       if (!res.ok || data.error) {
         btn.disabled = false; btn.textContent = 'Criar acesso';
         dmToast('Erro: '+(data.error||'Falha ao criar.'), 'error'); return;
+      }
+      // salvar salário e VR se informados
+      const salario = parseFloat(document.getElementById('m-salario').value)||0;
+      const vr      = parseFloat(document.getElementById('m-vr').value)||0;
+      if ((salario || vr) && data.id) {
+        await sb.from('profiles').update({ salario_base: salario, vale_refeicao: vr }).eq('id', data.id);
       }
       const primeiro = nome.split(' ')[0];
       const appUrl = window.location.origin + '/login.html';
