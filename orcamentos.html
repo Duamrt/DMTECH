@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141347"></script>
-  <script src="js/auth.js?v=04141347"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141347">
+  <script src="js/config.js?v=04141348"></script>
+  <script src="js/auth.js?v=04141348"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04141348">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -70,6 +70,11 @@
     .tipo-p { background:rgba(34,197,94,.2); color:#4ade80; }
     .btn-remove { background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:16px; padding:0 4px; }
     .btn-remove:hover { color:var(--danger); }
+    .btn-mic { background:none; border:1px solid var(--border); color:var(--text-dim); padding:8px 12px; font-size:16px; cursor:pointer; transition:all .15s; flex-shrink:0; }
+    .btn-mic:hover { border-color:var(--accent); color:var(--accent); }
+    .btn-mic.gravando { border-color:#f87171; color:#f87171; animation:pulsar .8s ease-in-out infinite; }
+    #mic-status { font-size:11px; color:#f87171; font-weight:600; margin-left:6px; }
+    @keyframes pulsar { 0%,100%{opacity:1} 50%{opacity:.4} }
     .btn-approve { background:none; border:1px solid #4ade80; color:#4ade80; padding:5px 10px; font-size:11px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
     .btn-approve:hover { background:rgba(34,197,94,.15); }
     .btn-reprove { background:none; border:1px solid var(--danger); color:var(--danger); padding:5px 10px; font-size:11px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:all .12s; }
@@ -190,8 +195,11 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Observações</label>
-        <input class="form-input" type="text" id="orc-notes" placeholder="Descrição geral do serviço...">
+        <label class="form-label">Observações <span id="mic-status"></span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" type="text" id="orc-notes" placeholder="Descrição geral do serviço..." style="flex:1">
+          <button class="btn-mic" id="btn-mic" onclick="toggleVoice()" title="Gravar por voz">🎙</button>
+        </div>
       </div>
 
       <!-- Items -->
@@ -653,6 +661,41 @@
       await sb.from('orcamentos').delete().eq('id', id);
       fecharModal();
       await carregarOrc();
+    }
+
+    // ── Voz ──
+    let _recognition = null;
+    let _gravando = false;
+
+    function toggleVoice() {
+      if (_gravando) { _recognition?.stop(); return; }
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        alert('Reconhecimento de voz não disponível. Use Chrome ou Edge.');
+        return;
+      }
+      _recognition = new SpeechRec();
+      _recognition.lang = 'pt-BR';
+      _recognition.continuous = false;
+      _recognition.interimResults = false;
+
+      _recognition.onstart = () => {
+        _gravando = true;
+        document.getElementById('btn-mic').classList.add('gravando');
+        document.getElementById('mic-status').textContent = '● gravando...';
+      };
+      _recognition.onresult = (e) => {
+        const texto = e.results[0][0].transcript;
+        const campo = document.getElementById('orc-notes');
+        campo.value = campo.value ? campo.value + ' ' + texto : texto;
+      };
+      _recognition.onerror = () => {};
+      _recognition.onend = () => {
+        _gravando = false;
+        document.getElementById('btn-mic').classList.remove('gravando');
+        document.getElementById('mic-status').textContent = '';
+      };
+      _recognition.start();
     }
 
     // ── Utils ──
