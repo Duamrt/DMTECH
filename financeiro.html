@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151023"></script>
-  <script src="js/auth.js?v=04151023"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151023">
+  <script src="js/config.js?v=04151030"></script>
+  <script src="js/auth.js?v=04151030"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151030">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -57,14 +57,14 @@
     .actions-cell { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
 
     /* ── DRE ── */
-    .dre-hero { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
-    .dre-hero-card { background:var(--surface-2); border:1px solid var(--border); padding:16px; text-align:center; }
-    .dre-hero-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:6px; }
-    .dre-hero-val { font-size:20px; font-weight:800; font-family:'Fira Code',monospace; }
-    .dre-hero-pct { font-size:11px; color:var(--text-muted); margin-top:4px; }
+    .dre-hero { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
+    .dre-hero-card { background:var(--surface-2); border:1px solid var(--border); padding:12px 16px; text-align:center; }
+    .dre-hero-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:4px; }
+    .dre-hero-val { font-size:18px; font-weight:800; font-family:'Fira Code',monospace; }
+    .dre-hero-pct { font-size:11px; color:var(--text-muted); margin-top:3px; }
 
-    .dre-tree { background:var(--surface-2); border:1px solid var(--border); padding:4px 0; margin-bottom:16px; }
-    .dre-row { display:flex; justify-content:space-between; align-items:center; padding:9px 20px; transition:background .1s; }
+    .dre-tree { background:var(--surface-2); border:1px solid var(--border); padding:4px 0; margin-bottom:16px; max-height:calc(100vh - 280px); overflow-y:auto; }
+    .dre-row { display:flex; justify-content:space-between; align-items:center; padding:7px 16px; transition:background .1s; }
     .dre-row:hover { background:var(--surface-3); }
     .dre-row.dre-total { border-top:1px solid var(--border); background:var(--surface-3); }
     .dre-row.dre-result { border-top:2px solid var(--border); background:var(--surface-2); }
