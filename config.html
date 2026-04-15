@@ -976,6 +976,9 @@
         console.log('[save] isAdmin=', _isAdmin, 'companyId=', APP.company?.id, 'result=', JSON.stringify(dbResult));
 
         if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        // verificar se salvou de fato
+        const { data: coCheck } = await sb.rpc('admin_get_company', { p_company_id: APP.company.id });
+        console.log('[verify] comissao_padrao=', coCheck?.comissao_padrao, 'calc_params=', JSON.stringify(coCheck?.calc_params));
         APP.company.calc_params      = calc_params;
         APP.company.comissao_padrao  = comissao_padrao;
         APP.company.valor_hora       = valor_hora;
