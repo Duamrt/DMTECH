@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04150715"></script>
-  <script src="js/auth.js?v=04150715"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150715">
+  <script src="js/config.js?v=04150718"></script>
+  <script src="js/auth.js?v=04150718"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150718">
   <style>
     /* Board */
     .board-outer {
@@ -703,16 +703,14 @@
           <button class="btn-ai" id="btn-checklist" onclick="gerarIA('checklist')">
             <span>☑</span> Checklist
           </button>
-          <button class="btn-ai" id="btn-whatsapp" onclick="gerarIA('whatsapp')">
-            <span>✉</span> Msg WA
+          <button class="btn-ai" id="btn-whatsapp" onclick="abrirWA()" style="background:#25d366;border-color:#25d366;color:#fff">
+            <span>✉</span> WhatsApp
           </button>
         </div>
         <div class="ai-result" id="ai-result">
           <span id="ai-text"></span>
           <button class="ai-copy" onclick="copiarIA()">Copiar</button>
-          <a id="ai-wa-btn" class="ai-copy" style="display:none;text-decoration:none;text-align:center;background:#25d366;border-color:#25d366;color:#fff" target="_blank" rel="noopener">
-            ▶ Abrir no WhatsApp
-          </a>
+
         </div>
       </div>
 
@@ -1257,19 +1255,35 @@
       textEl.textContent = texto;
       result.classList.add('show');
 
-      const waBtn = document.getElementById('ai-wa-btn');
-      if (action === 'whatsapp') {
-        const phone = (osAtual.clients?.phone || '').replace(/\D/g, '');
-        const waNum = phone ? (phone.startsWith('55') ? phone : '55' + phone) : '';
-        if (waNum) {
-          waBtn.href = `https://wa.me/${waNum}?text=${encodeURIComponent(texto)}`;
-          waBtn.style.display = 'block';
-        } else {
-          waBtn.style.display = 'none';
-        }
+    }
+
+    function abrirWA() {
+      if (!osAtual) return;
+      const cliente = osAtual.clients?.name || 'cliente';
+      const numOS   = String(osAtual.numero || '').padStart(3, '0');
+      const empresa = APP.company?.name || '';
+      const tpl = APP.company?.mensagens?.conclusao;
+      let texto;
+      if (tpl) {
+        texto = tpl
+          .replace(/{cliente}/gi, cliente)
+          .replace(/{nome_cliente}/gi, cliente)
+          .replace(/{os}/gi, `#${numOS}`)
+          .replace(/{numero_os}/gi, `#${numOS}`)
+          .replace(/{empresa}/gi, empresa);
       } else {
-        waBtn.style.display = 'none';
+        texto = `Olá, ${cliente}!
+
+Passando para informar que o serviço referente à OS #${numOS} foi concluído com sucesso.
+
+Ficamos à disposição para qualquer dúvida.
+
+${empresa}`;
       }
+      const phone = (osAtual.clients?.phone || '').replace(/\D/g, '');
+      const waNum = phone ? (phone.startsWith('55') ? phone : '55' + phone) : '';
+      if (!waNum) { dmToast('Cliente sem telefone cadastrado.', 'info'); return; }
+      window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(texto)}`, '_blank');
     }
 
     // ── PDFs (pdfmake) ────────────────────────────────────────────────────────
