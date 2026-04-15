@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150514"></script>
-  <script src="js/auth.js?v=04150514"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150514">
+  <script src="js/config.js?v=04150518"></script>
+  <script src="js/auth.js?v=04150518"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150518">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -945,21 +945,24 @@
         const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||3;
         const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
 
-        let error;
-        // Em modo admin: usa RPC que bypassa RLS
-        if (isPlatformAdmin() && localStorage.getItem('dmtech-admin-company')) {
-          ({ error } = await sb.rpc('admin_update_company_config', {
+        let error, dbResult;
+        const _isAdmin = isPlatformAdmin() && !!localStorage.getItem('dmtech-admin-company');
+        console.log('[calc] isAdmin='+_isAdmin+' company='+APP.company.id);
+        if (_isAdmin) {
+          dbResult = await sb.rpc('admin_update_company_config', {
             p_company_id: APP.company.id,
             p_calc_params: calc_params,
             p_comissao_padrao: comissao_padrao,
             p_valor_hora: valor_hora,
             p_capacidade_diaria: capacidade_diaria
-          }));
+          });
         } else {
-          ({ error } = await sb.from('companies')
+          dbResult = await sb.from('companies')
             .update({ calc_params, comissao_padrao, valor_hora, capacidade_diaria })
-            .eq('id', APP.company.id));
+            .eq('id', APP.company.id);
         }
+        error = dbResult.error;
+        console.log('[calc] result:', JSON.stringify(dbResult));
 
         if (error) { dmToast('Erro: '+error.message, 'error'); return; }
         APP.company.calc_params      = calc_params;
