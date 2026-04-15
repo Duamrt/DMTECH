@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04150702"></script>
-  <script src="js/auth.js?v=04150702"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150702">
+  <script src="js/config.js?v=04150715"></script>
+  <script src="js/auth.js?v=04150715"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150715">
   <style>
     /* Board */
     .board-outer {
@@ -710,6 +710,9 @@
         <div class="ai-result" id="ai-result">
           <span id="ai-text"></span>
           <button class="ai-copy" onclick="copiarIA()">Copiar</button>
+          <a id="ai-wa-btn" class="ai-copy" style="display:none;text-decoration:none;text-align:center;background:#25d366;border-color:#25d366;color:#fff" target="_blank" rel="noopener">
+            ▶ Abrir no WhatsApp
+          </a>
         </div>
       </div>
 
@@ -1253,6 +1256,20 @@
 
       textEl.textContent = texto;
       result.classList.add('show');
+
+      const waBtn = document.getElementById('ai-wa-btn');
+      if (action === 'whatsapp') {
+        const phone = (osAtual.clients?.phone || '').replace(/\D/g, '');
+        const waNum = phone ? (phone.startsWith('55') ? phone : '55' + phone) : '';
+        if (waNum) {
+          waBtn.href = `https://wa.me/${waNum}?text=${encodeURIComponent(texto)}`;
+          waBtn.style.display = 'block';
+        } else {
+          waBtn.style.display = 'none';
+        }
+      } else {
+        waBtn.style.display = 'none';
+      }
     }
 
     // ── PDFs (pdfmake) ────────────────────────────────────────────────────────
