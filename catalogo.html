@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150508"></script>
-  <script src="js/auth.js?v=04150508"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150508">
+  <script src="js/config.js?v=04150510"></script>
+  <script src="js/auth.js?v=04150510"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150510">
   <style>
     /* Tabs */
     .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
@@ -283,10 +283,20 @@
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
-      // Técnicos precisam da permissão 'catalogo' para editar; bloqueados sem ela
+      // Técnicos precisam da permissão 'catalogo'; bloqueados sem ela
       if (APP.profile?.role === 'tecnico' && !APP.profile?.permissions?.catalogo) {
         document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:14px">Acesso ao Catálogo não habilitado.<br>Solicite ao administrador.</div>';
         return;
+      }
+      // Técnicos: esconder preço, botões de criar/importar e headers
+      if (APP.profile?.role === 'tecnico') {
+        document.querySelectorAll('.search-bar .btn-primary, .search-bar .btn-ghost').forEach(b => b.style.display = 'none');
+        // Ocultar th Preço nas tabelas
+        document.querySelectorAll('thead tr').forEach(tr => {
+          tr.querySelectorAll('th').forEach(th => {
+            if (th.textContent.trim() === 'Preço' || th.textContent.trim() === '') th.style.display = 'none';
+          });
+        });
       }
       document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
       document.getElementById('nome-empresa').textContent = APP.company?.name || '';
@@ -320,6 +330,7 @@
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
     function fmt(v) { return v != null ? 'R$ ' + Number(v).toFixed(2).replace('.',',') : '—'; }
+    const _isTecnico = () => APP.profile?.role === 'tecnico';
 
     /* ════════════════ SERVIÇOS ════════════════ */
     async function carregarServicos() {
@@ -333,14 +344,14 @@
     }
     function renderServicos(lista) {
       const tb = document.getElementById('tabela-servicos');
-      if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum serviço cadastrado.</td></tr>'; return; }
+      const tec = _isTecnico();
+      if (!lista.length) { tb.innerHTML = `<tr><td colspan="${tec?3:5}" class="empty-state">Nenhum serviço cadastrado.</td></tr>`; return; }
       tb.innerHTML = lista.map(s => `
-        <tr style="cursor:pointer" onclick="abrirModalServico(${JSON.stringify(s).replace(/"/g,'&quot;')})">
+        <tr ${tec ? '' : `style="cursor:pointer" onclick="abrirModalServico(${JSON.stringify(s).replace(/"/g,'&quot;')})"`}>
           <td style="color:var(--text);font-weight:600">${esc(s.name)}</td>
           <td class="mono">${esc(s.code)}</td>
           <td>${esc(s.unit)}</td>
-          <td style="color:var(--accent)">${fmt(s.price)}</td>
-          <td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>
+          ${tec ? '' : `<td style="color:var(--accent)">${fmt(s.price)}</td><td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>`}
         </tr>`).join('');
     }
 
@@ -422,16 +433,17 @@
     }
     function renderProdutos(lista) {
       const tb = document.getElementById('tabela-produtos');
-      if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum produto cadastrado.</td></tr>'; return; }
+      const tec = _isTecnico();
+      if (!lista.length) { tb.innerHTML = `<tr><td colspan="${tec?4:6}" class="empty-state">Nenhum produto cadastrado.</td></tr>`; return; }
       tb.innerHTML = lista.map(p => {
         const estoqueClass = p.stock_min > 0 && p.stock <= p.stock_min ? 'color:var(--danger)' : 'color:var(--text-muted)';
-        return `<tr style="cursor:pointer" onclick="abrirModalProduto(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+        return `<tr ${tec ? '' : `style="cursor:pointer" onclick="abrirModalProduto(${JSON.stringify(p).replace(/"/g,'&quot;')})"`}>
           <td style="color:var(--text);font-weight:600">${esc(p.name)}</td>
           <td class="mono">${esc(p.code)}</td>
           <td>${esc(p.group_name)}</td>
-          <td style="color:var(--accent)">${fmt(p.price)}</td>
+          ${tec ? '' : `<td style="color:var(--accent)">${fmt(p.price)}</td>`}
           <td style="${estoqueClass}">${p.stock != null ? Number(p.stock).toLocaleString('pt-BR') : '—'}</td>
-          <td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>
+          ${tec ? '' : `<td style="text-align:right;color:var(--accent);font-size:12px">Editar →</td>`}
         </tr>`;
       }).join('');
     }
