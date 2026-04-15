@@ -8,10 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script src="js/config.js?v=04151252"></script>
-  <script src="js/auth.js?v=04151252"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151252">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/config.js?v=04151256"></script>
+  <script src="js/auth.js?v=04151256"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151256">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -518,107 +520,189 @@
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    // ── PIX EMV ──
-    function _crc16(str) {
+    // ── PDF (pdfmake) — mesmo padrão das OS ──
+    let _logoB64 = null;
+
+    async function _carregarLogo() {
+      const url = APP.company?.logo_url;
+      if (!url || _logoB64) return;
+      return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth; c.height = img.naturalHeight;
+            c.getContext('2d').drawImage(img, 0, 0);
+            _logoB64 = c.toDataURL('image/png');
+          } catch(e) { _logoB64 = null; }
+          resolve();
+        };
+        img.onerror = () => { _logoB64 = null; resolve(); };
+        img.src = url;
+      });
+    }
+
+    function _pdfHeader() {
+      const emp = APP.company || {};
+      const infoLines = [];
+      if (emp.cnpj)     infoLines.push({ text: 'CNPJ: ' + emp.cnpj,     style: 'headerInfo' });
+      if (emp.whatsapp) infoLines.push({ text: 'Tel: '  + emp.whatsapp,  style: 'headerInfo' });
+      if (emp.email)    infoLines.push({ text: emp.email,                 style: 'headerInfo' });
+      if (emp.endereco) infoLines.push({ text: emp.endereco,              style: 'headerInfo' });
+      const leftStack = [];
+      if (_logoB64?.startsWith('data:image/')) leftStack.push({ image: _logoB64, width: 70, margin: [0,0,0,4] });
+      leftStack.push({ text: emp.name || 'Empresa', fontSize: 16, bold: true, color: '#1a1a1a' });
+      return [
+        {
+          columns: [
+            { stack: leftStack, width: '*' },
+            {
+              stack: [
+                { text: [{ text: 'DM', bold: true, color: '#f97316', fontSize: 11 }, { text: 'Tech', bold: true, color: '#666', fontSize: 11 }], alignment: 'right', margin: [0,0,0,6] },
+                ...infoLines
+              ],
+              alignment: 'right', width: 'auto'
+            }
+          ],
+          margin: [0,0,0,8]
+        },
+        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#f97316' }], margin: [0,0,0,12] }
+      ];
+    }
+
+    function _pixEMV(chave, nome, valor) {
+      const tlv  = (id, v) => id + String(v.length).padStart(2,'0') + v;
+      const norm = s => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const mai  = tlv('00','br.gov.bcb.pix') + tlv('01', chave);
+      let emv    = tlv('00','01') + tlv('26',mai) + tlv('52','0000') + tlv('53','986')
+                 + tlv('54', valor.toFixed(2)) + tlv('58','BR')
+                 + tlv('59', norm(nome).substring(0,25))
+                 + tlv('60', 'BRASIL')
+                 + tlv('62', tlv('05','***')) + '6304';
       let crc = 0xFFFF;
-      for (let i = 0; i < str.length; i++) {
-        crc ^= str.charCodeAt(i) << 8;
-        for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+      for (let i = 0; i < emv.length; i++) {
+        crc ^= emv.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? (crc<<1)^0x1021 : crc<<1, crc &= 0xFFFF;
       }
-      return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4,'0');
-    }
-    function _tlv(id, value) { return id + String(value.length).padStart(2,'0') + value; }
-    function _pixPayload(chave, nome, cidade, valor) {
-      const gui = _tlv('00','BR.GOV.BCB.PIX') + _tlv('01', chave);
-      const addl = _tlv('62', _tlv('05','***'));
-      let p = _tlv('00','01') +
-              _tlv('26', gui) +
-              _tlv('52','0000') +
-              _tlv('53','986') +
-              _tlv('54', valor.toFixed(2)) +
-              _tlv('58','BR') +
-              _tlv('59', nome.substring(0,25)) +
-              _tlv('60', cidade.substring(0,15)) +
-              addl + '6304';
-      return p + _crc16(p);
+      return emv + crc.toString(16).toUpperCase().padStart(4,'0');
     }
 
-    // ── Imprimir Folha ──
+    function _qrBase64(emv) {
+      return new Promise(resolve => {
+        try {
+          const div = document.createElement('div');
+          div.style.cssText = 'position:absolute;left:-9999px';
+          document.body.appendChild(div);
+          new QRCode(div, { text: emv, width: 120, height: 120, correctLevel: QRCode.CorrectLevel.M });
+          setTimeout(() => {
+            const el = div.querySelector('img') || div.querySelector('canvas');
+            let src = null;
+            if (el?.tagName === 'IMG')    src = el.src;
+            else if (el?.tagName === 'CANVAS') src = el.toDataURL();
+            document.body.removeChild(div);
+            resolve(src);
+          }, 200);
+        } catch(e) { resolve(null); }
+      });
+    }
+
     async function imprimirFolha() {
-      if (!_dados?.folha?.length) { dmToast('Carregue a folha primeiro.','error'); return; }
-      const empresa  = APP.company?.name || '';
-      const periodo  = `${MESES[MES-1]} ${ANO}`;
+      if (!_dados?.folha?.length) { dmToast('Carregue a folha primeiro.', 'error'); return; }
+      dmToast('Gerando PDF...');
+      await _carregarLogo();
 
-      // Gerar QR codes como dataURL para cada funcionário com PIX
+      const periodo = `${MESES[MES-1]} ${ANO}`;
+      const dias    = parseInt(document.getElementById('dias-uteis').value) || 22;
+
+      // Gerar QR codes base64 para quem tem PIX e líquido > 0
       const qrMap = {};
       for (const f of _dados.folha) {
         if (!f.pix_key || f.liquido <= 0) continue;
-        try {
-          const payload = _pixPayload(f.pix_key, (f.name||'').toUpperCase(), 'BRASIL', f.liquido);
-          qrMap[f.id] = await QRCode.toDataURL(payload, { width:160, margin:1, color:{dark:'#000',light:'#fff'} });
-        } catch(_) {}
+        const emv = _pixEMV(f.pix_key, f.name || '', f.liquido);
+        qrMap[f.id] = await _qrBase64(emv);
       }
 
-      const slips = _dados.folha.map(f => {
-        const qrImg = qrMap[f.id] ? `<div class="qr-wrap"><img src="${qrMap[f.id]}" width="120" height="120"><div class="qr-label">PIX: ${esc(f.pix_key)}</div></div>` : '';
-        const valesLinhas = f.meusVales.map(v => {
+      const fmt = v => (v||0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+      const content = [
+        ..._pdfHeader(),
+        { text: 'Folha de Pagamento', fontSize: 16, bold: true, alignment: 'center', color: '#1a1a1a', margin: [0,0,0,4] },
+        { text: periodo + ' · ' + _dados.folha.length + ' pessoa(s)', fontSize: 10, alignment: 'center', color: '#666', margin: [0,0,0,18] },
+      ];
+
+      for (const f of _dados.folha) {
+        const cargo = f.role === 'dono' ? 'Dono' : 'Técnico';
+        const linhas = [
+          [{ text: 'HOLERITE', style: 'sectionTitle', colSpan: 2 }, {}],
+          ['Salário base',     { text: fmt(f.salario),   alignment:'right' }],
+          [`Vale Refeição (${dias} dias − ${f.faltas} falta${f.faltas!==1?'s':''})`,
+                              { text: fmt(f.vr),         alignment:'right', color:'#1565c0' }],
+        ];
+        if (f.extra > 0)     linhas.push(['Gratificação / Extra',  { text: fmt(f.extra),    alignment:'right', color:'#2e7d32' }]);
+        if (f.comissao > 0)  linhas.push([`Comissão (${f.pct}%)`,  { text: fmt(f.comissao), alignment:'right', color:'#2e7d32' }]);
+        if (f.descFalta > 0) linhas.push([{ text:`(−) Desc. Falta (${f.faltas} dia${f.faltas!==1?'s':''})`, color:'#c62828' },
+                                          { text:'-'+fmt(f.descFalta), alignment:'right', color:'#c62828' }]);
+        for (const v of f.meusVales) {
           const dt = new Date(v.created_at);
           const d  = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
-          return `<tr class="deduct"><td>(−) Vale ${d} — ${esc(v.descricao||'Vale')}</td><td>-${fmtM(v.valor)}</td></tr>`;
-        }).join('');
-        return `
-        <div class="slip">
-          <div class="slip-header">
-            <div>
-              <div class="slip-nome">${esc(f.name||'—')}</div>
-              <div class="slip-cargo">${f.role==='dono'?'Dono':'Técnico'} · ${f.minhasOS.qtd} OS em ${periodo}</div>
-            </div>
-            ${qrImg}
-          </div>
-          <table class="slip-table">
-            <tr><td>Salário base</td><td>${fmtM(f.salario)}</td></tr>
-            <tr><td>Vale Refeição (${parseInt(document.getElementById('dias-uteis').value)||22} dias − ${f.faltas} falta${f.faltas!==1?'s':''})</td><td>${fmtM(f.vr)}</td></tr>
-            ${f.extra>0?`<tr><td>Gratificação / Extra</td><td>${fmtM(f.extra)}</td></tr>`:''}
-            ${f.comissao>0?`<tr><td>Comissão (${f.pct}%)</td><td>${fmtM(f.comissao)}</td></tr>`:''}
-            ${f.descFalta>0?`<tr class="deduct"><td>(−) Desc. Falta (${f.faltas} dia${f.faltas!==1?'s':''})</td><td>-${fmtM(f.descFalta)}</td></tr>`:''}
-            ${valesLinhas}
-            <tr class="total-row"><td>LÍQUIDO A RECEBER</td><td>${fmtM(f.liquido)}</td></tr>
-          </table>
-          ${f.pix_key?`<div class="assinatura"><span>Assinatura: ___________________________________</span><span>Data: ___/___/______</span></div>`:''}
-        </div>`;
-      }).join('');
+          linhas.push([{ text:`(−) Vale ${d} — ${v.descricao||'Vale'}`, color:'#c62828' },
+                       { text:'-'+fmt(v.valor), alignment:'right', color:'#c62828' }]);
+        }
+        linhas.push([
+          { text: 'LÍQUIDO A RECEBER', bold: true, fontSize: 12 },
+          { text: fmt(f.liquido), bold: true, fontSize: 12, alignment: 'right', color: '#2e7d32' }
+        ]);
 
-      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-        <title>Folha ${periodo} — ${esc(empresa)}</title>
-        <style>
-          * { box-sizing:border-box; margin:0; padding:0; }
-          body { font-family:Arial,sans-serif; font-size:12px; color:#000; background:#fff; padding:20px; }
-          h1 { font-size:16px; margin-bottom:4px; }
-          .periodo { font-size:12px; color:#555; margin-bottom:20px; }
-          .slip { border:1px solid #ccc; padding:14px 16px; margin-bottom:16px; page-break-inside:avoid; }
-          .slip-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
-          .slip-nome { font-size:14px; font-weight:700; text-transform:uppercase; }
-          .slip-cargo { font-size:10px; color:#666; margin-top:2px; }
-          .qr-wrap { text-align:center; }
-          .qr-label { font-size:9px; color:#444; margin-top:3px; max-width:130px; word-break:break-all; }
-          .slip-table { width:100%; border-collapse:collapse; margin-top:6px; }
-          .slip-table td { padding:4px 6px; border-bottom:1px solid #eee; }
-          .slip-table td:last-child { text-align:right; font-weight:600; min-width:100px; }
-          .deduct td { color:#c00; }
-          .total-row td { font-weight:800; font-size:13px; border-top:2px solid #000; border-bottom:none; padding-top:6px; }
-          .assinatura { display:flex; justify-content:space-between; margin-top:12px; font-size:10px; color:#555; }
-          @media print { body { padding:10px; } .slip { margin-bottom:10px; } }
-        </style>
-      </head><body>
-        <h1>Folha de Pagamento — ${esc(empresa)}</h1>
-        <div class="periodo">${periodo} · ${_dados.folha.length} pessoa(s) · Total líquido: ${fmtM(_dados.totalLiquido)}</div>
-        ${slips}
-        <script>window.onload=()=>window.print();<\/script>
-      </body></html>`;
+        const tabelaSlip = {
+          table: { widths: ['*', 110], body: linhas },
+          layout: {
+            hLineWidth: (i, n) => (i === 0 || i === 1 || i === n.table.body.length) ? 0.5 : 0.3,
+            vLineWidth: () => 0.5, hLineColor: () => '#cccccc', vLineColor: () => '#cccccc',
+            paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 4, paddingBottom: () => 4
+          }
+        };
 
-      const w = window.open('','_blank');
-      w.document.write(html);
-      w.document.close();
+        const qrCol = qrMap[f.id]
+          ? { stack: [
+              { image: qrMap[f.id], width: 100, alignment: 'center' },
+              { text: 'PIX: ' + f.pix_key, fontSize: 7, color: '#555', alignment: 'center', margin: [0,3,0,0] }
+            ], width: 120, margin: [8,0,0,0] }
+          : { text: '', width: 0 };
+
+        const assinaturas = {
+          columns: [
+            { stack: [
+                { canvas: [{ type:'line', x1:0, y1:0, x2:180, y2:0, lineWidth:0.5, lineColor:'#999' }] },
+                { text: 'Assinatura do funcionário', fontSize: 8, color: '#999', alignment: 'center', margin: [0,3,0,0] }
+              ], width: 200 },
+            { text: '', width: '*' },
+            { stack: [
+                { canvas: [{ type:'line', x1:0, y1:0, x2:180, y2:0, lineWidth:0.5, lineColor:'#999' }] },
+                { text: 'Assinatura da empresa', fontSize: 8, color: '#999', alignment: 'center', margin: [0,3,0,0] }
+              ], width: 200 }
+          ],
+          margin: [0,10,0,0]
+        };
+
+        content.push(
+          { text: (f.name || '—').toUpperCase(), fontSize: 13, bold: true, color: '#1a1a1a', margin: [0,0,0,2] },
+          { text: cargo + ' · ' + f.minhasOS.qtd + ' OS em ' + periodo, fontSize: 9, color: '#666', margin: [0,0,0,8] },
+          { columns: [{ stack: [tabelaSlip], width: '*' }, qrCol], margin: [0,0,0,6] },
+          assinaturas,
+          { canvas: [{ type:'line', x1:0, y1:0, x2:515, y2:0, lineWidth:0.5, lineColor:'#ddd' }], margin: [0,14,0,14] }
+        );
+      }
+
+      content.push({ text: 'Powered by DMTech', alignment: 'center', fontSize: 8, color: '#999', margin: [0,4,0,0] });
+
+      pdfMake.createPdf({
+        pageSize: 'A4', pageMargins: [40,30,40,40],
+        content,
+        styles: {
+          headerInfo:   { fontSize: 9,  color: '#666' },
+          sectionTitle: { fontSize: 10, bold: true, color: '#1a1a1a', fillColor: '#f0f0f0' },
+        }
+      }).open();
     }
   </script>
   <script>
