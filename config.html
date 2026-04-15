@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150532"></script>
-  <script src="js/auth.js?v=04150532"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150532">
+  <script src="js/config.js?v=04150540"></script>
+  <script src="js/auth.js?v=04150540"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150540">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -952,6 +952,7 @@
         const valor_hora      = parseFloat(document.getElementById('calc-cobrado')?.value)||120;
         const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||3;
         const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
+        console.log('[save]', JSON.stringify({ custo_fixo, imposto_pct, taxa_cartao_pct, comissao_padrao, valor_hora, capacidade_diaria }));
 
         let error, dbResult;
         const _isAdmin = isPlatformAdmin() && !!localStorage.getItem('dmtech-admin-company');
