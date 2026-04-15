@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151301"></script>
-  <script src="js/auth.js?v=04151301"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151301">
+  <script src="js/config.js?v=04151304"></script>
+  <script src="js/auth.js?v=04151304"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151304">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -1311,16 +1311,22 @@
       if (!nome) { dmToast('Nome obrigatório.','error'); return; }
       const btn = document.getElementById('btn-salvar-edicao');
       btn.disabled = true; btn.textContent = 'Salvando...';
-      const { error } = await sb.rpc('update_member_profile', {
-        p_profile_id:    _editingMembro.id,
-        p_name:          nome,
-        p_whatsapp:      document.getElementById('em-whatsapp').value.trim(),
-        p_salario_base:  parseFloat(document.getElementById('em-salario').value)||0,
-        p_vale_refeicao: parseFloat(document.getElementById('em-vr').value)||0,
-        p_pix_key:       document.getElementById('em-pixkey').value.trim() || null
-      });
+      const pixKey = document.getElementById('em-pixkey').value.trim() || null;
+      const [{ error }, { error: errPix }] = await Promise.all([
+        sb.rpc('update_member_profile', {
+          p_profile_id:    _editingMembro.id,
+          p_name:          nome,
+          p_whatsapp:      document.getElementById('em-whatsapp').value.trim(),
+          p_salario_base:  parseFloat(document.getElementById('em-salario').value)||0,
+          p_vale_refeicao: parseFloat(document.getElementById('em-vr').value)||0
+        }),
+        sb.rpc('update_member_pix_key', {
+          p_profile_id: _editingMembro.id,
+          p_pix_key:    pixKey
+        })
+      ]);
       btn.disabled = false; btn.textContent = 'Salvar';
-      if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      if (error || errPix) { dmToast('Erro: '+(error||errPix).message,'error'); return; }
       dmToast('Membro atualizado!');
       fecharEditarMembro();
       renderEquipe(document.getElementById('cfg-content'));
