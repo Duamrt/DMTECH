@@ -47,7 +47,7 @@ async function requireAuth(redirectTo = 'login.html') {
   if (isPlatformAdmin()) {
     const adminCoId = localStorage.getItem('dmtech-admin-company');
     if (adminCoId) {
-      const { data: co } = await sb.from('companies').select('*').eq('id', adminCoId).single();
+      const { data: co } = await sb.rpc('admin_get_company', { p_company_id: adminCoId });
       if (co) {
         APP.company = co;
         _mostrarBarraAdmin(co.name);
