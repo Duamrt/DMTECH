@@ -850,9 +850,9 @@
             <div class="cfg-field"><div class="cfg-label">Valor hora cobrado (R$)</div><input class="cfg-input" id="calc-cobrado" type="number" value="${c.valor_hora||120}" min="0" step="5" oninput="calcularCusto()"></div>
           </div>
           <div class="cfg-row-3">
-            <div class="cfg-field"><div class="cfg-label">Comissão técnicos (%)</div><input class="cfg-input" id="calc-comissao" type="number" value="${c.comissao_padrao||5}" min="0" max="30" oninput="calcularCusto()"></div>
-            <div class="cfg-field"><div class="cfg-label">Impostos (%)</div><input class="cfg-input" id="calc-imposto" type="number" value="${(c.calc_params||{}).imposto_pct||6}" min="0" max="30" step="0.5" oninput="calcularCusto()"></div>
-            <div class="cfg-field"><div class="cfg-label">Taxa média cartão (%)</div><input class="cfg-input" id="calc-taxa" type="number" value="${(c.calc_params||{}).taxa_cartao_pct||3}" min="0" max="15" step="0.5" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Comissão técnicos (%)</div><input class="cfg-input" id="calc-comissao" type="number" value="${c.comissao_padrao??0}" min="0" max="30" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Impostos (%)</div><input class="cfg-input" id="calc-imposto" type="number" value="${(c.calc_params||{}).imposto_pct??0}" min="0" max="30" step="0.5" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Taxa média cartão (%)</div><input class="cfg-input" id="calc-taxa" type="number" value="${(c.calc_params||{}).taxa_cartao_pct??0}" min="0" max="15" step="0.5" oninput="calcularCusto()"></div>
           </div>
           <button class="cfg-btn cfg-btn-sm" style="margin-top:4px" onclick="salvarParamsCalc()">Salvar parâmetros</button>
         </div>
@@ -884,9 +884,9 @@
       const fixos   = parseFloat(document.getElementById('calc-fixos')?.value)||0;
       const vagas   = parseInt(document.getElementById('calc-vagas')?.value)||3;
       const cobrado = parseFloat(document.getElementById('calc-cobrado')?.value)||120;
-      const pctCom  = parseFloat(document.getElementById('calc-comissao')?.value)||5;
-      const pctImp  = parseFloat(document.getElementById('calc-imposto')?.value)||6;
-      const pctTaxa = parseFloat(document.getElementById('calc-taxa')?.value)||3;
+      const pctCom  = parseFloat(document.getElementById('calc-comissao')?.value)||0;
+      const pctImp  = parseFloat(document.getElementById('calc-imposto')?.value)||0;
+      const pctTaxa = parseFloat(document.getElementById('calc-taxa')?.value)||0;
 
       const custoFixo = salarios + vr + fixos;
       const horasFat  = vagas * horasDia * diasMes * 0.75;
