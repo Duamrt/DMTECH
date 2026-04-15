@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150857"></script>
-  <script src="js/auth.js?v=04150857"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150857">
+  <script src="js/config.js?v=04151023"></script>
+  <script src="js/auth.js?v=04151023"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151023">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -400,6 +400,9 @@
       (prods || []).forEach(p => {
         if (p.cost > 0) produtosCusto[p.name.toLowerCase()] = p.cost;
       });
+      // dados frescos — libera re-fetch do DRE/Lucro
+      dreCarregando = false;
+      lucroCarregando = false;
       renderTudo();
     }
 
@@ -463,8 +466,8 @@
       }
       if (tabAtiva === 'receitas') renderTabelaTipo(entradas, 'tabela-receitas', 'entrada');
       if (tabAtiva === 'despesas') renderTabelaTipo(saidas, 'tabela-despesas', 'saida');
-      if (tabAtiva === 'dre')     { dreCarregando = false; carregarDRE(); }
-      if (tabAtiva === 'lucro')   { lucroCarregando = false; carregarLucro(); }
+      if (tabAtiva === 'dre')   carregarDRE();
+      if (tabAtiva === 'lucro') carregarLucro();
     }
 
     /* ── Tabela Resumo ── */
@@ -516,6 +519,8 @@
 
     /* ─────────────── DRE ─────────────── */
     let dreCarregando = false;
+    let dreReqId = 0;
+    let _dreUltimoPeriodo = null;
 
     function _calcDataInicio() {
       const agora = new Date();
@@ -529,6 +534,8 @@
     async function carregarDRE() {
       if (dreCarregando) return;
       dreCarregando = true;
+      const reqId = ++dreReqId;
+      _dreUltimoPeriodo = periodoAtivo;
       document.getElementById('dre-tree').innerHTML =
         '<div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Carregando...</div>';
 
@@ -655,21 +662,30 @@
           ['dre-fat','dre-margem-bruta','dre-res'].forEach(id => document.getElementById(id).textContent = fmtMoeda(0));
         }
 
+        if (reqId !== dreReqId) return;
         document.getElementById('dre-tree').innerHTML = html;
       } catch(e) {
+        if (reqId !== dreReqId) return;
         document.getElementById('dre-tree').innerHTML =
           `<div style="text-align:center;padding:32px;color:#f87171;font-size:13px">Erro: ${esc(e.message)}</div>`;
+      } finally {
+        if (reqId === dreReqId) {
+          dreCarregando = false;
+          if (periodoAtivo !== _dreUltimoPeriodo) carregarDRE();
+        }
       }
-
-      dreCarregando = false;
     }
 
     /* ─────────────── LUCRO PEÇAS ─────────────── */
     let lucroCarregando = false;
+    let lucroReqId = 0;
+    let _lucroUltimoPeriodo = null;
 
     async function carregarLucro() {
       if (lucroCarregando) return;
       lucroCarregando = true;
+      const reqId = ++lucroReqId;
+      _lucroUltimoPeriodo = periodoAtivo;
       document.getElementById('tabela-lucro').innerHTML =
         '<tr><td colspan="6" class="empty-state">Carregando itens das OS...</td></tr>';
 
@@ -681,13 +697,14 @@
         const { data: oss } = await qOS;
         const osIds = (oss||[]).map(o => o.id);
 
+        if (reqId !== lucroReqId) return;
+
         if (!osIds.length) {
           document.getElementById('tabela-lucro').innerHTML =
             '<tr><td colspan="6" class="empty-state">Nenhuma OS no período.</td></tr>';
           ['lp-vendido','lp-custo','lp-lucro'].forEach(id => document.getElementById(id).textContent = fmtMoeda(0));
           document.getElementById('lp-margem').textContent = 'margem: 0%';
           document.getElementById('lp-qtd-os').textContent = '0 OS no período';
-          lucroCarregando = false;
           return;
         }
 
@@ -697,14 +714,20 @@
           .in('os_id', osIds)
           .eq('tipo', 'produto');
 
+        if (reqId !== lucroReqId) return;
+
         document.getElementById('lp-qtd-os').textContent = `${osIds.length} OS no período`;
         renderLucroPecas(itens || []);
       } catch(e) {
+        if (reqId !== lucroReqId) return;
         document.getElementById('tabela-lucro').innerHTML =
           `<tr><td colspan="6" class="empty-state">Erro: ${esc(e.message)}</td></tr>`;
+      } finally {
+        if (reqId === lucroReqId) {
+          lucroCarregando = false;
+          if (periodoAtivo !== _lucroUltimoPeriodo) carregarLucro();
+        }
       }
-
-      lucroCarregando = false;
     }
 
     function renderLucroPecas(itens) {
