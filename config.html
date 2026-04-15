@@ -972,6 +972,7 @@
           });
         }
         error = dbResult.error;
+        console.log('[save] isAdmin=', _isAdmin, 'companyId=', APP.company?.id, 'result=', JSON.stringify(dbResult));
 
         if (error) { dmToast('Erro: '+error.message, 'error'); return; }
         APP.company.calc_params      = calc_params;
