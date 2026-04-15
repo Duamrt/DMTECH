@@ -943,15 +943,15 @@
     }
 
     async function salvarParamsCalc() {
-      console.log('[calc-save] chamado');
       if (_busy.params) return; _busy.params = true;
       try {
-        const custo_fixo      = parseFloat(document.getElementById('calc-fixos')?.value)||0;
-        const imposto_pct     = parseFloat(document.getElementById('calc-imposto')?.value)||6;
-        const taxa_cartao_pct = parseFloat(document.getElementById('calc-taxa')?.value)||3;
-        const comissao_padrao = parseFloat(document.getElementById('calc-comissao')?.value)||5;
-        const valor_hora      = parseFloat(document.getElementById('calc-cobrado')?.value)||120;
-        const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||3;
+        const _n = (id, def) => { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? def : v; };
+        const custo_fixo        = _n('calc-fixos', 0);
+        const imposto_pct       = _n('calc-imposto', 0);
+        const taxa_cartao_pct   = _n('calc-taxa', 0);
+        const comissao_padrao   = _n('calc-comissao', 0);
+        const valor_hora        = _n('calc-cobrado', 120);
+        const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||1;
         const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
 
         let error, dbResult;
@@ -973,12 +973,7 @@
           });
         }
         error = dbResult.error;
-        console.log('[save] isAdmin=', _isAdmin, 'companyId=', APP.company?.id, 'result=', JSON.stringify(dbResult));
-
         if (error) { dmToast('Erro: '+error.message, 'error'); return; }
-        // verificar se salvou de fato
-        const { data: coCheck } = await sb.rpc('admin_get_company', { p_company_id: APP.company.id });
-        console.log('[verify] comissao_padrao=', coCheck?.comissao_padrao, 'calc_params=', JSON.stringify(coCheck?.calc_params));
         APP.company.calc_params      = calc_params;
         APP.company.comissao_padrao  = comissao_padrao;
         APP.company.valor_hora       = valor_hora;
