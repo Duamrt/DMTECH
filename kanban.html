@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04150659"></script>
-  <script src="js/auth.js?v=04150659"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150659">
+  <script src="js/config.js?v=04150702"></script>
+  <script src="js/auth.js?v=04150702"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150702">
   <style>
     /* Board */
     .board-outer {
@@ -1677,6 +1677,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
     }
   </script>
 </body>
