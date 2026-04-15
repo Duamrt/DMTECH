@@ -43,6 +43,18 @@ async function requireAuth(redirectTo = 'login.html') {
     return false;
   }
 
+  // Admin acessando outra empresa
+  if (isPlatformAdmin()) {
+    const adminCoId = localStorage.getItem('dmtech-admin-company');
+    if (adminCoId) {
+      const { data: co } = await sb.from('companies').select('*').eq('id', adminCoId).single();
+      if (co) {
+        APP.company = co;
+        _mostrarBarraAdmin(co.name);
+      }
+    }
+  }
+
   // Verificar plano (exceto páginas de acesso livre e admin)
   const page = window.location.pathname.split('/').pop() || 'index.html';
   const paginasExentas = ['upgrade.html', 'admin.html', 'login.html', 'signup.html', 'landing.html'];
@@ -51,6 +63,22 @@ async function requireAuth(redirectTo = 'login.html') {
   }
 
   return true;
+}
+
+function _mostrarBarraAdmin(nomeEmpresa) {
+  if (document.getElementById('dm-admin-bar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'dm-admin-bar';
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9997;background:#f97316;color:#fff;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;gap:12px';
+  bar.innerHTML = `<span>&#9650; ADMIN — visualizando: <strong>${String(nomeEmpresa ?? '').replace(/</g,'&lt;')}</strong></span><button onclick="sairModoAdmin()" style="background:rgba(0,0,0,.25);border:none;color:#fff;font-size:11px;font-weight:700;font-family:Manrope,sans-serif;padding:4px 12px;cursor:pointer">&#8592; Voltar ao Admin</button>`;
+  document.body.prepend(bar);
+  // empurra o conteúdo pra baixo
+  document.body.style.paddingTop = (parseInt(document.body.style.paddingTop) || 0) + 32 + 'px';
+}
+
+function sairModoAdmin() {
+  localStorage.removeItem('dmtech-admin-company');
+  window.location.href = 'admin.html';
 }
 
 function checkPlan() {

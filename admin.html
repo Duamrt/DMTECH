@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04141958"></script>
-  <script src="js/auth.js?v=04141958"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04141958">
+  <script src="js/config.js?v=04150453"></script>
+  <script src="js/auth.js?v=04150453"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150453">
   <style>
     .adm-layout { display: flex; min-height: 100vh; }
     .adm-sidebar {
@@ -311,13 +311,14 @@
             <td>${trialInfo(e.trial_ends_at, e.plan)}</td>
             <td style="font-family:'Fira Code',monospace">${e.os_count}</td>
             <td style="font-family:'Fira Code',monospace">${e.client_count}</td>
-            <td>
+            <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <select class="adm-select-plan" onchange="trocarPlano('${e.id}', this.value, this)" data-original="${e.plan}">
                 <option value="trial"        ${e.plan==='trial'?'selected':''}>Trial</option>
                 <option value="profissional" ${e.plan==='profissional'?'selected':''}>Profissional</option>
                 <option value="empresarial"  ${e.plan==='empresarial'?'selected':''}>Empresarial</option>
                 <option value="expirado"     ${e.plan==='expirado'?'selected':''}>Expirado</option>
               </select>
+              <button class="btn-adm primary" onclick="acessarEmpresa('${e.id}')">Acessar &#8594;</button>
             </td>
           </tr>
         `).join('');
@@ -420,6 +421,11 @@
           </tbody>
         </table>
       `;
+    }
+
+    function acessarEmpresa(companyId) {
+      localStorage.setItem('dmtech-admin-company', companyId);
+      window.location.href = 'dashboard.html';
     }
 
     async function confirmarUpgrade(requestId, companyId, plano) {
