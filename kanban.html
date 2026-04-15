@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04151749"></script>
-  <script src="js/lib.js?v=04151749"></script>
-  <script src="js/auth.js?v=04151749"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151749">
+  <script src="js/config.js?v=04151806"></script>
+  <script src="js/lib.js?v=04151806"></script>
+  <script src="js/auth.js?v=04151806"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151806">
   <style>
     /* Board */
     .board-outer {
@@ -719,6 +719,25 @@
         <textarea class="panel-textarea" id="p-ressalva" placeholder="Limitações, pendências, observações adicionais..."></textarea>
       </div>
 
+      <div class="hide-tecnico">
+        <div class="p-section-title">Mão de Obra</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+          <div>
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Horas est.</div>
+            <input class="panel-input" type="number" id="p-mo-est" placeholder="0" min="0" step="0.5" oninput="calcMO()">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Horas reais</div>
+            <input class="panel-input" type="number" id="p-mo-reais" placeholder="0" min="0" step="0.5" oninput="calcMO()">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">R$/hora</div>
+            <input class="panel-input" type="number" id="p-mo-custo-hora" placeholder="0" min="0" step="1" oninput="calcMO()">
+          </div>
+        </div>
+        <div id="p-mo-resultado" style="font-size:11px;color:var(--text-muted);min-height:16px"></div>
+      </div>
+
       <div>
         <div class="p-section-title">Garantia</div>
         <input class="panel-input" type="text" id="p-garantia" placeholder="Ex: 90 dias para serviços executados...">
@@ -883,6 +902,10 @@
       document.getElementById('p-ressalva').value       = osAtual.ressalva || '';
       document.getElementById('p-garantia').value      = osAtual.garantia || '';
       document.getElementById('p-link-externo').value  = osAtual.link_externo || '';
+      document.getElementById('p-mo-est').value        = osAtual.mo_horas_estimadas || '';
+      document.getElementById('p-mo-reais').value      = osAtual.mo_horas_reais || '';
+      document.getElementById('p-mo-custo-hora').value = osAtual.mo_custo_hora || '';
+      calcMO();
 
       const orcRow = document.getElementById('p-orc-row');
       if (osAtual.orcamentos) {
@@ -1197,6 +1220,9 @@
       const responsavelId = document.getElementById('p-responsavel').value || null;
       const garantia     = document.getElementById('p-garantia').value.trim() || null;
       const linkExterno  = document.getElementById('p-link-externo').value.trim() || null;
+      const moHorasEst   = parseFloat(document.getElementById('p-mo-est').value) || null;
+      const moHorasReais = parseFloat(document.getElementById('p-mo-reais').value) || null;
+      const moCustoHora  = parseFloat(document.getElementById('p-mo-custo-hora').value) || null;
 
       // started_at: lê campo ou auto-preenche ao mudar para em_andamento
       let startedAt = document.getElementById('p-started-at').value || null;
@@ -1210,7 +1236,7 @@
 
       const { error } = await sb
         .from('ordens_servico')
-        .update({ status: statusSelecionado, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno })
+        .update({ status: statusSelecionado, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora })
         .eq('id', osAtual.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
 
@@ -1233,13 +1259,33 @@
       }
 
       osAtual.status         = statusSelecionado;
-      osAtual.notes          = notes;
-      osAtual.desc_tecnico   = descTecnico;
-      osAtual.ressalva       = ressalva;
-      osAtual.responsavel_id = responsavelId;
+      osAtual.notes               = notes;
+      osAtual.desc_tecnico        = descTecnico;
+      osAtual.ressalva            = ressalva;
+      osAtual.responsavel_id      = responsavelId;
+      osAtual.mo_horas_estimadas  = moHorasEst;
+      osAtual.mo_horas_reais      = moHorasReais;
+      osAtual.mo_custo_hora       = moCustoHora;
       fecharPanel();
       await carregarOS();
       dmToast(statusSelecionado === 'entregue' ? 'OS entregue — receita lançada no caixa!' : 'OS atualizada!');
+    }
+
+    function calcMO() {
+      const est    = parseFloat(document.getElementById('p-mo-est')?.value) || 0;
+      const reais  = parseFloat(document.getElementById('p-mo-reais')?.value) || 0;
+      const custoH = parseFloat(document.getElementById('p-mo-custo-hora')?.value) || 0;
+      const el = document.getElementById('p-mo-resultado');
+      if (!el) return;
+      if (!custoH && !est && !reais) { el.textContent = ''; return; }
+      const custo_est  = est * custoH;
+      const custo_real = reais * custoH;
+      const total = osAtual?.total || 0;
+      const margem = total - custo_real;
+      const corReal = (custo_real > custo_est && custo_est > 0) ? '#f87171' : '#4ade80';
+      el.innerHTML =
+        `Est: <b>${fmtMoeda(custo_est)}</b> · Real: <b style="color:${corReal}">${fmtMoeda(custo_real)}</b>` +
+        (total > 0 ? ` · Margem: <b style="color:${margem >= 0 ? '#4ade80' : '#f87171'}">${fmtMoeda(margem)}</b>` : '');
     }
 
     function irParaOS() {

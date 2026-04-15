@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151749"></script>
-  <script src="js/lib.js?v=04151749"></script>
-  <script src="js/auth.js?v=04151749"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151749">
+  <script src="js/config.js?v=04151806"></script>
+  <script src="js/lib.js?v=04151806"></script>
+  <script src="js/auth.js?v=04151806"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151806">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -143,6 +143,7 @@
           <div class="tab"        id="tab-despesas" onclick="setTab('despesas',this)">Despesas</div>
           <div class="tab"        id="tab-lucro"    onclick="setTab('lucro',this)">Lucro Peças</div>
           <div class="tab"        id="tab-dre"      onclick="setTab('dre',this)">DRE</div>
+          <div class="tab"        id="tab-mo"       onclick="setTab('mo',this)">Mão de Obra</div>
         </div>
 
         <!-- PERIOD BAR (compartilhada entre abas, exceto receitas/despesas que têm botões próprios) -->
@@ -286,6 +287,49 @@
           </table>
         </div>
 
+        <!-- ── TAB MÃO DE OBRA ── -->
+        <div id="pane-mo" style="display:none">
+          <div class="caixa-kpis" id="mo-kpis">
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Total Horas</div>
+              <div class="caixa-kpi-val accent" id="mo-kpi-horas">—</div>
+              <div class="caixa-kpi-sub">horas reais no período</div>
+            </div>
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Custo MO</div>
+              <div class="caixa-kpi-val vermelho" id="mo-kpi-custo">—</div>
+              <div class="caixa-kpi-sub">horas reais × R$/h</div>
+            </div>
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Faturado (OS)</div>
+              <div class="caixa-kpi-val verde" id="mo-kpi-faturado">—</div>
+              <div class="caixa-kpi-sub">total das OS com MO</div>
+            </div>
+            <div class="caixa-kpi">
+              <div class="caixa-kpi-label">Margem MO</div>
+              <div class="caixa-kpi-val" id="mo-kpi-margem">—</div>
+              <div class="caixa-kpi-sub">faturado − custo MO</div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-body">
+              <table class="data-table">
+                <thead><tr>
+                  <th>OS</th><th>Cliente</th><th>Status</th>
+                  <th style="text-align:right">H. Est.</th>
+                  <th style="text-align:right">H. Reais</th>
+                  <th style="text-align:right">R$/h</th>
+                  <th style="text-align:right">Custo MO</th>
+                  <th style="text-align:right">Faturado</th>
+                  <th style="text-align:right">Margem</th>
+                </tr></thead>
+                <tbody id="mo-tbody"><tr><td colspan="9" class="empty-state">Carregando...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--text-dim);margin-top:8px">* Somente OS com horas preenchidas. Período baseado na data de criação da OS.</p>
+        </div>
+
       </div>
     </div>
   </div>
@@ -414,7 +458,7 @@
       tabAtiva = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       el.classList.add('active');
-      const allPanes = ['resumo','receitas','despesas','lucro','dre'];
+      const allPanes = ['resumo','receitas','despesas','lucro','dre','mo'];
       allPanes.forEach(t => {
         document.getElementById('pane-'+t).style.display = t === tab ? '' : 'none';
       });
@@ -471,6 +515,7 @@
       if (tabAtiva === 'despesas') renderTabelaTipo(saidas, 'tabela-despesas', 'saida');
       if (tabAtiva === 'dre')   carregarDRE();
       if (tabAtiva === 'lucro') carregarLucro();
+      if (tabAtiva === 'mo')    carregarMO();
     }
 
     /* ── Tabela Resumo ── */
@@ -682,6 +727,66 @@
     let lucroCarregando = false;
     let lucroReqId = 0;
     let _lucroUltimoPeriodo = null;
+
+    async function carregarMO() {
+      const tbody = document.getElementById('mo-tbody');
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Carregando...</td></tr>';
+
+      const { data, error } = await sb
+        .from('ordens_servico')
+        .select('numero, status, total, mo_horas_estimadas, mo_horas_reais, mo_custo_hora, created_at, clients(name)')
+        .eq('company_id', APP.company.id)
+        .not('mo_horas_estimadas', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (error || !data?.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhuma OS com dados de mão de obra registrados.</td></tr>';
+        ['mo-kpi-horas','mo-kpi-custo','mo-kpi-faturado','mo-kpi-margem'].forEach(id => document.getElementById(id).textContent = '0');
+        return;
+      }
+
+      const lista = filtrarPeriodo(data);
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhuma OS com MO no período selecionado.</td></tr>';
+        ['mo-kpi-horas','mo-kpi-custo','mo-kpi-faturado','mo-kpi-margem'].forEach(id => document.getElementById(id).textContent = '0');
+        return;
+      }
+
+      const STATUS_LABEL = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Ag. Liberação', pronta:'Pronta', entregue:'Entregue' };
+      let totHoras = 0, totCusto = 0, totFat = 0;
+
+      tbody.innerHTML = lista.map(os => {
+        const est   = os.mo_horas_estimadas || 0;
+        const reais = os.mo_horas_reais || 0;
+        const rph   = os.mo_custo_hora || 0;
+        const custo = reais * rph;
+        const fat   = os.total || 0;
+        const marg  = fat - custo;
+        totHoras += reais; totCusto += custo; totFat += fat;
+        const corMarg = marg >= 0 ? '#4ade80' : '#f87171';
+        const corH    = (reais > est && est > 0) ? '#f87171' : 'var(--text)';
+        return `<tr>
+          <td style="font-family:'Fira Code',monospace;font-weight:700">#${String(os.numero).padStart(3,'0')}</td>
+          <td>${esc(os.clients?.name || '—')}</td>
+          <td style="font-size:11px;color:var(--text-muted)">${STATUS_LABEL[os.status] || os.status}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace">${est || '—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:${corH}">${reais || '—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace">${rph ? fmtMoeda(rph) : '—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:#f87171">${custo ? fmtMoeda(custo) : '—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:#4ade80">${fat ? fmtMoeda(fat) : '—'}</td>
+          <td style="text-align:right;font-family:'Fira Code',monospace;color:${corMarg};font-weight:700">${fmtMoeda(marg)}</td>
+        </tr>`;
+      }).join('');
+
+      const totMarg = totFat - totCusto;
+      document.getElementById('mo-kpi-horas').textContent   = totHoras.toFixed(1) + 'h';
+      document.getElementById('mo-kpi-custo').textContent   = fmtMoeda(totCusto);
+      document.getElementById('mo-kpi-faturado').textContent = fmtMoeda(totFat);
+      const elMarg = document.getElementById('mo-kpi-margem');
+      elMarg.textContent  = fmtMoeda(totMarg);
+      elMarg.className    = 'caixa-kpi-val ' + (totMarg >= 0 ? 'verde' : 'vermelho');
+    }
 
     async function carregarLucro() {
       if (lucroCarregando) return;
