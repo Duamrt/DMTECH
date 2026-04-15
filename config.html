@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150554"></script>
-  <script src="js/auth.js?v=04150554"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150554">
+  <script src="js/config.js?v=04150557"></script>
+  <script src="js/auth.js?v=04150557"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150557">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -964,9 +964,12 @@
             p_capacidade_diaria: capacidade_diaria
           });
         } else {
-          dbResult = await sb.from('companies')
-            .update({ calc_params, comissao_padrao, valor_hora, capacidade_diaria })
-            .eq('id', APP.company.id);
+          dbResult = await sb.rpc('save_company_calc_params', {
+            p_calc_params: calc_params,
+            p_comissao_padrao: comissao_padrao,
+            p_valor_hora: valor_hora,
+            p_capacidade_diaria: capacidade_diaria
+          });
         }
         error = dbResult.error;
 
