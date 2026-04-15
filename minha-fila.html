@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150635"></script>
-  <script src="js/auth.js?v=04150635"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150635">
+  <script src="js/config.js?v=04150659"></script>
+  <script src="js/auth.js?v=04150659"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150659">
   <style>
     .fila-header-info {
       font-size: 12px;
@@ -184,7 +184,7 @@
           <button class="filtro-btn active" onclick="filtrarStatus(null, this)">Todas</button>
           <button class="filtro-btn" onclick="filtrarStatus('aberta', this)">Abertas</button>
           <button class="filtro-btn" onclick="filtrarStatus('em_andamento', this)">Em andamento</button>
-          <button class="filtro-btn" onclick="filtrarStatus('aguardando_peca', this)">Aguard. peça</button>
+          <button class="filtro-btn" onclick="filtrarStatus('aguardando_peca', this)">Aguard. Liberação</button>
           <button class="filtro-btn" onclick="filtrarStatus('pronta', this)">Prontas</button>
         </div>
 
@@ -213,7 +213,7 @@
       document.getElementById('btn-tema').textContent = isLight ? '○' : '◑';
     }
 
-    const STATUS_LABEL = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' };
+    const STATUS_LABEL = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Liberação', pronta:'Pronta', entregue:'Entregue' };
     const STATUS_BADGE = { aberta:'badge-orange', em_andamento:'badge-yellow', pronta:'badge-green', entregue:'badge-muted', aguardando_peca:'badge-red' };
 
     let todasOS = [];

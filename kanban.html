@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04150635"></script>
-  <script src="js/auth.js?v=04150635"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150635">
+  <script src="js/config.js?v=04150659"></script>
+  <script src="js/auth.js?v=04150659"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150659">
   <style>
     /* Board */
     .board-outer {
@@ -640,12 +640,19 @@
         <div class="p-info-mono" id="p-date">—</div>
       </div>
 
+      <div class="p-info-row" style="align-items:center">
+        <div class="p-info-label">Início execução</div>
+        <input type="datetime-local" id="p-started-at"
+          style="background:none;border:1px solid var(--border);color:var(--text-muted);font-family:'Fira Code',monospace;font-size:12px;padding:3px 6px;width:auto;flex:1"
+          title="Data/hora de início da execução">
+      </div>
+
       <div>
         <div class="p-section-title">Status</div>
         <div class="status-grid">
           <button class="status-btn btn-aberta"          onclick="selecionarStatus('aberta')">Aberta</button>
           <button class="status-btn btn-em_andamento"    onclick="selecionarStatus('em_andamento')">Em Andamento</button>
-          <button class="status-btn btn-aguardando_peca" onclick="selecionarStatus('aguardando_peca')">Aguard. Peça</button>
+          <button class="status-btn btn-aguardando_peca" onclick="selecionarStatus('aguardando_peca')">Aguard. Liberação</button>
           <button class="status-btn btn-pronta"          onclick="selecionarStatus('pronta')">Pronta</button>
           <button class="status-btn btn-entregue"        onclick="selecionarStatus('entregue')">Entregue</button>
         </div>
@@ -738,7 +745,7 @@
     const COLUNAS = [
       { status: 'aberta',          label: 'Aberta'        },
       { status: 'em_andamento',    label: 'Em Andamento'  },
-      { status: 'aguardando_peca', label: 'Aguard. Peça'  },
+      { status: 'aguardando_peca', label: 'Aguard. Liberação' },
       { status: 'pronta',          label: 'Pronta'        },
       { status: 'entregue',        label: 'Entregue'      },
     ];
@@ -820,6 +827,17 @@
       document.getElementById('p-client').textContent = osAtual.clients?.name || '—';
       document.getElementById('p-date').textContent   = fmtData(osAtual.created_at);
 
+      // Data de início: preenche se já existe
+      const startedEl = document.getElementById('p-started-at');
+      if (osAtual.started_at) {
+        // Converte para formato datetime-local (YYYY-MM-DDTHH:MM)
+        const d = new Date(osAtual.started_at);
+        const pad = n => String(n).padStart(2,'0');
+        startedEl.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } else {
+        startedEl.value = '';
+      }
+
       const mapsEl = document.getElementById('p-maps-link');
       const mapsPartes = [osAtual.clients?.address, osAtual.clients?.city].filter(Boolean);
       if (mapsPartes.length) {
@@ -880,17 +898,58 @@
         const tipo = it.tipo === 'servico' ? 'S' : 'P';
         const cod  = it.codigo ? `<span style="font-family:'Fira Code',monospace;font-size:10px;color:var(--text-dim);margin-right:4px">${it.codigo}</span>` : '';
         return `
-          <div class="p-item-row">
+          <div class="p-item-row" id="item-row-${idx}">
             <span class="p-item-tipo" style="color:${cor}">${tipo}</span>
             <span class="p-item-desc" title="${it.descricao}">${cod}${it.descricao}</span>
             <span class="p-item-qtd">${fmtN(it.quantidade)}</span>
-            <span class="p-item-val">${fmtMoeda(it.subtotal)}</span>
+            <span class="p-item-val" style="cursor:pointer;text-decoration:underline dotted" onclick="editarItem(${idx})" title="Editar valor">${fmtMoeda(it.subtotal)}</span>
             <button class="p-item-del" onclick="excluirItem(${idx},'${it.id}')" title="Remover">×</button>
+          </div>
+          <div id="item-edit-${idx}" style="display:none;background:var(--surface-2);border:1px solid var(--border);padding:8px;margin-top:-4px;margin-bottom:4px;display:none">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:11px;color:var(--text-dim)">Qtd</span>
+              <input id="edit-qtd-${idx}" type="number" value="${it.quantidade}" min="0.01" step="any"
+                style="width:64px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);font-size:12px;padding:3px 6px">
+              <span style="font-size:11px;color:var(--text-dim)">Preço unit.</span>
+              <input id="edit-preco-${idx}" type="number" value="${it.preco_unit}" min="0" step="any"
+                style="width:88px;background:var(--surface-3);border:1px solid var(--border);color:var(--text);font-size:12px;padding:3px 6px">
+              <button onclick="salvarEdicaoItem(${idx},'${it.id}')"
+                style="background:var(--accent);border:none;color:#fff;font-weight:700;font-size:11px;padding:4px 10px;cursor:pointer">OK</button>
+              <button onclick="cancelarEdicaoItem(${idx})"
+                style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:11px;padding:4px 8px;cursor:pointer">×</button>
+            </div>
           </div>
         `;
       }).join('');
       const total = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
       document.getElementById('p-itens-total').textContent = fmtMoeda(total);
+    }
+
+    function editarItem(idx) {
+      // Fecha qualquer edição aberta
+      document.querySelectorAll('[id^="item-edit-"]').forEach(el => el.style.display = 'none');
+      const el = document.getElementById(`item-edit-${idx}`);
+      if (el) el.style.display = 'block';
+    }
+    function cancelarEdicaoItem(idx) {
+      const el = document.getElementById(`item-edit-${idx}`);
+      if (el) el.style.display = 'none';
+    }
+    async function salvarEdicaoItem(idx, itemId) {
+      const qtd   = parseFloat(document.getElementById(`edit-qtd-${idx}`).value)   || 0;
+      const preco = parseFloat(document.getElementById(`edit-preco-${idx}`).value) || 0;
+      const subtotal = qtd * preco;
+      const { error } = await sb.from('os_items')
+        .update({ quantidade: qtd, preco_unit: preco, subtotal })
+        .eq('id', itemId);
+      if (error) { dmToast('Erro ao salvar item', 'error'); return; }
+      // Atualiza cache local
+      itensPanel[idx].quantidade = qtd;
+      itensPanel[idx].preco_unit  = preco;
+      itensPanel[idx].subtotal    = subtotal;
+      const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+      await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+      renderItensPanel();
     }
 
     async function adicionarItem() {
@@ -1093,9 +1152,20 @@
       if (!osAtual || !statusSelecionado) return;
       const notes        = document.getElementById('p-notes').value.trim();
       const responsavelId = document.getElementById('p-responsavel').value || null;
+
+      // started_at: lê campo ou auto-preenche ao mudar para em_andamento
+      let startedAt = document.getElementById('p-started-at').value || null;
+      if (startedAt) {
+        startedAt = new Date(startedAt).toISOString();
+      } else if (statusSelecionado === 'em_andamento' && !osAtual.started_at) {
+        startedAt = new Date().toISOString();
+      } else {
+        startedAt = osAtual.started_at || null;
+      }
+
       const { error } = await sb
         .from('ordens_servico')
-        .update({ status: statusSelecionado, notes, responsavel_id: responsavelId })
+        .update({ status: statusSelecionado, notes, responsavel_id: responsavelId, started_at: startedAt })
         .eq('id', osAtual.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
 
@@ -1243,7 +1313,7 @@
 
     function _pdfInfoOS(os) {
       const c = os.clients || {};
-      const STATUS = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' };
+      const STATUS = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Liberação', pronta:'Pronta', entregue:'Entregue' };
       const numOS = String(os.numero || '-').padStart(3, '0');
       const resp  = os.responsavel?.name || os.responsavel?.email || 'Não definido';
       const endCli = [c.address, c.city].filter(Boolean).join(' — ');
@@ -1570,7 +1640,7 @@
     async function carregarOS() {
       let query = sb
         .from('ordens_servico')
-        .select('*, is_demo, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
+        .select('*, is_demo, started_at, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
         .eq('company_id', APP.company.id)
         .order('numero', { ascending: false });
       // Técnico vê só as próprias OS

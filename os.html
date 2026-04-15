@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150635"></script>
-  <script src="js/auth.js?v=04150635"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150635">
+  <script src="js/config.js?v=04150659"></script>
+  <script src="js/auth.js?v=04150659"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150659">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -124,7 +124,7 @@
             <button class="filter-btn active" onclick="setFiltro('todos',this)">Todas</button>
             <button class="filter-btn" onclick="setFiltro('aberta',this)">Aberta</button>
             <button class="filter-btn" onclick="setFiltro('em_andamento',this)">Em Andamento</button>
-            <button class="filter-btn" onclick="setFiltro('aguardando_peca',this)">Aguardando Peça</button>
+            <button class="filter-btn" onclick="setFiltro('aguardando_peca',this)">Aguardando Liberação</button>
             <button class="filter-btn" onclick="setFiltro('pronta',this)">Pronta</button>
             <button class="filter-btn" onclick="setFiltro('entregue',this)">Entregue</button>
           </div>
@@ -167,16 +167,22 @@
       <div class="form-row" style="margin-bottom:12px">
         <div class="form-group">
           <label class="form-label">Cliente</label>
-          <select class="form-input" id="os-cliente">
-            <option value="">Selecionar cliente...</option>
-          </select>
+          <div class="ac-wrap" style="position:relative">
+            <input class="form-input" type="text" id="os-cliente-inp" placeholder="Buscar cliente..."
+              autocomplete="off"
+              oninput="filtrarAcCliente(this.value)"
+              onfocus="filtrarAcCliente(this.value)"
+              onblur="setTimeout(esconderAcCliente,150)">
+            <input type="hidden" id="os-cliente">
+            <div class="ac-drop" id="ac-drop-cliente"></div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Status</label>
           <select class="form-input" id="os-status">
             <option value="aberta">Aberta</option>
             <option value="em_andamento">Em Andamento</option>
-            <option value="aguardando_peca">Aguardando Peça</option>
+            <option value="aguardando_peca">Aguardando Liberação</option>
             <option value="pronta">Pronta</option>
             <option value="entregue">Entregue</option>
           </select>
@@ -264,9 +270,35 @@
     async function carregarClientes() {
       const { data } = await sb.from('clients').select('id,name').eq('company_id', APP.company.id).order('name');
       clientes = data || [];
-      const sel = document.getElementById('os-cliente');
-      sel.innerHTML = '<option value="">Selecionar cliente...</option>' +
-        clientes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    }
+
+    let _acCliSugs = [];
+    function filtrarAcCliente(q) {
+      const drop = document.getElementById('ac-drop-cliente');
+      const lista = q.length >= 1
+        ? clientes.filter(c => c.name.toLowerCase().includes(q.toLowerCase()))
+        : clientes;
+      _acCliSugs = lista.slice(0, 10);
+      if (!_acCliSugs.length) { drop.style.display = 'none'; return; }
+      drop.innerHTML = _acCliSugs.map((c, i) =>
+        `<div class="ac-item" onmousedown="selecionarAcCliente(${i})">${esc(c.name)}</div>`
+      ).join('');
+      drop.style.display = 'block';
+    }
+    function selecionarAcCliente(idx) {
+      const c = _acCliSugs[idx];
+      if (!c) return;
+      document.getElementById('os-cliente-inp').value = c.name;
+      document.getElementById('os-cliente').value     = c.id;
+      esconderAcCliente();
+    }
+    function esconderAcCliente() {
+      document.getElementById('ac-drop-cliente').style.display = 'none';
+    }
+    function _clienteSetValor(id) {
+      const c = clientes.find(x => x.id === id);
+      document.getElementById('os-cliente').value     = id || '';
+      document.getElementById('os-cliente-inp').value = c ? c.name : '';
     }
 
     async function carregarCatalogo() {
@@ -323,7 +355,7 @@
     }
 
     function labelStatus(s) {
-      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' }[s] || s;
+      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Liberação', pronta:'Pronta', entregue:'Entregue' }[s] || s;
     }
 
     // ── Modal ──
@@ -332,7 +364,7 @@
       tipoItemAtual = 'servico';
       document.getElementById('modal-titulo').textContent = 'Nova OS';
       document.getElementById('os-id').value = '';
-      document.getElementById('os-cliente').value = '';
+      _clienteSetValor('');
       document.getElementById('os-status').value = 'aberta';
       document.getElementById('os-notes').value = '';
       document.getElementById('btn-excluir').style.display = 'none';
@@ -346,7 +378,7 @@
       tipoItemAtual = 'servico';
       document.getElementById('modal-titulo').textContent = `OS #${os.numero}`;
       document.getElementById('os-id').value = os.id;
-      document.getElementById('os-cliente').value = os.client_id || '';
+      _clienteSetValor(os.client_id || '');
       document.getElementById('os-status').value = os.status;
       document.getElementById('os-notes').value = os.notes || '';
       document.getElementById('btn-excluir').style.display = 'block';
