@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151217"></script>
-  <script src="js/auth.js?v=04151217"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151217">
+  <script src="js/config.js?v=04151219"></script>
+  <script src="js/auth.js?v=04151219"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151219">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -297,9 +297,10 @@
       if (!_dados) return;
       const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
       const recalc = _dados.folha.map(f => {
-        const vr      = f.vrDia * Math.max(0, dias - f.faltas);
+        const vrDia   = dias > 0 ? f.vrMensal / dias : 0;
+        const vr      = vrDia * Math.max(0, dias - f.faltas);
         const liquido = f.salario - f.descFalta + vr + f.comissao - f.totalVale;
-        return { ...f, vr, liquido };
+        return { ...f, vrDia, vr, liquido };
       });
       const nd = { ...calcTotais(recalc), folha: recalc };
       renderFolha(nd);
@@ -313,7 +314,8 @@
       const comissaoPadrao = APP.company?.comissao_padrao || 0;
       const folha = tecnicos.map(t => {
         const salario      = t.salario_base  || 0;
-        const vrDia        = t.vale_refeicao || 0;
+        const vrMensal     = t.vale_refeicao || 0;
+        const vrDia        = dias > 0 ? vrMensal / dias : 0;
         const faltas       = parseInt(localStorage.getItem(_faltasKey(t.id))) || 0;
         const descFalta    = salario / 30 * faltas;
         const vr           = vrDia * Math.max(0, dias - faltas);
@@ -323,7 +325,7 @@
         const minhasOS     = osPor[t.id]     || { qtd: 0, total: 0 };
         const comissao     = minhasOS.total * (pct / 100);
         const liquido      = salario - descFalta + vr + comissao - totalVale;
-        return { ...t, salario, vrDia, faltas, descFalta, vr, meusVales, totalVale, pct, minhasOS, comissao, liquido };
+        return { ...t, salario, vrMensal, vrDia, faltas, descFalta, vr, meusVales, totalVale, pct, minhasOS, comissao, liquido };
       });
       return { ...calcTotais(folha), folha };
     }
@@ -334,10 +336,11 @@
       const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
       const recalc = _dados.folha.map(r => {
         if (r.id !== profileId) return r;
+        const vrDia     = dias > 0 ? r.vrMensal / dias : 0;
         const descFalta = r.salario / 30 * faltas;
-        const vr        = r.vrDia * Math.max(0, dias - faltas);
+        const vr        = vrDia * Math.max(0, dias - faltas);
         const liquido   = r.salario - descFalta + vr + r.comissao - r.totalVale;
-        return { ...r, faltas, descFalta, vr, liquido };
+        return { ...r, faltas, vrDia, descFalta, vr, liquido };
       });
       renderFolha({ ...calcTotais(recalc), folha: recalc });
     }
@@ -366,7 +369,7 @@
       document.getElementById('emp-lista').innerHTML = folha.map(f => {
         const iniciais = (f.name||'??').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
         const liqCor   = f.liquido >= 0 ? 'var(--accent)' : '#f87171';
-        const vrDiaStr = f.vrDia > 0 ? `VR/dia ${fmtM(f.vrDia)}` : 'Sem VR';
+        const vrDiaStr = f.vrMensal > 0 ? `VR/mês ${fmtM(f.vrMensal)}` : 'Sem VR';
 
         let valesHtml = '';
         if (f.meusVales.length) {
