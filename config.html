@@ -235,6 +235,36 @@
     <div class="modal" id="modal-gen-box"></div>
   </div>
 
+  <!-- Modal editar técnico -->
+  <div class="modal-overlay" id="modal-editar-membro" onclick="if(event.target===this)fecharEditarMembro()">
+    <div class="modal">
+      <div class="modal-title">Editar técnico</div>
+      <div class="form-group">
+        <label class="form-label">Nome completo</label>
+        <input class="form-input" type="text" id="em-nome">
+      </div>
+      <div class="form-group">
+        <label class="form-label">WhatsApp</label>
+        <input class="form-input" type="tel" id="em-whatsapp" placeholder="(99) 99999-9999">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Salário base (R$)</label>
+          <input class="form-input" type="number" id="em-salario" min="0" step="50">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Vale refeição / dia (R$)</label>
+          <input class="form-input" type="number" id="em-vr" min="0" step="5">
+        </div>
+      </div>
+      <div class="modal-actions" style="flex-wrap:wrap;gap:8px;margin-top:20px">
+        <button class="btn btn-ghost" onclick="fecharEditarMembro()">Cancelar</button>
+        <button class="btn btn-ghost" id="btn-reset-senha" onclick="resetarSenhaMembro()">Redefinir senha</button>
+        <button class="btn btn-primary" id="btn-salvar-edicao" onclick="salvarEdicaoMembro()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal novo técnico -->
   <div class="modal-overlay" id="modal-membro" onclick="if(event.target===this)fecharModalMembro()">
     <div class="modal">
@@ -312,6 +342,8 @@
     let _aba = 'dados';
     let _novoMembroWA = null;
     let _calcEquipe = [];
+    let _equipeData = [];
+    let _editingMembro = null;
 
     // ── INIT ──
     (async () => {
@@ -1069,21 +1101,25 @@
           <div class="cfg-section-title" style="margin:0;border:none;padding:0">${data.length} membro${data.length!==1?'s':''}</div>
           <button class="cfg-btn" onclick="abrirModalMembro()">+ Adicionar técnico</button>
         </div>
-        ${data.map(m => {
+        ${(_equipeData = data, data).map((m,i) => {
           const primeiro = (m.name||m.email||'?').split(' ')[0];
           const inicial  = primeiro[0].toUpperCase();
           const isDono   = m.role === 'dono';
           const sub      = [m.email, m.whatsapp ? fmtWA(m.whatsapp) : null].filter(Boolean).join(' · ');
+          const salVR    = !isDono ? `Sal. R$${(m.salario_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2})} · VR R$${(m.vale_refeicao||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}/dia` : '';
           return `
           <div class="eq-card">
             <div class="eq-avatar">${inicial}</div>
             <div class="eq-info">
               <div class="eq-nome">${esc(primeiro)}</div>
               <div class="eq-sub">${esc(sub)}</div>
-              ${!isDono && (m.salario_base||m.vale_refeicao) ? `<div class="eq-sub" style="margin-top:2px;color:var(--text-dim)">Sal. R$${(m.salario_base||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} · VR R$${(m.vale_refeicao||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}/dia</div>` : ''}
+              ${salVR ? `<div class="eq-sub" style="margin-top:2px;color:var(--text-dim)">${salVR}</div>` : ''}
             </div>
-            <span class="eq-papel ${isDono?'dono':''}">${isDono?'Dono':'Técnico'}</span>
-            ${!isDono ? `<button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="removerMembro('${m.id}','${esc(primeiro)}')">Remover</button>` : ''}
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+              ${m.whatsapp ? `<button class="cfg-btn cfg-btn-sm" onclick="enviarLinkAcesso(${i})" title="Enviar link de acesso">WA</button>` : ''}
+              <button class="cfg-btn cfg-btn-sm" onclick="abrirEditarMembro(${i})">Editar</button>
+              ${!isDono ? `<button class="cfg-btn cfg-btn-sm cfg-btn-danger" onclick="removerMembro('${m.id}','${esc(primeiro)}')">Remover</button>` : ''}
+            </div>
           </div>`;
         }).join('')}`;
     }
@@ -1217,11 +1253,11 @@
         btn.disabled = false; btn.textContent = 'Criar acesso';
         dmToast('Erro: '+(data.error||'Falha ao criar.'), 'error'); return;
       }
-      // salvar salário e VR se informados
+      // salvar salário e VR via RPC (bypass RLS)
       const salario = parseFloat(document.getElementById('m-salario').value)||0;
       const vr      = parseFloat(document.getElementById('m-vr').value)||0;
-      if ((salario || vr) && data.id) {
-        await sb.from('profiles').update({ salario_base: salario, vale_refeicao: vr }).eq('id', data.id);
+      if (data.id) {
+        await sb.rpc('update_member_profile', { p_profile_id: data.id, p_name: nome, p_whatsapp: whatsapp, p_salario_base: salario, p_vale_refeicao: vr });
       }
       const primeiro = nome.split(' ')[0];
       const appUrl = window.location.origin + '/login.html';
@@ -1231,6 +1267,59 @@
       document.getElementById('modal-membro-actions').style.display = 'none';
       _novoMembroWA = { primeiro, email, senha, whatsapp };
       dmToast(`Acesso de ${primeiro} criado!`);
+    }
+    function enviarLinkAcesso(idx) {
+      const m = _equipeData[idx];
+      if (!m) return;
+      const appUrl = window.location.origin + '/login.html';
+      const primeiro = (m.name||m.email||'').split(' ')[0];
+      const msg = encodeURIComponent(`Olá ${primeiro}! Acesse o sistema:\n\nE-mail: ${m.email}\nLink: ${appUrl}`);
+      const num = (m.whatsapp||'').replace(/\D/g,'');
+      const waNum = num.length===11 ? '55'+num : num;
+      if (!waNum) { dmToast('WhatsApp não cadastrado.','error'); return; }
+      window.open(`https://wa.me/${waNum}?text=${msg}`,'_blank');
+    }
+    function abrirEditarMembro(idx) {
+      const m = _equipeData[idx];
+      if (!m) return;
+      _editingMembro = m;
+      document.getElementById('em-nome').value = m.name||'';
+      document.getElementById('em-whatsapp').value = m.whatsapp||'';
+      document.getElementById('em-salario').value = m.salario_base??0;
+      document.getElementById('em-vr').value = m.vale_refeicao??0;
+      document.getElementById('modal-editar-membro').classList.add('active');
+    }
+    function fecharEditarMembro() {
+      document.getElementById('modal-editar-membro').classList.remove('active');
+      _editingMembro = null;
+    }
+    async function salvarEdicaoMembro() {
+      if (!_editingMembro) return;
+      const nome = document.getElementById('em-nome').value.trim();
+      if (!nome) { dmToast('Nome obrigatório.','error'); return; }
+      const btn = document.getElementById('btn-salvar-edicao');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      const { error } = await sb.rpc('update_member_profile', {
+        p_profile_id:   _editingMembro.id,
+        p_name:         nome,
+        p_whatsapp:     document.getElementById('em-whatsapp').value.trim(),
+        p_salario_base: parseFloat(document.getElementById('em-salario').value)||0,
+        p_vale_refeicao:parseFloat(document.getElementById('em-vr').value)||0
+      });
+      btn.disabled = false; btn.textContent = 'Salvar';
+      if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      dmToast('Membro atualizado!');
+      fecharEditarMembro();
+      renderEquipe(document.getElementById('cfg-content'));
+    }
+    async function resetarSenhaMembro() {
+      if (!_editingMembro) return;
+      const nome = (_editingMembro.name||_editingMembro.email||'').split(' ')[0];
+      dmConfirm(`Enviar e-mail de redefinição de senha para ${nome}?`, async () => {
+        const { error } = await sb.auth.resetPasswordForEmail(_editingMembro.email);
+        if (error) { dmToast('Erro: '+error.message,'error'); return; }
+        dmToast('E-mail de redefinição enviado!');
+      }, 'Enviar');
     }
     function abrirWA() {
       if (!_novoMembroWA) return;
