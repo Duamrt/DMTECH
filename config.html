@@ -943,6 +943,7 @@
     }
 
     async function salvarParamsCalc() {
+      console.log('[calc-save] chamado');
       if (_busy.params) return; _busy.params = true;
       try {
         const custo_fixo      = parseFloat(document.getElementById('calc-fixos')?.value)||0;
