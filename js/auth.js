@@ -62,6 +62,12 @@ async function requireAuth(redirectTo = 'login.html') {
     if (!checkPlan()) return false;
   }
 
+  // Modo técnico: marca body + filtra sidebar
+  if (APP.profile?.role === 'tecnico') {
+    document.body.classList.add('modo-tecnico');
+    _filtrarNavTecnico();
+  }
+
   return true;
 }
 
@@ -132,12 +138,36 @@ function isPlatformAdmin() {
     APP.profile?.company_id === 'aaaa0001-0000-0000-0000-000000000001';
 }
 
-// ESC fecha qualquer modal aberto em qualquer página
+function podeVer(key) {
+  if (APP.profile?.role === 'dono') return true;
+  return !!(APP.profile?.permissions?.[key]);
+}
+
+function _filtrarNavTecnico() {
+  const bloqueadas = ['dashboard.html','orcamentos.html','financeiro.html','fornecedores.html','notas-fiscais.html','folha.html','audit.html'];
+  document.querySelectorAll('.sidebar-nav a.nav-item').forEach(a => {
+    const href = (a.getAttribute('href') || '').split('?')[0].split('/').pop();
+    if (bloqueadas.includes(href)) a.style.display = 'none';
+  });
+}
+
+// ESC fecha qualquer modal ou painel aberto em qualquer página
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (document.getElementById('dm-confirm-overlay')?.classList.contains('show')) return; // não fecha modal de fundo
+  if (document.getElementById('dm-confirm-overlay')?.classList.contains('show')) return;
+  // Painel lateral (kanban e outros que usam classe .open)
+  const painel = document.getElementById('side-panel');
+  if (painel?.classList.contains('open')) {
+    painel.classList.remove('open');
+    document.getElementById('panel-overlay')?.classList.remove('open');
+    return;
+  }
+  // Modais padrão
   if (typeof fecharModal === 'function') { fecharModal(); return; }
   document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+  // Sidebar mobile
+  document.querySelector('.sidebar.open')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('show');
 });
 
 // ── Confirm e Toast globais ──
@@ -162,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     #dm-toast.success{background:rgba(74,222,128,.08);border-color:#4ade80;color:#4ade80}
     #dm-toast.error{background:rgba(239,68,68,.08);border-color:#f87171;color:#f87171}
     #dm-toast.info{background:var(--surface-2);border-color:var(--border);color:var(--text)}
+    .modo-tecnico .hide-tecnico{display:none!important}
   `;
   document.head.appendChild(st);
   document.body.insertAdjacentHTML('beforeend', `

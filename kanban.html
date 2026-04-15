@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04150732"></script>
-  <script src="js/auth.js?v=04150732"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150732">
+  <script src="js/config.js?v=04150857"></script>
+  <script src="js/auth.js?v=04150857"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150857">
   <style>
     /* Board */
     .board-outer {
@@ -681,7 +681,7 @@
       <div>
         <div class="p-section-title p-itens-total-row">
           <span>Itens da OS</span>
-          <span id="p-itens-total" style="color:var(--accent);font-weight:800;font-size:11px">R$ 0,00</span>
+          <span id="p-itens-total" class="hide-tecnico" style="color:var(--accent);font-weight:800;font-size:11px">R$ 0,00</span>
         </div>
         <div id="p-itens-lista"><div class="p-item-empty">Nenhum item.</div></div>
         <div class="p-item-add">
@@ -698,7 +698,7 @@
             <div class="p-ac-lista" id="p-ac-lista"></div>
           </div>
           <input class="p-add-inp" id="p-add-qtd"  placeholder="Qtd" type="number" value="1" min="0.01" step="any">
-          <input class="p-add-inp" id="p-add-preco" placeholder="R$" type="number" value="0" min="0" step="any">
+          <input class="p-add-inp hide-tecnico" id="p-add-preco" placeholder="R$" type="number" value="0" min="0" step="any">
           <button class="p-add-btn" onclick="adicionarItem()" title="Adicionar">+</button>
         </div>
       </div>
@@ -911,7 +911,8 @@
     }
 
     function renderItensPanel() {
-      const lista = document.getElementById('p-itens-lista');
+      const lista  = document.getElementById('p-itens-lista');
+      const isTec  = APP.profile?.role === 'tecnico';
       if (!itensPanel.length) {
         lista.innerHTML = '<div class="p-item-empty">Nenhum item.</div>';
         document.getElementById('p-itens-total').textContent = 'R$ 0,00';
@@ -921,15 +922,9 @@
         const cor  = it.tipo === 'servico' ? '#60a5fa' : '#4ade80';
         const tipo = it.tipo === 'servico' ? 'S' : 'P';
         const cod  = it.codigo ? `<span style="font-family:'Fira Code',monospace;font-size:10px;color:var(--text-dim);margin-right:4px">${it.codigo}</span>` : '';
-        return `
-          <div class="p-item-row" id="item-row-${idx}">
-            <span class="p-item-tipo" style="color:${cor}">${tipo}</span>
-            <span class="p-item-desc" title="${it.descricao}">${cod}${it.descricao}</span>
-            <span class="p-item-qtd">${fmtN(it.quantidade)}</span>
-            <span class="p-item-val" style="cursor:pointer;text-decoration:underline dotted" onclick="editarItem(${idx})" title="Editar valor">${fmtMoeda(it.subtotal)}</span>
-            <button class="p-item-del" onclick="excluirItem(${idx},'${it.id}')" title="Remover">×</button>
-          </div>
-          <div id="item-edit-${idx}" style="display:none;background:var(--surface-2);border:1px solid var(--border);padding:8px;margin-top:-4px;margin-bottom:4px;display:none">
+        const valSpan = isTec ? '' : `<span class="p-item-val" style="cursor:pointer;text-decoration:underline dotted" onclick="editarItem(${idx})" title="Editar valor">${fmtMoeda(it.subtotal)}</span>`;
+        const editForm = isTec ? '' : `
+          <div id="item-edit-${idx}" style="display:none;background:var(--surface-2);border:1px solid var(--border);padding:8px;margin-top:-4px;margin-bottom:4px">
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <span style="font-size:11px;color:var(--text-dim)">Qtd</span>
               <input id="edit-qtd-${idx}" type="number" value="${it.quantidade}" min="0.01" step="any"
@@ -942,7 +937,16 @@
               <button onclick="cancelarEdicaoItem(${idx})"
                 style="background:none;border:1px solid var(--border);color:var(--text-dim);font-size:11px;padding:4px 8px;cursor:pointer">×</button>
             </div>
+          </div>`;
+        return `
+          <div class="p-item-row" id="item-row-${idx}">
+            <span class="p-item-tipo" style="color:${cor}">${tipo}</span>
+            <span class="p-item-desc" title="${it.descricao}">${cod}${it.descricao}</span>
+            <span class="p-item-qtd">${fmtN(it.quantidade)}</span>
+            ${valSpan}
+            <button class="p-item-del" onclick="excluirItem(${idx},'${it.id}')" title="Remover">×</button>
           </div>
+          ${editForm}
         `;
       }).join('');
       const total = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
@@ -1049,12 +1053,12 @@
         const cor    = c._tipo === 'servico' ? '#60a5fa' : '#4ade80';
         const badge  = c._tipo === 'servico' ? 'S' : 'P';
         const code   = c.code ? `<span class="p-ac-code">${c.code}</span>` : '';
-        const preco  = fmtMoeda(c.price || 0);
+        const precoHtml = APP.profile?.role === 'tecnico' ? '' : `<span class="p-ac-preco">${fmtMoeda(c.price || 0)}</span>`;
         return `<div class="p-ac-item" onmousedown="acSelecionar(${i})">
           <span class="p-ac-badge" style="background:${cor}20;color:${cor}">${badge}</span>
           ${code}
           <span class="p-ac-nome">${c.name}</span>
-          <span class="p-ac-preco">${preco}</span>
+          ${precoHtml}
         </div>`;
       }).join('');
 
@@ -1093,6 +1097,7 @@
     }
 
     async function acCriar() {
+      if (APP.profile?.role === 'tecnico') { dmToast('Apenas o dono pode criar itens no catálogo', 'info'); return; }
       const nome = document.getElementById('p-add-desc').value.trim();
       const tipo = document.getElementById('p-add-tipo').value;
       const prec = parseFloat(document.getElementById('p-add-preco').value) || 0;

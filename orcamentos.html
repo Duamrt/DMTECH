@@ -10,10 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
-  <script src="js/config.js?v=04150732"></script>
-  <script src="js/auth.js?v=04150732"></script>
-  <script src="js/pdf-orc.js?v=04150732"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150732">
+  <script src="js/config.js?v=04150857"></script>
+  <script src="js/auth.js?v=04150857"></script>
+  <script src="js/pdf-orc.js?v=04150857"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150857">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -333,6 +333,7 @@
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
+      if (APP.profile?.role === 'tecnico') { window.location.href = 'minha-fila.html'; return; }
       document.getElementById('topbar-user').textContent  = APP.profile.name || APP.profile.email || '';
       document.getElementById('nome-empresa').textContent = APP.company?.name || '';
       await Promise.all([carregarClientes(), carregarCatalogo()]);

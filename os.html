@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150732"></script>
-  <script src="js/auth.js?v=04150732"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150732">
+  <script src="js/config.js?v=04150857"></script>
+  <script src="js/auth.js?v=04150857"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150857">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -140,7 +140,7 @@
                   <th>Cliente</th>
                   <th>Origem</th>
                   <th>Status</th>
-                  <th>Total</th>
+                  <th class="hide-tecnico">Total</th>
                   <th>Data</th>
                   <th></th>
                 </tr>
@@ -198,7 +198,7 @@
       <div class="items-section">
         <div class="items-header">
           <span class="items-title">Itens</span>
-          <span class="items-total" id="os-itens-total">Total: R$ 0,00</span>
+          <span class="items-total hide-tecnico" id="os-itens-total">Total: R$ 0,00</span>
         </div>
         <table class="items-table">
           <thead>
@@ -206,8 +206,8 @@
               <th>Tipo</th>
               <th style="width:40%">Descrição</th>
               <th>Qtd</th>
-              <th>Preço Unit.</th>
-              <th>Subtotal</th>
+              <th class="hide-tecnico">Preço Unit.</th>
+              <th class="hide-tecnico">Subtotal</th>
               <th></th>
             </tr>
           </thead>
@@ -222,7 +222,7 @@
             <div class="ac-drop" id="ac-drop"></div>
           </div>
           <input class="form-input" type="number" id="os-item-qtd" placeholder="Qtd" value="1" min="0.001" step="any">
-          <input class="form-input" type="number" id="os-item-preco" placeholder="Preço" min="0" step="0.01">
+          <input class="form-input hide-tecnico" type="number" id="os-item-preco" placeholder="Preço" min="0" step="0.01">
           <button class="btn btn-ghost" onclick="adicionarItem()">+ Item</button>
         </div>
       </div>
@@ -356,7 +356,7 @@
           <td style="font-weight:600;color:var(--text)">${esc(nome)}</td>
           <td>${origem}</td>
           <td><span class="badge badge-${o.status}">${labelStatus(o.status)}</span></td>
-          <td style="font-family:'Fira Code',monospace;color:var(--accent)">${fmtMoeda(o.total)}</td>
+          ${APP.profile?.role === 'tecnico' ? '' : `<td style="font-family:'Fira Code',monospace;color:var(--accent)">${fmtMoeda(o.total)}</td>`}
           <td style="color:var(--text-dim);font-size:12px">${data}</td>
           <td><div class="actions-cell">
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick='abrirModalEditar(${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button>
@@ -425,8 +425,9 @@
       acSugs = catalogo.filter(c => c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
       const div = document.getElementById('ac-drop');
       if (!acSugs.length) { div.style.display = 'none'; return; }
+      const isTec = APP.profile?.role === 'tecnico';
       div.innerHTML = acSugs.map((c, i) =>
-        `<div class="ac-item" onmousedown="selecionarAc(${i})">[${c.tipo === 'servico' ? 'S' : 'P'}] ${esc(c.name)} — ${fmtMoeda(c.price)}</div>`
+        `<div class="ac-item" onmousedown="selecionarAc(${i})">[${c.tipo === 'servico' ? 'S' : 'P'}] ${esc(c.name)}${isTec ? '' : ` — ${fmtMoeda(c.price)}`}</div>`
       ).join('');
       div.style.display = 'block';
     }
@@ -476,9 +477,10 @@
     }
 
     function renderItens() {
-      const tbody = document.getElementById('os-items-tbody');
+      const tbody  = document.getElementById('os-items-tbody');
+      const isTec  = APP.profile?.role === 'tecnico';
       if (!itensAtual.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="font-size:12px">Nenhum item adicionado.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${isTec ? 4 : 6}" class="empty-state" style="font-size:12px">Nenhum item adicionado.</td></tr>`;
         document.getElementById('os-itens-total').textContent = 'Total: R$ 0,00';
         return;
       }
@@ -487,8 +489,8 @@
           <td><span class="badge tipo-badge tipo-${it.tipo === 'servico' ? 's' : 'p'}">${it.tipo === 'servico' ? 'S' : 'P'}</span></td>
           <td style="color:var(--text)">${esc(it.descricao)}</td>
           <td class="mono">${fmtQtd(it.quantidade)}</td>
-          <td class="mono">${fmtMoeda(it.preco_unit)}</td>
-          <td class="mono" style="color:var(--accent)">${fmtMoeda(it.subtotal)}</td>
+          ${isTec ? '' : `<td class="mono">${fmtMoeda(it.preco_unit)}</td>`}
+          ${isTec ? '' : `<td class="mono" style="color:var(--accent)">${fmtMoeda(it.subtotal)}</td>`}
           <td style="display:flex;gap:4px;align-items:center">
             <button class="btn-remove" style="font-size:11px;padding:2px 6px" onclick="editarItem(${i})" title="Editar">✏</button>
             <button class="btn-remove" onclick="removerItem(${i})" title="Remover">×</button>

@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150732"></script>
-  <script src="js/auth.js?v=04150732"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150732">
+  <script src="js/config.js?v=04150857"></script>
+  <script src="js/auth.js?v=04150857"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150857">
   <style>
     /* Tabs */
     .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
@@ -283,11 +283,6 @@
     (async () => {
       const ok = await requireAuth();
       if (!ok) return;
-      // Técnicos precisam da permissão 'catalogo'; bloqueados sem ela
-      if (APP.profile?.role === 'tecnico' && !APP.profile?.permissions?.catalogo) {
-        document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:14px">Acesso ao Catálogo não habilitado.<br>Solicite ao administrador.</div>';
-        return;
-      }
       // Técnicos: esconder preço, botões de criar/importar e headers
       if (APP.profile?.role === 'tecnico') {
         document.querySelectorAll('.search-bar .btn-primary, .search-bar .btn-ghost').forEach(b => b.style.display = 'none');
