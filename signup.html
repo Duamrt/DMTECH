@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151318"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151318">
+  <script src="js/config.js?v=04151357"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151357">
   <style>
     body {
       display: flex;
@@ -246,14 +246,8 @@
     }
 
     async function notificarTelegram(empresa, nome, email) {
-      const TG_BOT  = '8644194982:AAH6-26NFAbYYtq4TM45hOapqqMguid9qpI';
-      const TG_CHAT = '-5021838308';
-      const agora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Recife' });
-      const msg = `🚀 *Novo cliente DM Tech!*\n\n🏢 *Empresa:* ${empresa}\n👤 *Nome:* ${nome}\n📧 *E-mail:* ${email}\n🕐 *Horário:* ${agora}`;
-      await fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: TG_CHAT, text: msg, parse_mode: 'Markdown' })
+      await sb.functions.invoke('notificar-lead', {
+        body: { empresa, nome, email }
       });
     }
 

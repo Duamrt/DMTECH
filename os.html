@@ -8,9 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151318"></script>
-  <script src="js/auth.js?v=04151318"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151318">
+  <script src="js/config.js?v=04151357"></script>
+  <script src="js/lib.js?v=04151357"></script>
+  <script src="js/auth.js?v=04151357"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151357">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -327,7 +328,8 @@
       const { data } = await sb.from('ordens_servico')
         .select('*, is_demo, garantia, link_externo, clients(name), orcamentos(numero)')
         .eq('company_id', APP.company.id)
-        .order('numero', { ascending: false });
+        .order('numero', { ascending: false })
+        .limit(1000);
       todasOs = data || [];
       renderTabela();
     }

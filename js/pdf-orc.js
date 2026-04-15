@@ -252,7 +252,7 @@ const PDF_ORC = {
     const [{ data: orc }, { data: itens }] = await Promise.all([
       sb.from('orcamentos')
         .select('*, clients(name, phone, email, cpf_cnpj)')
-        .eq('id', orcId).single(),
+        .eq('id', orcId).eq('company_id', APP.company.id).single(),
       sb.from('orcamento_items').select('*').eq('orcamento_id', orcId).order('id')
     ]);
     if (!orc) { dmToast('Orçamento não encontrado', 'error'); return; }
@@ -299,7 +299,7 @@ const PDF_ORC = {
     const [{ data: orc }, { data: itens }] = await Promise.all([
       sb.from('orcamentos')
         .select('*, clients(name, phone, email)')
-        .eq('id', orcId).single(),
+        .eq('id', orcId).eq('company_id', APP.company.id).single(),
       sb.from('orcamento_items').select('*').eq('orcamento_id', orcId).order('id')
     ]);
     if (!orc) { dmToast('Orçamento não encontrado', 'error'); return; }
@@ -393,7 +393,7 @@ const PDF_ORC = {
 
     const { data: orc } = await sb.from('orcamentos')
       .select('*, clients(name, phone, email, cpf_cnpj)')
-      .eq('id', orcId).single();
+      .eq('id', orcId).eq('company_id', APP.company.id).single();
     if (!orc) { dmToast('Orçamento não encontrado', 'error'); return; }
 
     const empresa = cfg.empresa_nome || APP.company?.name || 'Empresa';

@@ -43,15 +43,20 @@ async function requireAuth(redirectTo = 'login.html') {
     return false;
   }
 
-  // Admin acessando outra empresa
+  // Admin acessando outra empresa (expira em 8h)
   if (isPlatformAdmin()) {
-    const adminCoId = localStorage.getItem('dmtech-admin-company');
-    if (adminCoId) {
+    const adminCoId  = localStorage.getItem('dmtech-admin-company');
+    const adminCoTs  = parseInt(localStorage.getItem('dmtech-admin-company-ts') || '0', 10);
+    const oitoHoras  = 8 * 60 * 60 * 1000;
+    if (adminCoId && (Date.now() - adminCoTs) < oitoHoras) {
       const { data: co } = await sb.rpc('admin_get_company', { p_company_id: adminCoId });
       if (co) {
         APP.company = co;
         _mostrarBarraAdmin(co.name);
       }
+    } else if (adminCoId) {
+      localStorage.removeItem('dmtech-admin-company');
+      localStorage.removeItem('dmtech-admin-company-ts');
     }
   }
 
@@ -62,8 +67,13 @@ async function requireAuth(redirectTo = 'login.html') {
     if (!checkPlan()) return false;
   }
 
-  // Modo técnico: marca body + filtra sidebar
+  // Modo técnico: redireciona páginas bloqueadas + filtra sidebar
   if (APP.profile?.role === 'tecnico') {
+    const bloqueadasTecnico = ['dashboard.html','orcamentos.html','financeiro.html','fornecedores.html','notas-fiscais.html','folha.html','audit.html'];
+    if (bloqueadasTecnico.includes(page)) {
+      window.location.href = 'minha-fila.html';
+      return false;
+    }
     document.body.classList.add('modo-tecnico');
     _filtrarNavTecnico();
   }
@@ -102,6 +112,7 @@ function _mostrarBarraAdmin(nomeEmpresa) {
 
 function sairModoAdmin() {
   localStorage.removeItem('dmtech-admin-company');
+  localStorage.removeItem('dmtech-admin-company-ts');
   window.location.href = 'admin.html';
 }
 
@@ -257,7 +268,7 @@ async function auditLog(action, entity, entityId, entityLabel, details) {
       entity_label: entityLabel || null,
       details: details || null
     });
-  } catch(e) { /* silencioso */ }
+  } catch(e) { console.warn('[auditLog]', e?.message || e); }
 }
 
 function dmToast(msg, tipo = 'success') {
