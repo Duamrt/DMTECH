@@ -47,8 +47,7 @@ async function requireAuth(redirectTo = 'login.html') {
   if (isPlatformAdmin()) {
     const adminCoId = localStorage.getItem('dmtech-admin-company');
     if (adminCoId) {
-      const { data: co, error: _rpcErr2 } = await sb.rpc('admin_get_company', { p_company_id: adminCoId });
-      console.log('[auth] co.comissao_padrao=',co?.comissao_padrao,'calc_params=',JSON.stringify(co?.calc_params),'err=',_rpcErr2);
+      const { data: co } = await sb.rpc('admin_get_company', { p_company_id: adminCoId });
       if (co) {
         APP.company = co;
         _mostrarBarraAdmin(co.name);
