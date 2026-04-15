@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150453"></script>
-  <script src="js/auth.js?v=04150453"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150453">
+  <script src="js/config.js?v=04150508"></script>
+  <script src="js/auth.js?v=04150508"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150508">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -837,15 +837,16 @@
         <div class="cfg-section">
           <div class="cfg-section-title">Parâmetros</div>
           <div class="cfg-row-3">
-            <div class="cfg-field"><div class="cfg-label">Custos fixos (R$/mês)</div><input class="cfg-input" id="calc-fixos" type="number" value="0" min="0" step="100" oninput="calcularCusto()"><div class="cfg-hint">Aluguel, luz, internet...</div></div>
+            <div class="cfg-field"><div class="cfg-label">Custos fixos (R$/mês)</div><input class="cfg-input" id="calc-fixos" type="number" value="${(c.calc_params||{}).custo_fixo||0}" min="0" step="100" oninput="calcularCusto()"><div class="cfg-hint">Aluguel, luz, internet...</div></div>
             <div class="cfg-field"><div class="cfg-label">Vagas/Atendimentos</div><input class="cfg-input" id="calc-vagas" type="number" value="${c.capacidade_diaria||3}" min="1" max="50" oninput="calcularCusto()"></div>
             <div class="cfg-field"><div class="cfg-label">Valor hora cobrado (R$)</div><input class="cfg-input" id="calc-cobrado" type="number" value="${c.valor_hora||120}" min="0" step="5" oninput="calcularCusto()"></div>
           </div>
           <div class="cfg-row-3">
             <div class="cfg-field"><div class="cfg-label">Comissão técnicos (%)</div><input class="cfg-input" id="calc-comissao" type="number" value="${c.comissao_padrao||5}" min="0" max="30" oninput="calcularCusto()"></div>
-            <div class="cfg-field"><div class="cfg-label">Impostos (%)</div><input class="cfg-input" id="calc-imposto" type="number" value="6" min="0" max="30" step="0.5" oninput="calcularCusto()"></div>
-            <div class="cfg-field"><div class="cfg-label">Taxa média cartão (%)</div><input class="cfg-input" id="calc-taxa" type="number" value="3" min="0" max="15" step="0.5" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Impostos (%)</div><input class="cfg-input" id="calc-imposto" type="number" value="${(c.calc_params||{}).imposto_pct||6}" min="0" max="30" step="0.5" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Taxa média cartão (%)</div><input class="cfg-input" id="calc-taxa" type="number" value="${(c.calc_params||{}).taxa_cartao_pct||3}" min="0" max="15" step="0.5" oninput="calcularCusto()"></div>
           </div>
+          <button class="cfg-btn cfg-btn-sm" style="margin-top:4px" onclick="salvarParamsCalc()">Salvar parâmetros</button>
         </div>
         <div class="calc-panel">
           <div class="calc-header">Simulador de Lucratividade</div>
@@ -923,12 +924,30 @@
         const updates = [];
         document.querySelectorAll('.calc-sal').forEach((input, i) => {
           const m = _calcEquipe[i];
-          if (m) updates.push(sb.from('profiles').update({ salario_base: parseFloat(input.value)||0 }).eq('id', m.id).eq('company_id', APP.company.id));
+          if (m) updates.push(sb.rpc('update_member_salary', { p_profile_id: m.id, p_salary: parseFloat(input.value)||0 }));
         });
-        await Promise.all(updates);
+        const results = await Promise.all(updates);
+        const erros = results.filter(r => r.error);
+        if (erros.length) { dmToast('Erro ao salvar alguns salários', 'error'); return; }
         dmToast('Salários salvos!');
       } catch(e) { dmToast('Erro inesperado', 'error'); }
       finally { _busy.salarios = false; }
+    }
+
+    async function salvarParamsCalc() {
+      if (_busy.params) return; _busy.params = true;
+      try {
+        const custo_fixo     = parseFloat(document.getElementById('calc-fixos')?.value)||0;
+        const imposto_pct    = parseFloat(document.getElementById('calc-imposto')?.value)||6;
+        const taxa_cartao_pct= parseFloat(document.getElementById('calc-taxa')?.value)||3;
+        const { error } = await sb.from('companies')
+          .update({ calc_params: { custo_fixo, imposto_pct, taxa_cartao_pct } })
+          .eq('id', APP.company.id);
+        if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        APP.company.calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
+        dmToast('Parâmetros salvos!');
+      } catch(e) { dmToast('Erro inesperado', 'error'); }
+      finally { _busy.params = false; }
     }
 
     // ══════════════════════════════════════════
