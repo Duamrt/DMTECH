@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150718"></script>
-  <script src="js/auth.js?v=04150718"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150718">
+  <script src="js/config.js?v=04150719"></script>
+  <script src="js/auth.js?v=04150719"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150719">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -449,6 +449,17 @@
       renderItens();
     }
 
+    function editarItem(idx) {
+      const it = itensAtual[idx];
+      tipoItemAtual = it.tipo;
+      document.getElementById('os-item-desc').value  = it.descricao;
+      document.getElementById('os-item-qtd').value   = it.quantidade;
+      document.getElementById('os-item-preco').value = it.preco_unit;
+      itensAtual.splice(idx, 1);
+      renderItens();
+      document.getElementById('os-item-desc').focus();
+    }
+
     function renderItens() {
       const tbody = document.getElementById('os-items-tbody');
       if (!itensAtual.length) {
@@ -463,7 +474,10 @@
           <td class="mono">${fmtQtd(it.quantidade)}</td>
           <td class="mono">${fmtMoeda(it.preco_unit)}</td>
           <td class="mono" style="color:var(--accent)">${fmtMoeda(it.subtotal)}</td>
-          <td><button class="btn-remove" onclick="removerItem(${i})" title="Remover">×</button></td>
+          <td style="display:flex;gap:4px;align-items:center">
+            <button class="btn-remove" style="font-size:11px;padding:2px 6px" onclick="editarItem(${i})" title="Editar">✏</button>
+            <button class="btn-remove" onclick="removerItem(${i})" title="Remover">×</button>
+          </td>
         </tr>
       `).join('');
       const total = itensAtual.reduce((s, it) => s + it.subtotal, 0);
