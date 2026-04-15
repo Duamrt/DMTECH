@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151304"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151304">
+  <script src="js/config.js?v=04151314"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151314">
   <style>
     body {
       display: flex;
@@ -98,8 +98,10 @@
       if (e.key === 'Enter') fazerLogin();
     });
 
-    sb.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = 'dashboard.html';
+    sb.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data: p } = await sb.from('profiles').select('company_id').eq('id', session.user.id).single();
+      window.location.href = p?.company_id === 'aaaa0001-0000-0000-0000-000000000001' ? 'admin.html' : 'dashboard.html';
     });
 
     async function fazerLogin() {
@@ -114,7 +116,7 @@
       btn.disabled    = true;
       btn.textContent = 'Entrando...';
 
-      const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+      const { data: authData, error } = await sb.auth.signInWithPassword({ email, password: senha });
 
       if (error) {
         mostrarErro('E-mail ou senha incorretos.');
@@ -123,7 +125,8 @@
         return;
       }
 
-      window.location.href = 'dashboard.html';
+      const { data: p } = await sb.from('profiles').select('company_id').eq('id', authData.user.id).single();
+      window.location.href = p?.company_id === 'aaaa0001-0000-0000-0000-000000000001' ? 'admin.html' : 'dashboard.html';
     }
 
     function mostrarErro(msg) {
