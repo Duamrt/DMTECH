@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150510"></script>
-  <script src="js/auth.js?v=04150510"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150510">
+  <script src="js/config.js?v=04150514"></script>
+  <script src="js/auth.js?v=04150514"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150514">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -937,14 +937,35 @@
     async function salvarParamsCalc() {
       if (_busy.params) return; _busy.params = true;
       try {
-        const custo_fixo     = parseFloat(document.getElementById('calc-fixos')?.value)||0;
-        const imposto_pct    = parseFloat(document.getElementById('calc-imposto')?.value)||6;
-        const taxa_cartao_pct= parseFloat(document.getElementById('calc-taxa')?.value)||3;
-        const { error } = await sb.from('companies')
-          .update({ calc_params: { custo_fixo, imposto_pct, taxa_cartao_pct } })
-          .eq('id', APP.company.id);
+        const custo_fixo      = parseFloat(document.getElementById('calc-fixos')?.value)||0;
+        const imposto_pct     = parseFloat(document.getElementById('calc-imposto')?.value)||6;
+        const taxa_cartao_pct = parseFloat(document.getElementById('calc-taxa')?.value)||3;
+        const comissao_padrao = parseFloat(document.getElementById('calc-comissao')?.value)||5;
+        const valor_hora      = parseFloat(document.getElementById('calc-cobrado')?.value)||120;
+        const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||3;
+        const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
+
+        let error;
+        // Em modo admin: usa RPC que bypassa RLS
+        if (isPlatformAdmin() && localStorage.getItem('dmtech-admin-company')) {
+          ({ error } = await sb.rpc('admin_update_company_config', {
+            p_company_id: APP.company.id,
+            p_calc_params: calc_params,
+            p_comissao_padrao: comissao_padrao,
+            p_valor_hora: valor_hora,
+            p_capacidade_diaria: capacidade_diaria
+          }));
+        } else {
+          ({ error } = await sb.from('companies')
+            .update({ calc_params, comissao_padrao, valor_hora, capacidade_diaria })
+            .eq('id', APP.company.id));
+        }
+
         if (error) { dmToast('Erro: '+error.message, 'error'); return; }
-        APP.company.calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
+        APP.company.calc_params      = calc_params;
+        APP.company.comissao_padrao  = comissao_padrao;
+        APP.company.valor_hora       = valor_hora;
+        APP.company.capacidade_diaria= capacidade_diaria;
         dmToast('Parâmetros salvos!');
       } catch(e) { dmToast('Erro inesperado', 'error'); }
       finally { _busy.params = false; }
