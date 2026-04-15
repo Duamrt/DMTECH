@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151030"></script>
-  <script src="js/auth.js?v=04151030"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151030">
+  <script src="js/config.js?v=04151038"></script>
+  <script src="js/auth.js?v=04151038"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151038">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -63,20 +63,22 @@
     .dre-hero-val { font-size:18px; font-weight:800; font-family:'Fira Code',monospace; }
     .dre-hero-pct { font-size:11px; color:var(--text-muted); margin-top:3px; }
 
-    .dre-tree { background:var(--surface-2); border:1px solid var(--border); padding:4px 0; margin-bottom:16px; max-height:calc(100vh - 280px); overflow-y:auto; }
-    .dre-row { display:flex; justify-content:space-between; align-items:center; padding:7px 16px; transition:background .1s; }
-    .dre-row:hover { background:var(--surface-3); }
-    .dre-row.dre-total { border-top:1px solid var(--border); background:var(--surface-3); }
-    .dre-row.dre-result { border-top:2px solid var(--border); background:var(--surface-2); }
+    .dre-table { width:100%; border-collapse:collapse; background:var(--surface-2); border:1px solid var(--border); margin-bottom:16px; }
+    .dre-table td { padding:8px 16px; font-size:13px; }
+    .dre-table tr { border-bottom:1px solid var(--border); transition:background .1s; }
+    .dre-table tr:last-child { border-bottom:none; }
+    .dre-table tr:hover { background:var(--surface-3); }
+    .dre-table tr.dre-result { border-top:2px solid var(--border); background:var(--surface-3); }
+    .dre-table tr.dre-sep-row td { padding:2px 0; background:var(--border); height:1px; }
     .dre-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); }
     .dre-label.main { color:var(--text); font-size:13px; }
-    .dre-label.indent { padding-left:18px; font-size:11px; color:var(--text-dim); font-weight:600; text-transform:none; letter-spacing:0; }
-    .dre-val { font-family:'Fira Code',monospace; font-size:13px; font-weight:700; }
+    .dre-label.indent { padding-left:24px !important; font-size:11px; color:var(--text-muted); font-weight:600; text-transform:none; letter-spacing:0; }
+    .dre-label.result { color:var(--text); font-size:13px; font-weight:800; }
+    .dre-val { font-family:'Fira Code',monospace; font-size:13px; font-weight:700; text-align:right; white-space:nowrap; }
     .dre-val.pos { color:#4ade80; }
     .dre-val.neg { color:#f87171; }
     .dre-val.neu { color:var(--text-muted); }
-    .dre-pct { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-dim); margin-left:10px; min-width:44px; text-align:right; }
-    .dre-sep { height:1px; background:var(--border); margin:4px 0; opacity:.5; }
+    .dre-pct { font-family:'Fira Code',monospace; font-size:11px; color:var(--text-muted); text-align:right; white-space:nowrap; width:52px; }
 
     /* ── Lucro Peças ── */
     .lucro-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
@@ -278,9 +280,9 @@
             </div>
           </div>
 
-          <div class="dre-tree" id="dre-tree">
-            <div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Carregando...</div>
-          </div>
+          <table class="dre-table" id="dre-tree">
+            <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">Carregando...</td></tr>
+          </table>
         </div>
 
       </div>
@@ -618,23 +620,22 @@
         function pct(v) { return f > 0 ? (v/f*100).toFixed(0)+'%' : '—'; }
         function row(label, val, cls='neu', indent=false) {
           const labelClass = 'dre-label' + (indent ? ' indent' : ' main');
-          return `<div class="dre-row">
-            <span class="${labelClass}">${label}</span>
-            <div style="display:flex;align-items:center">
-              <span class="dre-val ${cls}">${fmtMoeda(val)}</span>
-              <span class="dre-pct">${pct(val)}</span>
-            </div>
-          </div>`;
+          return `<tr>
+            <td class="${labelClass}">${label}</td>
+            <td class="dre-val ${cls}">${fmtMoeda(val)}</td>
+            <td class="dre-pct">${pct(val)}</td>
+          </tr>`;
         }
         function rowResult(label, val) {
-          const cor = val >= 0 ? '#4ade80' : '#f87171';
-          return `<div class="dre-row dre-result">
-            <span class="dre-label main" style="font-size:14px;color:var(--text)">${label}</span>
-            <div style="display:flex;align-items:center">
-              <span class="dre-val" style="font-size:16px;color:${cor}">${fmtMoeda(val)}</span>
-              <span class="dre-pct" style="font-size:12px">${pct(val)}</span>
-            </div>
-          </div>`;
+          const cls = val >= 0 ? 'pos' : 'neg';
+          return `<tr class="dre-result">
+            <td class="dre-label result">${label}</td>
+            <td class="dre-val ${cls}" style="font-size:15px">${fmtMoeda(val)}</td>
+            <td class="dre-pct">${pct(val)}</td>
+          </tr>`;
+        }
+        function rowSep() {
+          return `<tr class="dre-sep-row"><td colspan="3"></td></tr>`;
         }
 
         let html = '';
@@ -642,23 +643,23 @@
         if (impostoPct > 0)
           html += row(`(−) Impostos / Simples (${impostoPct}%)`, impostos, 'neg', true);
         html += row('(=) Receita Líquida', receitaLiquida, receitaLiquida >= 0 ? 'pos' : 'neg');
-        html += `<div class="dre-sep"></div>`;
+        html += rowSep();
         html += row('(−) Custo de Materiais', custoMateriais, 'neg', true);
         html += rowResult('(=) Margem Bruta', margemBruta);
-        html += `<div class="dre-sep"></div>`;
+        html += rowSep();
         if (custoPessoal > 0)     html += row('(−) Custo de Pessoal', custoPessoal, 'neg', true);
         if (custosFixos > 0)      html += row('(−) Custos Fixos', custosFixos, 'neg', true);
         if (taxasFinanceiras > 0) html += row('(−) Taxas Financeiras', taxasFinanceiras, 'neg', true);
         if (outrosCustos > 0)     html += row('(−) Outros Custos', outrosCustos, 'neg', true);
         if (totalDespesas > 0) {
-          html += `<div class="dre-sep"></div>`;
+          html += rowSep();
           html += row('Total Despesas Operacionais', totalDespesas, 'neg');
         }
-        html += `<div class="dre-sep"></div>`;
+        html += rowSep();
         html += rowResult('Resultado Líquido', resultadoLiquido);
 
         if (!osIds.length && !sp.length) {
-          html = '<div style="text-align:center;padding:32px;color:var(--text-dim);font-size:13px">Nenhuma OS entregue no período.</div>';
+          html = '<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">Nenhuma OS entregue no período.</td></tr>';
           ['dre-fat','dre-margem-bruta','dre-res'].forEach(id => document.getElementById(id).textContent = fmtMoeda(0));
         }
 
@@ -667,7 +668,7 @@
       } catch(e) {
         if (reqId !== dreReqId) return;
         document.getElementById('dre-tree').innerHTML =
-          `<div style="text-align:center;padding:32px;color:#f87171;font-size:13px">Erro: ${esc(e.message)}</div>`;
+          `<tr><td colspan="3" style="text-align:center;padding:24px;color:#f87171;font-size:13px">Erro: ${esc(e.message)}</td></tr>`;
       } finally {
         if (reqId === dreReqId) {
           dreCarregando = false;
