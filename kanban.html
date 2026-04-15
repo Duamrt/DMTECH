@@ -11,9 +11,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04150719"></script>
-  <script src="js/auth.js?v=04150719"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150719">
+  <script src="js/config.js?v=04150732"></script>
+  <script src="js/auth.js?v=04150732"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150732">
   <style>
     /* Board */
     .board-outer {
@@ -310,6 +310,17 @@
       line-height: 1.5;
     }
     .panel-textarea:focus { outline: none; border-color: var(--accent); }
+    .panel-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-size: 13px;
+      padding: 8px 12px;
+      box-sizing: border-box;
+    }
+    .panel-input:focus { outline: none; border-color: var(--accent); }
 
     /* Footer actions */
     .panel-actions {
@@ -698,6 +709,16 @@
       </div>
 
       <div>
+        <div class="p-section-title">Garantia</div>
+        <input class="panel-input" type="text" id="p-garantia" placeholder="Ex: 90 dias para serviços executados...">
+      </div>
+
+      <div>
+        <div class="p-section-title">Link de Referência</div>
+        <input class="panel-input" type="url" id="p-link-externo" placeholder="Drive, foto, projeto...">
+      </div>
+
+      <div>
         <div class="p-section-title">Assistente IA</div>
         <div class="ai-btns">
           <button class="btn-ai" id="btn-checklist" onclick="gerarIA('checklist')">
@@ -847,7 +868,9 @@
       } else {
         mapsEl.style.display = 'none';
       }
-      document.getElementById('p-notes').value        = osAtual.notes || '';
+      document.getElementById('p-notes').value          = osAtual.notes || '';
+      document.getElementById('p-garantia').value      = osAtual.garantia || '';
+      document.getElementById('p-link-externo').value  = osAtual.link_externo || '';
 
       const orcRow = document.getElementById('p-orc-row');
       if (osAtual.orcamentos) {
@@ -1153,6 +1176,8 @@
       if (!osAtual || !statusSelecionado) return;
       const notes        = document.getElementById('p-notes').value.trim();
       const responsavelId = document.getElementById('p-responsavel').value || null;
+      const garantia     = document.getElementById('p-garantia').value.trim() || null;
+      const linkExterno  = document.getElementById('p-link-externo').value.trim() || null;
 
       // started_at: lê campo ou auto-preenche ao mudar para em_andamento
       let startedAt = document.getElementById('p-started-at').value || null;
@@ -1166,7 +1191,7 @@
 
       const { error } = await sb
         .from('ordens_servico')
-        .update({ status: statusSelecionado, notes, responsavel_id: responsavelId, started_at: startedAt })
+        .update({ status: statusSelecionado, notes, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno })
         .eq('id', osAtual.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
 
@@ -1566,7 +1591,9 @@ ${empresa}`;
       const totalS   = servicos.reduce((s,i) => s+(i.subtotal||0), 0);
       const totalP   = produtos.reduce((s,i) => s+(i.subtotal||0), 0);
       const { bloco: blocoTotais, totalGeral } = _pdfTotais(totalS, totalP);
-      const notas = document.getElementById('p-notes').value || os.notes || '';
+      const notas     = document.getElementById('p-notes').value || os.notes || '';
+      const garantia  = document.getElementById('p-garantia').value || os.garantia || '';
+      const linkExt   = document.getElementById('p-link-externo').value || os.link_externo || '';
 
       // QR PIX
       let blocoPix = null;
@@ -1589,7 +1616,10 @@ ${empresa}`;
       const blocoFinal = [];
       if (blocoPix) blocoFinal.push({ columns: [{ ...blocoTotais, width: '*', margin:[0,0,0,6] }, blocoPix], margin:[0,0,0,6] });
       else blocoFinal.push(blocoTotais);
-      if (notas) blocoFinal.push({ text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,20] });
+      if (notas) blocoFinal.push({ text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,6] });
+      if (garantia) blocoFinal.push({ text: 'Garantia: ' + garantia, style: 'obs', bold: true, margin: [0,0,0,6] });
+      if (linkExt) blocoFinal.push({ text: [{ text: 'Referência: ', style: 'obs', bold: true }, { text: linkExt, color: '#2563eb', decoration: 'underline', link: linkExt, fontSize: 9 }], margin: [0,0,0,20] });
+      else blocoFinal.push({ text: '', margin: [0,0,0,20] });
       blocoFinal.push(_pdfAssinaturas());
 
       const docDef = {
@@ -1671,7 +1701,7 @@ ${empresa}`;
     async function carregarOS() {
       let query = sb
         .from('ordens_servico')
-        .select('*, is_demo, started_at, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
+        .select('*, is_demo, started_at, garantia, link_externo, clients(name,phone,email,address,city,cpf_cnpj), orcamentos(numero), responsavel:profiles(id,name,email)')
         .eq('company_id', APP.company.id)
         .order('numero', { ascending: false });
       // Técnico vê só as próprias OS

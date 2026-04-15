@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04150719"></script>
-  <script src="js/auth.js?v=04150719"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04150719">
+  <script src="js/config.js?v=04150732"></script>
+  <script src="js/auth.js?v=04150732"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04150732">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -227,6 +227,17 @@
         </div>
       </div>
 
+      <div class="form-row" style="margin-top:12px">
+        <div class="form-group">
+          <label class="form-label">Garantia</label>
+          <input class="form-input" type="text" id="os-garantia" placeholder="Ex: 90 dias para serviços executados...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link de Referência</label>
+          <input class="form-input" type="url" id="os-link-externo" placeholder="Drive, foto, projeto...">
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
         <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
@@ -314,7 +325,7 @@
 
     async function carregarOs() {
       const { data } = await sb.from('ordens_servico')
-        .select('*, is_demo, clients(name), orcamentos(numero)')
+        .select('*, is_demo, garantia, link_externo, clients(name), orcamentos(numero)')
         .eq('company_id', APP.company.id)
         .order('numero', { ascending: false });
       todasOs = data || [];
@@ -367,6 +378,8 @@
       _clienteSetValor('');
       document.getElementById('os-status').value = 'aberta';
       document.getElementById('os-notes').value = '';
+      document.getElementById('os-garantia').value = '';
+      document.getElementById('os-link-externo').value = '';
       document.getElementById('btn-excluir').style.display = 'none';
       document.getElementById('os-add-row').style.display = 'grid';
       renderItens();
@@ -381,6 +394,8 @@
       _clienteSetValor(os.client_id || '');
       document.getElementById('os-status').value = os.status;
       document.getElementById('os-notes').value = os.notes || '';
+      document.getElementById('os-garantia').value = os.garantia || '';
+      document.getElementById('os-link-externo').value = os.link_externo || '';
       document.getElementById('btn-excluir').style.display = 'block';
       document.getElementById('os-add-row').style.display = 'grid';
 
@@ -489,8 +504,10 @@
       const id       = document.getElementById('os-id').value;
       const clientId = document.getElementById('os-cliente').value || null;
       const status   = document.getElementById('os-status').value;
-      const notes    = document.getElementById('os-notes').value.trim() || null;
-      const total    = itensAtual.reduce((s, it) => s + it.subtotal, 0);
+      const notes       = document.getElementById('os-notes').value.trim() || null;
+      const garantia    = document.getElementById('os-garantia').value.trim() || null;
+      const linkExterno = document.getElementById('os-link-externo').value.trim() || null;
+      const total       = itensAtual.reduce((s, it) => s + it.subtotal, 0);
 
       const btn = document.getElementById('btn-salvar');
       btn.disabled = true; btn.textContent = 'Salvando...';
@@ -498,13 +515,13 @@
       let osId = id;
 
       if (id) {
-        await sb.from('ordens_servico').update({ client_id: clientId, status, notes, total }).eq('id', id);
+        await sb.from('ordens_servico').update({ client_id: clientId, status, notes, garantia, link_externo: linkExterno, total }).eq('id', id);
         await sb.from('os_items').delete().eq('os_id', id);
       } else {
         const { data: maxN } = await sb.from('ordens_servico').select('numero').eq('company_id', APP.company.id).order('numero', { ascending: false }).limit(1);
         const numero = maxN?.length ? maxN[0].numero + 1 : 1;
         const { data: novaOs } = await sb.from('ordens_servico').insert({
-          company_id: APP.company.id, client_id: clientId, status, notes, total, numero
+          company_id: APP.company.id, client_id: clientId, status, notes, garantia, link_externo: linkExterno, total, numero
         }).select().single();
         osId = novaOs?.id;
       }
