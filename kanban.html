@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04151357"></script>
-  <script src="js/lib.js?v=04151357"></script>
-  <script src="js/auth.js?v=04151357"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151357">
+  <script src="js/config.js?v=04151749"></script>
+  <script src="js/lib.js?v=04151749"></script>
+  <script src="js/auth.js?v=04151749"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151749">
   <style>
     /* Board */
     .board-outer {
@@ -705,8 +705,18 @@
       </div>
 
       <div>
-        <div class="p-section-title">Observações</div>
-        <textarea class="panel-textarea" id="p-notes" placeholder="Observações sobre o serviço..."></textarea>
+        <div class="p-section-title">Descrição do Serviço</div>
+        <textarea class="panel-textarea dono-only-field" id="p-notes" placeholder="Descreva o serviço solicitado..."></textarea>
+      </div>
+
+      <div>
+        <div class="p-section-title">Descrição do Técnico</div>
+        <textarea class="panel-textarea" id="p-desc-tecnico" placeholder="O que foi executado pelo técnico..."></textarea>
+      </div>
+
+      <div>
+        <div class="p-section-title">Ressalva</div>
+        <textarea class="panel-textarea" id="p-ressalva" placeholder="Limitações, pendências, observações adicionais..."></textarea>
       </div>
 
       <div>
@@ -869,6 +879,8 @@
         mapsEl.style.display = 'none';
       }
       document.getElementById('p-notes').value          = osAtual.notes || '';
+      document.getElementById('p-desc-tecnico').value   = osAtual.desc_tecnico || '';
+      document.getElementById('p-ressalva').value       = osAtual.ressalva || '';
       document.getElementById('p-garantia').value      = osAtual.garantia || '';
       document.getElementById('p-link-externo').value  = osAtual.link_externo || '';
 
@@ -1180,6 +1192,8 @@
     async function salvarStatus() {
       if (!osAtual || !statusSelecionado) return;
       const notes        = document.getElementById('p-notes').value.trim();
+      const descTecnico  = document.getElementById('p-desc-tecnico').value.trim() || null;
+      const ressalva     = document.getElementById('p-ressalva').value.trim() || null;
       const responsavelId = document.getElementById('p-responsavel').value || null;
       const garantia     = document.getElementById('p-garantia').value.trim() || null;
       const linkExterno  = document.getElementById('p-link-externo').value.trim() || null;
@@ -1196,7 +1210,7 @@
 
       const { error } = await sb
         .from('ordens_servico')
-        .update({ status: statusSelecionado, notes, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno })
+        .update({ status: statusSelecionado, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno })
         .eq('id', osAtual.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
 
@@ -1218,8 +1232,10 @@
         });
       }
 
-      osAtual.status        = statusSelecionado;
-      osAtual.notes         = notes;
+      osAtual.status         = statusSelecionado;
+      osAtual.notes          = notes;
+      osAtual.desc_tecnico   = descTecnico;
+      osAtual.ressalva       = ressalva;
       osAtual.responsavel_id = responsavelId;
       fecharPanel();
       await carregarOS();

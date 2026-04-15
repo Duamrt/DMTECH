@@ -222,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     #dm-toast.error{background:rgba(239,68,68,.08);border-color:#f87171;color:#f87171}
     #dm-toast.info{background:var(--surface-2);border-color:var(--border);color:var(--text)}
     .modo-tecnico .hide-tecnico{display:none!important}
+    .modo-tecnico .dono-only-field{pointer-events:none;opacity:.5;user-select:none}
   `;
   document.head.appendChild(st);
   document.body.insertAdjacentHTML('beforeend', `
