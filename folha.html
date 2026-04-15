@@ -8,9 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151245"></script>
-  <script src="js/auth.js?v=04151245"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151245">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="js/config.js?v=04151252"></script>
+  <script src="js/auth.js?v=04151252"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151252">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -129,7 +130,8 @@
           <button class="period-btn" onclick="mudarMes(-1)">&#8592;</button>
           <div class="period-nav-label" id="period-label">— <span>—</span></div>
           <button class="period-btn" onclick="mudarMes(1)">&#8594;</button>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost" style="margin-left:auto;font-size:12px;padding:6px 14px" onclick="imprimirFolha()">&#128438; Imprimir PDF</button>
+          <div style="display:flex;align-items:center;gap:8px">
             <label class="form-label" style="margin:0;font-size:12px">Dias úteis:</label>
             <input class="form-input" type="number" id="dias-uteis" value="22" min="1" max="31" style="width:70px" oninput="calcular()">
           </div>
@@ -250,7 +252,7 @@
 
       const [resProf, resVales, resOS] = await Promise.all([
         sb.from('profiles')
-          .select('id, name, role, salario_base, vale_refeicao')
+          .select('id, name, role, salario_base, vale_refeicao, pix_key')
           .eq('company_id', APP.company.id)
           .eq('ativo', true)
           .in('role', ['dono', 'tecnico'])
@@ -514,6 +516,109 @@
     function esc(v) {
       if (!v) return '';
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── PIX EMV ──
+    function _crc16(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+      }
+      return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+    }
+    function _tlv(id, value) { return id + String(value.length).padStart(2,'0') + value; }
+    function _pixPayload(chave, nome, cidade, valor) {
+      const gui = _tlv('00','BR.GOV.BCB.PIX') + _tlv('01', chave);
+      const addl = _tlv('62', _tlv('05','***'));
+      let p = _tlv('00','01') +
+              _tlv('26', gui) +
+              _tlv('52','0000') +
+              _tlv('53','986') +
+              _tlv('54', valor.toFixed(2)) +
+              _tlv('58','BR') +
+              _tlv('59', nome.substring(0,25)) +
+              _tlv('60', cidade.substring(0,15)) +
+              addl + '6304';
+      return p + _crc16(p);
+    }
+
+    // ── Imprimir Folha ──
+    async function imprimirFolha() {
+      if (!_dados?.folha?.length) { dmToast('Carregue a folha primeiro.','error'); return; }
+      const empresa  = APP.company?.name || '';
+      const periodo  = `${MESES[MES-1]} ${ANO}`;
+
+      // Gerar QR codes como dataURL para cada funcionário com PIX
+      const qrMap = {};
+      for (const f of _dados.folha) {
+        if (!f.pix_key || f.liquido <= 0) continue;
+        try {
+          const payload = _pixPayload(f.pix_key, (f.name||'').toUpperCase(), 'BRASIL', f.liquido);
+          qrMap[f.id] = await QRCode.toDataURL(payload, { width:160, margin:1, color:{dark:'#000',light:'#fff'} });
+        } catch(_) {}
+      }
+
+      const slips = _dados.folha.map(f => {
+        const qrImg = qrMap[f.id] ? `<div class="qr-wrap"><img src="${qrMap[f.id]}" width="120" height="120"><div class="qr-label">PIX: ${esc(f.pix_key)}</div></div>` : '';
+        const valesLinhas = f.meusVales.map(v => {
+          const dt = new Date(v.created_at);
+          const d  = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
+          return `<tr class="deduct"><td>(−) Vale ${d} — ${esc(v.descricao||'Vale')}</td><td>-${fmtM(v.valor)}</td></tr>`;
+        }).join('');
+        return `
+        <div class="slip">
+          <div class="slip-header">
+            <div>
+              <div class="slip-nome">${esc(f.name||'—')}</div>
+              <div class="slip-cargo">${f.role==='dono'?'Dono':'Técnico'} · ${f.minhasOS.qtd} OS em ${periodo}</div>
+            </div>
+            ${qrImg}
+          </div>
+          <table class="slip-table">
+            <tr><td>Salário base</td><td>${fmtM(f.salario)}</td></tr>
+            <tr><td>Vale Refeição (${parseInt(document.getElementById('dias-uteis').value)||22} dias − ${f.faltas} falta${f.faltas!==1?'s':''})</td><td>${fmtM(f.vr)}</td></tr>
+            ${f.extra>0?`<tr><td>Gratificação / Extra</td><td>${fmtM(f.extra)}</td></tr>`:''}
+            ${f.comissao>0?`<tr><td>Comissão (${f.pct}%)</td><td>${fmtM(f.comissao)}</td></tr>`:''}
+            ${f.descFalta>0?`<tr class="deduct"><td>(−) Desc. Falta (${f.faltas} dia${f.faltas!==1?'s':''})</td><td>-${fmtM(f.descFalta)}</td></tr>`:''}
+            ${valesLinhas}
+            <tr class="total-row"><td>LÍQUIDO A RECEBER</td><td>${fmtM(f.liquido)}</td></tr>
+          </table>
+          ${f.pix_key?`<div class="assinatura"><span>Assinatura: ___________________________________</span><span>Data: ___/___/______</span></div>`:''}
+        </div>`;
+      }).join('');
+
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+        <title>Folha ${periodo} — ${esc(empresa)}</title>
+        <style>
+          * { box-sizing:border-box; margin:0; padding:0; }
+          body { font-family:Arial,sans-serif; font-size:12px; color:#000; background:#fff; padding:20px; }
+          h1 { font-size:16px; margin-bottom:4px; }
+          .periodo { font-size:12px; color:#555; margin-bottom:20px; }
+          .slip { border:1px solid #ccc; padding:14px 16px; margin-bottom:16px; page-break-inside:avoid; }
+          .slip-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+          .slip-nome { font-size:14px; font-weight:700; text-transform:uppercase; }
+          .slip-cargo { font-size:10px; color:#666; margin-top:2px; }
+          .qr-wrap { text-align:center; }
+          .qr-label { font-size:9px; color:#444; margin-top:3px; max-width:130px; word-break:break-all; }
+          .slip-table { width:100%; border-collapse:collapse; margin-top:6px; }
+          .slip-table td { padding:4px 6px; border-bottom:1px solid #eee; }
+          .slip-table td:last-child { text-align:right; font-weight:600; min-width:100px; }
+          .deduct td { color:#c00; }
+          .total-row td { font-weight:800; font-size:13px; border-top:2px solid #000; border-bottom:none; padding-top:6px; }
+          .assinatura { display:flex; justify-content:space-between; margin-top:12px; font-size:10px; color:#555; }
+          @media print { body { padding:10px; } .slip { margin-bottom:10px; } }
+        </style>
+      </head><body>
+        <h1>Folha de Pagamento — ${esc(empresa)}</h1>
+        <div class="periodo">${periodo} · ${_dados.folha.length} pessoa(s) · Total líquido: ${fmtM(_dados.totalLiquido)}</div>
+        ${slips}
+        <script>window.onload=()=>window.print();<\/script>
+      </body></html>`;
+
+      const w = window.open('','_blank');
+      w.document.write(html);
+      w.document.close();
     }
   </script>
   <script>
