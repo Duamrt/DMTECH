@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151241"></script>
-  <script src="js/auth.js?v=04151241"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151241">
+  <script src="js/config.js?v=04151245"></script>
+  <script src="js/auth.js?v=04151245"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151245">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -25,38 +25,40 @@
     .folha-kpi-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:5px; }
     .folha-kpi-val   { font-size:20px; font-weight:800; font-family:'Fira Code',monospace; }
 
-    /* ── Technician cards ── */
-    .tec-card { background:var(--surface-2); border:2px solid var(--border); padding:16px 18px; margin-bottom:8px; transition:border-color .12s; }
-    .tec-card:hover { border-color:var(--border-light, var(--accent)); }
-    .tec-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
-    .tec-nome { font-size:16px; font-weight:800; color:var(--text); text-transform:uppercase; }
-    .tec-cargo { font-size:11px; color:var(--text-muted); margin-top:2px; }
-    .tec-liquido { text-align:right; }
-    .tec-liquido-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
-    .tec-liquido-val { font-size:22px; font-weight:800; font-family:'Fira Code',monospace; }
-
-    .tec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; }
-    .tec-cell { background:var(--surface-3,var(--surface)); border:1px solid var(--border); padding:8px 10px; text-align:center; }
-    .tec-cell-val { font-size:13px; font-weight:700; font-family:'Fira Code',monospace; }
-    .tec-cell-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-top:2px; }
-
-    .tec-vales { margin-top:10px; border-left:3px solid #f87171; padding-left:12px; }
-    .vale-line { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; }
-    .vale-info { color:var(--text-muted); }
-    .vale-dt   { font-family:'Fira Code',monospace; font-size:10px; color:var(--text-dim); margin-right:8px; }
-    .vale-val  { font-family:'Fira Code',monospace; font-weight:700; color:#f87171; }
-
-    .tec-actions { margin-top:10px; display:flex; justify-content:flex-end; }
-
-    /* ── Slip body ── */
-    .slip-body { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
-    .slip-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:4px 0; border-bottom:1px solid var(--border); }
-    .slip-row:last-child { border-bottom:none; }
-    .slip-label { color:var(--text-muted); font-weight:500; }
-    .slip-val { font-family:'Fira Code',monospace; font-weight:700; color:var(--text); }
-    .slip-editable .slip-label { color:var(--text); }
-    .slip-divider { border-top:2px solid var(--border); margin:4px 0; }
-    .slip-total .slip-label { font-weight:800; color:var(--text); font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
+    /* ── Folha table ── */
+    .folha-table-wrap { overflow-x:auto; }
+    .folha-table { width:100%; border-collapse:collapse; }
+    .folha-table th {
+      font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+      color:var(--text-dim); background:var(--surface-2); border:1px solid var(--border);
+      padding:8px 10px; text-align:right; white-space:nowrap;
+    }
+    .folha-table th:first-child { text-align:left; }
+    .folha-table td {
+      font-size:13px; font-weight:600; font-family:'Fira Code',monospace;
+      border:1px solid var(--border); padding:8px 10px; text-align:right;
+      vertical-align:middle; background:var(--surface-2);
+    }
+    .folha-table td:first-child { text-align:left; font-family:inherit; }
+    .folha-table tr:hover td { background:var(--surface-3, var(--surface)); }
+    .folha-table tfoot td {
+      font-size:12px; font-weight:800; background:var(--surface);
+      border-top:2px solid var(--accent);
+    }
+    .ft-nome  { font-weight:800; color:var(--text); font-size:13px; }
+    .ft-cargo { font-size:10px; color:var(--text-dim); font-weight:500; }
+    .ft-input {
+      width:80px; text-align:right; background:transparent;
+      border:none; border-bottom:1px dashed currentColor;
+      font-size:12px; font-weight:700; font-family:'Fira Code',monospace;
+      padding:1px 2px; color:inherit;
+    }
+    .ft-input:focus { outline:none; }
+    .ft-faltas-input {
+      width:40px; text-align:center; background:var(--surface);
+      border:1px solid var(--border); font-size:12px; font-weight:700;
+      font-family:'Fira Code',monospace; padding:2px 4px; color:var(--text);
+    }
 
     /* ── Total bar ── */
     .total-bar { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border:2px solid var(--accent); padding:16px 22px; margin-top:8px; }
@@ -393,85 +395,68 @@
       document.getElementById('kpi-comissoes').textContent = fmtM(totalComissoes);
       document.getElementById('kpi-liquido').textContent   = fmtM(totalLiquido);
 
-      document.getElementById('emp-lista').innerHTML = folha.map(f => {
-        const liqCor  = f.liquido >= 0 ? 'var(--accent)' : '#f87171';
-        const cargo   = f.role === 'dono' ? 'Dono' : 'Técnico';
-
-        const linhaVales = f.meusVales.map(v => {
-          const dt    = new Date(v.created_at);
-          const dtStr = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
-          return `<div class="slip-row" style="padding-left:16px">
-            <span class="slip-label" style="color:var(--text-dim);font-size:11px">${dtStr} — ${esc(v.descricao||'Vale')}</span>
-            <span class="slip-val" style="color:#f87171">-${fmtM(v.valor)}</span>
-          </div>`;
-        }).join('');
-
-        return `<div class="tec-card">
-          <div class="tec-head">
-            <div>
-              <div class="tec-nome">${esc(f.name||'—')}</div>
-              <div class="tec-cargo">${cargo}</div>
-            </div>
-            <div class="tec-liquido">
-              <div class="tec-liquido-label">Líquido a receber</div>
-              <div class="tec-liquido-val" style="color:${liqCor}">${fmtM(f.liquido)}</div>
-            </div>
-          </div>
-
-          <div class="slip-body">
-            <div class="slip-row">
-              <span class="slip-label">Salário base</span>
-              <span class="slip-val">${fmtM(f.salario)}</span>
-            </div>
-            <div class="slip-row">
-              <span class="slip-label">Vale Refeição</span>
-              <span class="slip-val" style="color:#60a5fa">${fmtM(f.vr)}</span>
-            </div>
-            <div class="slip-row slip-editable">
-              <span class="slip-label">Gratificação / Extra</span>
-              <span class="slip-val" style="color:#4ade80">
-                <input type="number" min="0" step="0.01" value="${f.extra||0}"
-                  style="width:110px;text-align:right;background:transparent;border:none;border-bottom:1px dashed #4ade80;color:#4ade80;font-size:13px;font-weight:700;font-family:'Fira Code',monospace;padding:1px 2px"
-                  oninput="mudarExtra('${f.id}', this.value)">
-              </span>
-            </div>
-            ${f.descFalta > 0 ? `<div class="slip-row">
-              <span class="slip-label" style="color:#f87171">(−) Desc. Falta · ${f.faltas} dia(s)</span>
-              <span class="slip-val" style="color:#f87171">-${fmtM(f.descFalta)}</span>
-            </div>` : ''}
-            <div class="slip-row slip-editable">
-              <span class="slip-label">(−) Vale / Adiantamento</span>
-              <span class="slip-val" style="color:#f87171">
-                ${f.totalVale > 0 ? `-${fmtM(f.totalVale)}` : fmtM(0)}
-                <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;margin-left:8px" onclick="abrirModalVale('${f.id}','${esc(f.name||'')}')">+ Vale</button>
-              </span>
-            </div>
-            ${linhaVales}
-            <div class="slip-divider"></div>
-            <div class="slip-row slip-total">
-              <span class="slip-label">Líquido a receber</span>
-              <span class="slip-val" style="color:${liqCor};font-size:16px">${fmtM(f.liquido)}</span>
-            </div>
-          </div>
-
-          <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-            <span style="font-size:11px;color:var(--text-dim)">Faltas:</span>
-            <input type="number" min="0" max="31" value="${f.faltas}"
-              style="width:48px;text-align:center;background:var(--surface);border:1px solid var(--border);color:${f.faltas>0?'#f87171':'var(--text-muted)'};font-size:12px;font-weight:700;font-family:'Fira Code',monospace;padding:2px 4px"
+      const linhas = folha.map(f => {
+        const liqCor = f.liquido >= 0 ? 'var(--accent)' : '#f87171';
+        const cargo  = f.role === 'dono' ? 'Dono' : 'Técnico';
+        const valesTip = f.meusVales.map(v => {
+          const dt = new Date(v.created_at);
+          const d  = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
+          return `${d} ${esc(v.descricao||'Vale')} ${fmtM(v.valor)}`;
+        }).join('&#10;');
+        return `<tr>
+          <td>
+            <div class="ft-nome">${esc(f.name||'—')}</div>
+            <div class="ft-cargo">${cargo} · ${f.minhasOS.qtd} OS</div>
+          </td>
+          <td>${fmtM(f.salario)}</td>
+          <td style="color:#60a5fa">${fmtM(f.vr)}</td>
+          <td style="color:#4ade80">
+            <input class="ft-input" type="number" min="0" step="0.01" value="${f.extra||0}"
+              style="color:#4ade80" oninput="mudarExtra('${f.id}', this.value)">
+          </td>
+          <td style="color:#f87171" title="${valesTip}">
+            ${f.totalVale > 0 ? `-${fmtM(f.totalVale)}` : '—'}
+            <button class="btn btn-ghost" style="font-size:10px;padding:1px 6px;margin-left:4px" onclick="abrirModalVale('${f.id}','${esc(f.name||'')}')">+</button>
+          </td>
+          <td style="color:#f87171">
+            <input class="ft-faltas-input" type="number" min="0" max="31" value="${f.faltas}"
+              style="color:${f.faltas>0?'#f87171':'var(--text-muted)'}"
               oninput="mudarFaltas('${f.id}', this.value)">
-            <span style="font-size:11px;color:var(--text-dim)">${f.minhasOS.qtd} OS no mês</span>
-          </div>
-        </div>`;
+          </td>
+          <td style="color:${liqCor};font-weight:800;font-size:14px">${fmtM(f.liquido)}</td>
+        </tr>`;
       }).join('');
 
-      document.getElementById('total-bar').innerHTML = `
-        <div class="total-bar">
-          <div>
-            <div class="total-bar-label">Total Folha — ${MESES[MES-1]} ${ANO}</div>
-            <div style="font-size:12px;color:var(--text-dim);margin-top:4px">${folha.length} técnico(s) · Sal. ${fmtM(totalSalarios)} · VR ${fmtM(totalVR)} · Com. ${fmtM(totalComissoes)} · Vales -${fmtM(totalVales)}</div>
-          </div>
-          <div class="total-bar-val">${fmtM(totalLiquido)}</div>
+      document.getElementById('emp-lista').innerHTML = `
+        <div class="folha-table-wrap">
+          <table class="folha-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">NOME</th>
+                <th>SAL. BASE</th>
+                <th>VALE REFEIÇÃO</th>
+                <th>GRATIFICAÇÃO</th>
+                <th>VALES / ADIANT.</th>
+                <th>FALTAS</th>
+                <th>TOTAL LÍQUIDO</th>
+              </tr>
+            </thead>
+            <tbody>${linhas}</tbody>
+            <tfoot>
+              <tr>
+                <td style="text-align:left;color:var(--text-muted);font-family:inherit;font-size:11px;letter-spacing:.05em">TOTAL · ${folha.length} pessoa(s)</td>
+                <td>${fmtM(totalSalarios)}</td>
+                <td style="color:#60a5fa">${fmtM(totalVR)}</td>
+                <td style="color:#4ade80">${fmtM(totalExtras)}</td>
+                <td style="color:#f87171">${totalVales>0?`-${fmtM(totalVales)}`:'—'}</td>
+                <td style="color:#f87171">${totalDescontos>0?`-${fmtM(totalDescontos)}`:'—'}</td>
+                <td style="color:var(--accent);font-size:15px">${fmtM(totalLiquido)}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>`;
+
+      document.getElementById('total-bar').innerHTML = '';
     }
 
     // ── Modal Vale ──
