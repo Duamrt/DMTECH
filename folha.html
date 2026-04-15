@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04151219"></script>
-  <script src="js/auth.js?v=04151219"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04151219">
+  <script src="js/config.js?v=04151221"></script>
+  <script src="js/auth.js?v=04151221"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04151221">
   <style>
     /* ── Period nav ── */
     .period-nav { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
@@ -47,6 +47,16 @@
     .vale-val  { font-family:'Fira Code',monospace; font-weight:700; color:#f87171; }
 
     .tec-actions { margin-top:10px; display:flex; justify-content:flex-end; }
+
+    /* ── Slip body ── */
+    .slip-body { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+    .slip-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:4px 0; border-bottom:1px solid var(--border); }
+    .slip-row:last-child { border-bottom:none; }
+    .slip-label { color:var(--text-muted); font-weight:500; }
+    .slip-val { font-family:'Fira Code',monospace; font-weight:700; color:var(--text); }
+    .slip-editable .slip-label { color:var(--text); }
+    .slip-divider { border-top:2px solid var(--border); margin:4px 0; }
+    .slip-total .slip-label { font-weight:800; color:var(--text); font-size:13px; text-transform:uppercase; letter-spacing:.04em; }
 
     /* ── Total bar ── */
     .total-bar { display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border:2px solid var(--accent); padding:16px 22px; margin-top:8px; }
@@ -299,7 +309,7 @@
       const recalc = _dados.folha.map(f => {
         const vrDia   = dias > 0 ? f.vrMensal / dias : 0;
         const vr      = vrDia * Math.max(0, dias - f.faltas);
-        const liquido = f.salario - f.descFalta + vr + f.comissao - f.totalVale;
+        const liquido = f.salario - f.descFalta + vr + (f.extra||0) + f.comissao - f.totalVale;
         return { ...f, vrDia, vr, liquido };
       });
       const nd = { ...calcTotais(recalc), folha: recalc };
@@ -309,6 +319,9 @@
     function _faltasKey(profileId) {
       return `dmtech-faltas-${APP.company.id}-${ANO}-${MES}-${profileId}`;
     }
+    function _extraKey(profileId) {
+      return `dmtech-extra-${APP.company.id}-${ANO}-${MES}-${profileId}`;
+    }
 
     function calcularFolha(tecnicos, valesPor, osPor, dias) {
       const comissaoPadrao = APP.company?.comissao_padrao || 0;
@@ -317,6 +330,7 @@
         const vrMensal     = t.vale_refeicao || 0;
         const vrDia        = dias > 0 ? vrMensal / dias : 0;
         const faltas       = parseInt(localStorage.getItem(_faltasKey(t.id))) || 0;
+        const extra        = parseFloat(localStorage.getItem(_extraKey(t.id))) || 0;
         const descFalta    = salario / 30 * faltas;
         const vr           = vrDia * Math.max(0, dias - faltas);
         const meusVales    = valesPor[t.id]  || [];
@@ -324,8 +338,8 @@
         const pct          = comissaoPadrao;
         const minhasOS     = osPor[t.id]     || { qtd: 0, total: 0 };
         const comissao     = minhasOS.total * (pct / 100);
-        const liquido      = salario - descFalta + vr + comissao - totalVale;
-        return { ...t, salario, vrMensal, vrDia, faltas, descFalta, vr, meusVales, totalVale, pct, minhasOS, comissao, liquido };
+        const liquido      = salario - descFalta + vr + extra + comissao - totalVale;
+        return { ...t, salario, vrMensal, vrDia, faltas, extra, descFalta, vr, meusVales, totalVale, pct, minhasOS, comissao, liquido };
       });
       return { ...calcTotais(folha), folha };
     }
@@ -339,8 +353,20 @@
         const vrDia     = dias > 0 ? r.vrMensal / dias : 0;
         const descFalta = r.salario / 30 * faltas;
         const vr        = vrDia * Math.max(0, dias - faltas);
-        const liquido   = r.salario - descFalta + vr + r.comissao - r.totalVale;
+        const liquido   = r.salario - descFalta + vr + (r.extra||0) + r.comissao - r.totalVale;
         return { ...r, faltas, vrDia, descFalta, vr, liquido };
+      });
+      renderFolha({ ...calcTotais(recalc), folha: recalc });
+    }
+
+    function mudarExtra(profileId, val) {
+      const extra = Math.max(0, parseFloat(val) || 0);
+      localStorage.setItem(_extraKey(profileId), extra);
+      const dias = parseInt(document.getElementById('dias-uteis').value) || 22;
+      const recalc = _dados.folha.map(r => {
+        if (r.id !== profileId) return r;
+        const liquido = r.salario - r.descFalta + r.vr + extra + r.comissao - r.totalVale;
+        return { ...r, extra, liquido };
       });
       renderFolha({ ...calcTotais(recalc), folha: recalc });
     }
@@ -351,6 +377,7 @@
         totalVR:         folha.reduce((s,f)=>s+f.vr,0),
         totalVales:      folha.reduce((s,f)=>s+f.totalVale,0),
         totalComissoes:  folha.reduce((s,f)=>s+f.comissao,0),
+        totalExtras:     folha.reduce((s,f)=>s+(f.extra||0),0),
         totalDescontos:  folha.reduce((s,f)=>s+(f.descFalta||0),0),
         totalLiquido:    folha.reduce((s,f)=>s+f.liquido,0),
       };
@@ -367,57 +394,72 @@
       document.getElementById('kpi-liquido').textContent   = fmtM(totalLiquido);
 
       document.getElementById('emp-lista').innerHTML = folha.map(f => {
-        const iniciais = (f.name||'??').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
-        const liqCor   = f.liquido >= 0 ? 'var(--accent)' : '#f87171';
-        const vrDiaStr = f.vrMensal > 0 ? `VR/mês ${fmtM(f.vrMensal)}` : 'Sem VR';
+        const liqCor  = f.liquido >= 0 ? 'var(--accent)' : '#f87171';
+        const cargo   = f.role === 'dono' ? 'Dono' : 'Técnico';
 
-        let valesHtml = '';
-        if (f.meusVales.length) {
-          valesHtml = `<div class="tec-vales">` + f.meusVales.map(v => {
-            const dt = new Date(v.created_at);
-            const dtStr = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
-            return `<div class="vale-line">
-              <span class="vale-info"><span class="vale-dt">${dtStr}</span>${esc(v.descricao||'Vale')}</span>
-              <span class="vale-val">-${fmtM(v.valor)}</span>
-            </div>`;
-          }).join('') + `</div>`;
-        }
+        const linhaVales = f.meusVales.map(v => {
+          const dt    = new Date(v.created_at);
+          const dtStr = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');
+          return `<div class="slip-row" style="padding-left:16px">
+            <span class="slip-label" style="color:var(--text-dim);font-size:11px">${dtStr} — ${esc(v.descricao||'Vale')}</span>
+            <span class="slip-val" style="color:#f87171">-${fmtM(v.valor)}</span>
+          </div>`;
+        }).join('');
 
         return `<div class="tec-card">
           <div class="tec-head">
             <div>
               <div class="tec-nome">${esc(f.name||'—')}</div>
-              <div class="tec-cargo">Técnico · ${vrDiaStr}</div>
+              <div class="tec-cargo">${cargo}</div>
             </div>
             <div class="tec-liquido">
-              <div class="tec-liquido-label">A receber</div>
+              <div class="tec-liquido-label">Líquido a receber</div>
               <div class="tec-liquido-val" style="color:${liqCor}">${fmtM(f.liquido)}</div>
             </div>
           </div>
-          <div class="tec-grid">
-            <div class="tec-cell"><div class="tec-cell-val" style="color:var(--text)">${fmtM(f.salario)}</div><div class="tec-cell-label">Salário</div></div>
-            <div class="tec-cell">
-              <input type="number" min="0" max="31" value="${f.faltas}"
-                style="width:52px;text-align:center;background:var(--surface);border:1px solid var(--border);color:${f.faltas>0?'#f87171':'var(--text)'};font-size:13px;font-weight:700;font-family:'Fira Code',monospace;padding:2px 4px"
-                oninput="mudarFaltas('${f.id}', this.value)">
-              <div class="tec-cell-label">Faltas</div>
+
+          <div class="slip-body">
+            <div class="slip-row">
+              <span class="slip-label">Salário base</span>
+              <span class="slip-val">${fmtM(f.salario)}</span>
             </div>
-            ${f.descFalta > 0 ? `<div class="tec-cell" title="Desconto: ${f.faltas} falta(s) × ${fmtM(f.salario/30)}/dia"><div class="tec-cell-val" style="color:#f87171">-${fmtM(f.descFalta)}</div><div class="tec-cell-label">Desc. Falta</div></div>` : ''}
-            <div class="tec-cell"><div class="tec-cell-val" style="color:#60a5fa">${fmtM(f.vr)}</div><div class="tec-cell-label">VR Mês</div></div>
-            <div class="tec-cell" title="OS entregues no mês: ${f.minhasOS.qtd} OS · ${fmtM(f.minhasOS.total)}">
-              <div class="tec-cell-val" style="color:var(--text-muted)">${f.minhasOS.qtd}</div>
-              <div class="tec-cell-label">OS/Mês</div>
+            <div class="slip-row">
+              <span class="slip-label">Vale Refeição</span>
+              <span class="slip-val" style="color:#60a5fa">${fmtM(f.vr)}</span>
             </div>
-            <div class="tec-cell" title="${f.pct}% sobre ${fmtM(f.minhasOS.total)}">
-              <div class="tec-cell-val" style="color:#a78bfa">${fmtM(f.comissao)}</div>
-              <div class="tec-cell-label">Comissão ${f.pct}%</div>
+            <div class="slip-row slip-editable">
+              <span class="slip-label">Gratificação / Extra</span>
+              <span class="slip-val" style="color:#4ade80">
+                <input type="number" min="0" step="0.01" value="${f.extra||0}"
+                  style="width:110px;text-align:right;background:transparent;border:none;border-bottom:1px dashed #4ade80;color:#4ade80;font-size:13px;font-weight:700;font-family:'Fira Code',monospace;padding:1px 2px"
+                  oninput="mudarExtra('${f.id}', this.value)">
+              </span>
             </div>
-            <div class="tec-cell"><div class="tec-cell-val" style="color:#f87171">-${fmtM(f.totalVale)}</div><div class="tec-cell-label">Vales</div></div>
-            <div class="tec-cell"><div class="tec-cell-val" style="color:${liqCor}">${fmtM(f.liquido)}</div><div class="tec-cell-label">Líquido</div></div>
+            ${f.descFalta > 0 ? `<div class="slip-row">
+              <span class="slip-label" style="color:#f87171">(−) Desc. Falta · ${f.faltas} dia(s)</span>
+              <span class="slip-val" style="color:#f87171">-${fmtM(f.descFalta)}</span>
+            </div>` : ''}
+            <div class="slip-row slip-editable">
+              <span class="slip-label">(−) Vale / Adiantamento</span>
+              <span class="slip-val" style="color:#f87171">
+                ${f.totalVale > 0 ? `-${fmtM(f.totalVale)}` : fmtM(0)}
+                <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;margin-left:8px" onclick="abrirModalVale('${f.id}','${esc(f.name||'')}')">+ Vale</button>
+              </span>
+            </div>
+            ${linhaVales}
+            <div class="slip-divider"></div>
+            <div class="slip-row slip-total">
+              <span class="slip-label">Líquido a receber</span>
+              <span class="slip-val" style="color:${liqCor};font-size:16px">${fmtM(f.liquido)}</span>
+            </div>
           </div>
-          ${valesHtml}
-          <div class="tec-actions">
-            <button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick="abrirModalVale('${f.id}','${esc(f.name||'')}')">+ Vale</button>
+
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+            <span style="font-size:11px;color:var(--text-dim)">Faltas:</span>
+            <input type="number" min="0" max="31" value="${f.faltas}"
+              style="width:48px;text-align:center;background:var(--surface);border:1px solid var(--border);color:${f.faltas>0?'#f87171':'var(--text-muted)'};font-size:12px;font-weight:700;font-family:'Fira Code',monospace;padding:2px 4px"
+              oninput="mudarFaltas('${f.id}', this.value)">
+            <span style="font-size:11px;color:var(--text-dim)">${f.minhasOS.qtd} OS no mês</span>
           </div>
         </div>`;
       }).join('');
