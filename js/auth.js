@@ -68,7 +68,25 @@ async function requireAuth(redirectTo = 'login.html') {
     _filtrarNavTecnico();
   }
 
+  _injetarBtnFecharSidebar();
   return true;
+}
+
+function _injetarBtnFecharSidebar() {
+  const logo = document.querySelector('.sidebar-logo');
+  if (!logo || document.getElementById('btn-fechar-sidebar')) return;
+  // Envolve o conteúdo existente num wrapper
+  const wrap = document.createElement('div');
+  wrap.className = 'logo-text';
+  while (logo.firstChild) wrap.appendChild(logo.firstChild);
+  logo.appendChild(wrap);
+  // Botão fechar
+  const btn = document.createElement('button');
+  btn.id = 'btn-fechar-sidebar';
+  btn.innerHTML = '&#8592;';
+  btn.setAttribute('aria-label', 'Fechar menu');
+  btn.onclick = () => { if (typeof toggleSidebar === 'function') toggleSidebar(); };
+  logo.appendChild(btn);
 }
 
 function _mostrarBarraAdmin(nomeEmpresa) {
