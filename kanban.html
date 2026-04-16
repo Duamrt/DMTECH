@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04161643"></script>
-  <script src="js/lib.js?v=04161643"></script>
-  <script src="js/auth.js?v=04161643"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161643">
+  <script src="js/config.js?v=04161646"></script>
+  <script src="js/lib.js?v=04161646"></script>
+  <script src="js/auth.js?v=04161646"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161646">
   <style>
     /* Board */
     .board-outer {
@@ -816,6 +816,29 @@
     </div>
   </div>
 
+  <!-- Modal Confirmar Entregue -->
+  <div id="entr-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:var(--surface-2);border:1px solid var(--border);width:100%;max-width:400px;padding:28px;font-family:Manrope,sans-serif">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Confirmar Recebimento</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px" id="entr-subtitulo">Informe como o pagamento foi recebido</div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Forma de pagamento</div>
+        <select id="entr-forma" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Manrope,sans-serif;font-size:13px;padding:8px 10px">
+          <option value="pix">PIX</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao_debito">Cartao Debito</option>
+          <option value="cartao_credito">Cartao Credito</option>
+          <option value="boleto">Boleto</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="fecharModalEntregue()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:9px 18px;font-size:13px;font-weight:700;font-family:Manrope,sans-serif;cursor:pointer">Cancelar</button>
+        <button onclick="confirmarEntregue()" style="background:#4ade80;border:none;color:#000;padding:9px 18px;font-size:13px;font-weight:700;font-family:Manrope,sans-serif;cursor:pointer">Confirmar Entrega</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
     document.getElementById('versao-rodape').textContent = VERSION;
@@ -1298,6 +1321,25 @@
       document.getElementById('fat-boleto-wrap').style.display = forma === 'boleto' ? '' : 'none';
     }
 
+    function fecharModalEntregue() {
+      document.getElementById('entr-overlay').style.display = 'none';
+    }
+
+    function abrirModalEntregue() {
+      const veioDeFaturado = osAtual && osAtual.status === 'faturado';
+      document.getElementById('entr-subtitulo').textContent = veioDeFaturado
+        ? 'OS faturada - confirme o recebimento'
+        : 'Informe como o pagamento foi recebido';
+      document.getElementById('entr-forma').value = 'pix';
+      document.getElementById('entr-overlay').style.display = 'flex';
+    }
+
+    async function confirmarEntregue() {
+      const forma = document.getElementById('entr-forma').value;
+      fecharModalEntregue();
+      await _executarSalvarStatus('entregue', { forma });
+    }
+
     function fecharModalFaturar() {
       document.getElementById('fat-overlay').style.display = 'none';
     }
@@ -1327,6 +1369,10 @@
       // Faturado: abre modal antes de salvar
       if (statusSelecionado === 'faturado' && osAtual.status !== 'faturado') {
         await abrirModalFaturar();
+        return;
+      }
+      if (statusSelecionado === 'entregue') {
+        abrirModalEntregue();
         return;
       }
       await _executarSalvarStatus(statusSelecionado, null);
@@ -1387,8 +1433,25 @@
           valor: totalOS || 0,
           data_vencimento: dataHoje,
           categoria: 'servico',
-          pago: false
+          forma_pagamento: fatDados && fatDados.forma ? fatDados.forma : null,
+          pago: true
         });
+      } else if (status === 'entregue' && osAtual.status === 'faturado') {
+        await sb.from('caixa')
+          .update({ pago: true, forma_pagamento: fatDados && fatDados.forma ? fatDados.forma : null })
+          .eq('company_id', APP.company.id)
+          .ilike('descricao', 'OS #' + String(osAtual.numero).padStart(3,'0') + '%')
+          .eq('pago', false);
+      }
+      // Estorno: se estava entregue e voltou para outro status
+      if (osAtual.status === 'entregue' && status !== 'entregue') {
+        const numPad = String(osAtual.numero).padStart(3,'0');
+        await sb.from('caixa')
+          .delete()
+          .eq('company_id', APP.company.id)
+          .ilike('descricao', 'OS #' + numPad + '%')
+          .eq('tipo', 'entrada')
+          .eq('pago', true);
       }
       // Se FATURADO → ENTREGUE: não lança de novo (já existe no caixa)
 
