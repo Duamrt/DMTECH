@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04161640"></script>
-  <script src="js/lib.js?v=04161640"></script>
-  <script src="js/auth.js?v=04161640"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161640">
+  <script src="js/config.js?v=04161643"></script>
+  <script src="js/lib.js?v=04161643"></script>
+  <script src="js/auth.js?v=04161643"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161643">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -127,7 +127,13 @@
             <button class="filter-btn" onclick="setFiltro('em_andamento',this)">Em Andamento</button>
             <button class="filter-btn" onclick="setFiltro('aguardando_peca',this)">Aguardando Liberação</button>
             <button class="filter-btn" onclick="setFiltro('pronta',this)">Pronta</button>
+            <button class="filter-btn" onclick="setFiltro('faturado',this)">Faturado</button>
             <button class="filter-btn" onclick="setFiltro('entregue',this)">Entregue</button>
+          </div>
+          <div style="position:relative">
+            <input id="busca-cliente" type="text" placeholder="Buscar por cliente..." oninput="renderTabela()"
+              style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Manrope',sans-serif;font-size:13px;padding:7px 12px 7px 32px;width:200px">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;pointer-events:none">⌕</span>
           </div>
           <button class="btn btn-primary" onclick="abrirModal()">+ Nova OS</button>
         </div>
@@ -369,7 +375,9 @@
     }
 
     function renderTabela() {
-      const lista = filtroAtivo === 'todos' ? todasOs : todasOs.filter(o => o.status === filtroAtivo);
+      const busca = (document.getElementById('busca-cliente')?.value || '').trim().toLowerCase();
+      let lista = filtroAtivo === 'todos' ? todasOs : todasOs.filter(o => o.status === filtroAtivo);
+      if (busca) lista = lista.filter(o => (o.clients?.name || '').toLowerCase().includes(busca));
       const tbody = document.getElementById('tabela-os');
       if (!lista.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma OS encontrada.</td></tr>';
@@ -395,7 +403,7 @@
     }
 
     function labelStatus(s) {
-      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Liberação', pronta:'Pronta', entregue:'Entregue' }[s] || s;
+      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Liberação', pronta:'Pronta', faturado:'Faturado', entregue:'Entregue' }[s] || s;
     }
 
     // ── Modal ──
