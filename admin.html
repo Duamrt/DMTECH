@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04161616"></script>
-  <script src="js/lib.js?v=04161616"></script>
-  <script src="js/auth.js?v=04161616"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161616">
+  <script src="js/config.js?v=04161619"></script>
+  <script src="js/lib.js?v=04161619"></script>
+  <script src="js/auth.js?v=04161619"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161619">
   <style>
     .adm-layout { display: flex; min-height: 100vh; }
     .adm-sidebar {
@@ -426,14 +426,24 @@
     }
 
     async function excluirEmpresa(companyId, nome) {
-      const ok = await dmConfirmAsync(`Excluir "${nome}" permanentemente?\n\nTodos os dados (OS, clientes, caixa) serão apagados. Ação irreversível.`);
+      const ok = await dmConfirmAsync(`Excluir "${nome}" permanentemente?\n\nTodos os dados (OS, clientes, caixa) serão apagados e os emails liberados. Ação irreversível.`);
       if (!ok) return;
-      const { error } = await sb.rpc('admin_delete_company', { p_company_id: companyId });
-      if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-delete-company`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ company_id: companyId }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) { dmToast('Erro: ' + (json.error || res.status), 'error'); return; }
       _empresas = _empresas.filter(e => e.id !== companyId);
       atualizarMetricas();
       renderEmpresasTabela();
-      dmToast('Empresa excluída.');
+      dmToast('Empresa excluída e emails liberados.');
     }
 
     function acessarEmpresa(companyId) {
