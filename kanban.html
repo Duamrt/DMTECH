@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04161619"></script>
-  <script src="js/lib.js?v=04161619"></script>
-  <script src="js/auth.js?v=04161619"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161619">
+  <script src="js/config.js?v=04161625"></script>
+  <script src="js/lib.js?v=04161625"></script>
+  <script src="js/auth.js?v=04161625"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161625">
   <style>
     /* Board */
     .board-outer {
@@ -749,6 +749,11 @@
       </div>
 
       <div>
+        <div class="p-section-title">Histórico de Movimentações</div>
+        <div id="p-historico"><div style="font-size:12px;color:var(--text-dim)">Carregando...</div></div>
+      </div>
+
+      <div>
         <div class="p-section-title">Assistente IA</div>
         <div class="ai-btns">
           <button class="btn-ai" id="btn-checklist" onclick="gerarIA('checklist')">
@@ -943,6 +948,9 @@
 
       document.getElementById('side-panel').classList.add('open');
       document.getElementById('panel-overlay').classList.add('open');
+
+      // Carregar histórico de movimentações
+      carregarHistoricoOS(id);
     }
 
     function renderItensPanel() {
@@ -1212,6 +1220,46 @@
       selecionarStatus(COLUNAS[next].status);
     }
 
+    const STATUS_LABEL = {
+      aberta: 'Aberta', em_andamento: 'Em Andamento',
+      aguardando_peca: 'Aguard. Liberação', pronta: 'Pronta', entregue: 'Entregue'
+    };
+
+    async function carregarHistoricoOS(osId) {
+      const el = document.getElementById('p-historico');
+      const { data, error } = await sb
+        .from('audit_log')
+        .select('user_name, details, created_at')
+        .eq('entity_id', osId)
+        .eq('action', 'status_change')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error || !data?.length) {
+        el.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Sem movimentações registradas.</div>';
+        return;
+      }
+
+      el.innerHTML = data.map(h => {
+        const de   = STATUS_LABEL[h.details?.de]   || h.details?.de   || '—';
+        const para = STATUS_LABEL[h.details?.para] || h.details?.para || '—';
+        const quem = h.user_name || 'Desconhecido';
+        const quando = new Date(h.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+        return `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:18px;line-height:1;margin-top:1px">↕</div>
+          <div>
+            <div style="font-size:12px;color:var(--text);font-weight:600">${esc(quem)}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:1px">
+              <span style="color:var(--text-muted)">${esc(de)}</span>
+              <span style="margin:0 4px;color:var(--text-dim)">→</span>
+              <span style="color:var(--accent)">${esc(para)}</span>
+            </div>
+            <div style="font-size:10px;color:var(--text-dim);font-family:'Fira Code',monospace;margin-top:2px">${quando}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
     async function salvarStatus() {
       if (!osAtual || !statusSelecionado) return;
       const notes        = document.getElementById('p-notes').value.trim();
@@ -1269,6 +1317,7 @@
       fecharPanel();
       await carregarOS();
       dmToast(statusSelecionado === 'entregue' ? 'OS entregue — receita lançada no caixa!' : 'OS atualizada!');
+      if (osAtual?.id) carregarHistoricoOS(osAtual.id);
     }
 
     function calcMO() {
