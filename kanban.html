@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04161646"></script>
-  <script src="js/lib.js?v=04161646"></script>
-  <script src="js/auth.js?v=04161646"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161646">
+  <script src="js/config.js?v=04161653"></script>
+  <script src="js/lib.js?v=04161653"></script>
+  <script src="js/auth.js?v=04161653"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161653">
   <style>
     /* Board */
     .board-outer {
@@ -82,7 +82,6 @@
     .k-col[data-status="em_andamento"]    { --col-color: #fbbf24; }
     .k-col[data-status="aguardando_peca"] { --col-color: #fb923c; }
     .k-col[data-status="pronta"]          { --col-color: #4ade80; }
-    .k-col[data-status="faturado"]        { --col-color: #a78bfa; }
     .k-col[data-status="entregue"]        { --col-color: #6b7280; }
 
     /* Cards */
@@ -271,7 +270,6 @@
     .status-btn.btn-em_andamento.active    { background: rgba(245,158,11,.2);  border-color:#d97706; color:#fbbf24; }
     .status-btn.btn-aguardando_peca.active { background: rgba(249,115,22,.2);  border-color:#ea580c; color:#fb923c; }
     .status-btn.btn-pronta.active          { background: rgba(34,197,94,.2);   border-color:#16a34a; color:#4ade80; }
-    .status-btn.btn-faturado.active        { background: rgba(167,139,250,.2); border-color:#7c3aed; color:#a78bfa; }
     .status-btn.btn-entregue.active        { background: rgba(107,114,128,.2); border-color:#4b5563; color:#9ca3af; }
 
     /* Avançar/Voltar */
@@ -668,7 +666,6 @@
           <button class="status-btn btn-em_andamento"    onclick="selecionarStatus('em_andamento')">Em Andamento</button>
           <button class="status-btn btn-aguardando_peca" onclick="selecionarStatus('aguardando_peca')">Aguard. Liberação</button>
           <button class="status-btn btn-pronta"          onclick="selecionarStatus('pronta')">Pronta</button>
-          <button class="status-btn btn-faturado"          onclick="selecionarStatus('faturado')">Faturado</button>
           <button class="status-btn btn-entregue"        onclick="selecionarStatus('entregue')">Entregue</button>
         </div>
       </div>
@@ -787,35 +784,6 @@
 
   <div class="versao" id="versao-rodape"></div>
 
-  <!-- Modal Faturamento -->
-  <div id="fat-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:var(--surface-2);border:1px solid var(--border);width:100%;max-width:420px;padding:28px;font-family:Manrope,sans-serif">
-      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Faturar OS</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px">Serviço entregue — pagamento em data futura</div>
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Vencimento</div>
-        <input id="fat-vencimento" type="date" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Fira Code,monospace;font-size:13px;padding:8px 10px">
-      </div>
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Forma de pagamento</div>
-        <select id="fat-forma" onchange="toggleFatBoleto()" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Manrope,sans-serif;font-size:13px;padding:8px 10px">
-          <option value="pix">PIX</option>
-          <option value="boleto">Boleto</option>
-          <option value="transferencia">Transferência</option>
-          <option value="dinheiro">Dinheiro</option>
-        </select>
-      </div>
-      <div id="fat-boleto-wrap" style="display:none;margin-bottom:14px">
-        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Código de barras</div>
-        <input id="fat-codigo-barras" type="text" placeholder="Cole o código aqui..." style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Fira Code,monospace;font-size:12px;padding:8px 10px">
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
-        <button onclick="fecharModalFaturar()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:9px 18px;font-size:13px;font-weight:700;font-family:Manrope,sans-serif;cursor:pointer">Cancelar</button>
-        <button onclick="confirmarFaturar()" style="background:var(--accent);border:none;color:#fff;padding:9px 18px;font-size:13px;font-weight:700;font-family:Manrope,sans-serif;cursor:pointer">Faturar</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Confirmar Entregue -->
   <div id="entr-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
     <div style="background:var(--surface-2);border:1px solid var(--border);width:100%;max-width:400px;padding:28px;font-family:Manrope,sans-serif">
@@ -859,7 +827,6 @@
       { status: 'em_andamento',    label: 'Em Andamento'  },
       { status: 'aguardando_peca', label: 'Aguard. Liberação' },
       { status: 'pronta',          label: 'Pronta'        },
-      { status: 'faturado',         label: 'Faturado'      },
       { status: 'entregue',        label: 'Entregue'      },
     ];
 
@@ -1278,7 +1245,7 @@
 
     const STATUS_LABEL = {
       aberta: 'Aberta', em_andamento: 'Em Andamento',
-      aguardando_peca: 'Aguard. Liberação', pronta: 'Pronta', faturado: 'Faturado', entregue: 'Entregue'
+      aguardando_peca: 'Aguard. Liberação', pronta: 'Pronta', entregue: 'Entregue'
     };
 
     async function carregarHistoricoOS(osId) {
@@ -1316,20 +1283,12 @@
       }).join('');
     }
 
-    function toggleFatBoleto() {
-      const forma = document.getElementById('fat-forma').value;
-      document.getElementById('fat-boleto-wrap').style.display = forma === 'boleto' ? '' : 'none';
-    }
-
     function fecharModalEntregue() {
       document.getElementById('entr-overlay').style.display = 'none';
     }
 
     function abrirModalEntregue() {
-      const veioDeFaturado = osAtual && osAtual.status === 'faturado';
-      document.getElementById('entr-subtitulo').textContent = veioDeFaturado
-        ? 'OS faturada - confirme o recebimento'
-        : 'Informe como o pagamento foi recebido';
+      document.getElementById('entr-subtitulo').textContent = 'Informe como o pagamento foi recebido';
       document.getElementById('entr-forma').value = 'pix';
       document.getElementById('entr-overlay').style.display = 'flex';
     }
@@ -1340,37 +1299,9 @@
       await _executarSalvarStatus('entregue', { forma });
     }
 
-    function fecharModalFaturar() {
-      document.getElementById('fat-overlay').style.display = 'none';
-    }
-
-    async function abrirModalFaturar() {
-      // data padrão: 30 dias
-      const d = new Date();
-      d.setDate(d.getDate() + 30);
-      document.getElementById('fat-vencimento').value = d.toISOString().split('T')[0];
-      document.getElementById('fat-forma').value = 'pix';
-      document.getElementById('fat-boleto-wrap').style.display = 'none';
-      document.getElementById('fat-codigo-barras').value = '';
-      document.getElementById('fat-overlay').style.display = 'flex';
-    }
-
-    async function confirmarFaturar() {
-      const vencimento = document.getElementById('fat-vencimento').value;
-      const forma      = document.getElementById('fat-forma').value;
-      const codBarras  = document.getElementById('fat-codigo-barras').value.trim() || null;
-      if (!vencimento) { dmToast('Informe a data de vencimento', 'error'); return; }
-      fecharModalFaturar();
-      await _executarSalvarStatus('faturado', { vencimento, forma, codBarras });
-    }
-
     async function salvarStatus() {
       if (!osAtual || !statusSelecionado) return;
       // Faturado: abre modal antes de salvar
-      if (statusSelecionado === 'faturado' && osAtual.status !== 'faturado') {
-        await abrirModalFaturar();
-        return;
-      }
       if (statusSelecionado === 'entregue') {
         abrirModalEntregue();
         return;
@@ -1409,22 +1340,10 @@
       // Audit log
       await auditLog('status_change', 'os', osAtual.id, `OS #${String(osAtual.numero).padStart(3,'0')}`, { de: osAtual.status, para: status, cliente: osAtual.clients?.name || '' });
 
-      // Lançar receita no caixa — faturado (futuro) ou entregue direto
+      // Lançar receita no caixa ao entregar
       const totalOS = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-      if (status === 'faturado' && osAtual.status !== 'faturado' && fatDados) {
-        const insData = {
-          company_id: APP.company.id,
-          tipo: 'entrada',
-          descricao: `OS #${String(osAtual.numero).padStart(3,'0')} — ${osAtual.clients?.name || 'Cliente'} (Faturado)`,
-          valor: totalOS || 0,
-          data_vencimento: fatDados.vencimento,
-          categoria: 'servico',
-          pago: false
-        };
-        if (fatDados.codBarras) insData.codigo_barras = fatDados.codBarras;
-        await sb.from('caixa').insert(insData);
-      } else if (status === 'entregue' && osAtual.status !== 'entregue' && osAtual.status !== 'faturado') {
-        // Entregue direto (sem passar por faturado): lança agora
+      if (status === 'entregue' && osAtual.status !== 'entregue') {
+        // Lançar receita no caixa
         const dataHoje = new Date().toISOString().split('T')[0];
         await sb.from('caixa').insert({
           company_id: APP.company.id,
@@ -1436,12 +1355,6 @@
           forma_pagamento: fatDados && fatDados.forma ? fatDados.forma : null,
           pago: true
         });
-      } else if (status === 'entregue' && osAtual.status === 'faturado') {
-        await sb.from('caixa')
-          .update({ pago: true, forma_pagamento: fatDados && fatDados.forma ? fatDados.forma : null })
-          .eq('company_id', APP.company.id)
-          .ilike('descricao', 'OS #' + String(osAtual.numero).padStart(3,'0') + '%')
-          .eq('pago', false);
       }
       // Estorno: se estava entregue e voltou para outro status
       if (osAtual.status === 'entregue' && status !== 'entregue') {
@@ -1453,7 +1366,6 @@
           .eq('tipo', 'entrada')
           .eq('pago', true);
       }
-      // Se FATURADO → ENTREGUE: não lança de novo (já existe no caixa)
 
       osAtual.status         = status;
       osAtual.notes               = notes;
@@ -1465,7 +1377,7 @@
       osAtual.mo_custo_hora       = moCustoHora;
       fecharPanel();
       await carregarOS();
-      dmToast(status === 'entregue' ? 'OS entregue!' : status === 'faturado' ? 'OS faturada — receita lançada no caixa para vencer em ' + (fatDados?.vencimento || '') + '!' : 'OS atualizada!');
+      dmToast(status === 'entregue' ? 'OS entregue!' : 'OS atualizada!');
       if (osAtual?.id) carregarHistoricoOS(osAtual.id);
     }
 
