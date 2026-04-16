@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04161653"></script>
-  <script src="js/lib.js?v=04161653"></script>
-  <script src="js/auth.js?v=04161653"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161653">
+  <script src="js/config.js?v=04161702"></script>
+  <script src="js/lib.js?v=04161702"></script>
+  <script src="js/auth.js?v=04161702"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161702">
   <style>
     /* Board */
     .board-outer {
@@ -786,9 +786,17 @@
 
   <!-- Modal Confirmar Entregue -->
   <div id="entr-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:var(--surface-2);border:1px solid var(--border);width:100%;max-width:400px;padding:28px;font-family:Manrope,sans-serif">
-      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Confirmar Recebimento</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:20px" id="entr-subtitulo">Informe como o pagamento foi recebido</div>
+    <div style="background:var(--surface-2);border:1px solid var(--border);width:100%;max-width:420px;padding:28px;font-family:Manrope,sans-serif">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Confirmar Entrega</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px">Selecione o tipo de recebimento</div>
+      <div style="display:flex;margin-bottom:20px;border:1px solid var(--border)">
+        <button id="entr-btn-agora" onclick="setEntrTipo('agora')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:var(--accent);color:#fff">Pago Agora</button>
+        <button id="entr-btn-fat" onclick="setEntrTipo('faturado')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;cursor:pointer;background:var(--surface);color:var(--text-muted)">Faturado</button>
+      </div>
+      <div id="entr-venc-row" style="display:none;margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Data de Vencimento</div>
+        <input type="date" id="entr-vencimento" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Manrope,sans-serif;font-size:13px;padding:8px 10px">
+      </div>
       <div style="margin-bottom:20px">
         <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Forma de pagamento</div>
         <select id="entr-forma" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Manrope,sans-serif;font-size:13px;padding:8px 10px">
@@ -1283,20 +1291,38 @@
       }).join('');
     }
 
+    let _entrTipo = 'agora';
+    function setEntrTipo(tipo) {
+      _entrTipo = tipo;
+      document.getElementById('entr-btn-agora').style.background = tipo === 'agora' ? 'var(--accent)' : 'var(--surface)';
+      document.getElementById('entr-btn-agora').style.color = tipo === 'agora' ? '#fff' : 'var(--text-muted)';
+      document.getElementById('entr-btn-fat').style.background = tipo === 'faturado' ? '#7c3aed' : 'var(--surface)';
+      document.getElementById('entr-btn-fat').style.color = tipo === 'faturado' ? '#fff' : 'var(--text-muted)';
+      document.getElementById('entr-venc-row').style.display = tipo === 'faturado' ? 'block' : 'none';
+    }
+
     function fecharModalEntregue() {
       document.getElementById('entr-overlay').style.display = 'none';
     }
 
     function abrirModalEntregue() {
-      document.getElementById('entr-subtitulo').textContent = 'Informe como o pagamento foi recebido';
+      setEntrTipo('agora');
+      document.getElementById('entr-vencimento').value = '';
       document.getElementById('entr-forma').value = 'pix';
       document.getElementById('entr-overlay').style.display = 'flex';
     }
 
     async function confirmarEntregue() {
       const forma = document.getElementById('entr-forma').value;
-      fecharModalEntregue();
-      await _executarSalvarStatus('entregue', { forma });
+      if (_entrTipo === 'faturado') {
+        const venc = document.getElementById('entr-vencimento').value;
+        if (!venc) { dmToast('Informe a data de vencimento', 'error'); return; }
+        fecharModalEntregue();
+        await _executarSalvarStatus('entregue', { forma, faturado: true, vencimento: venc });
+      } else {
+        fecharModalEntregue();
+        await _executarSalvarStatus('entregue', { forma, faturado: false });
+      }
     }
 
     async function salvarStatus() {
@@ -1331,10 +1357,13 @@
         startedAt = osAtual.started_at || null;
       }
 
-      const { error } = await sb
-        .from('ordens_servico')
-        .update({ status: status, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora })
-        .eq('id', osAtual.id);
+      const osUpd = { status, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora };
+      if (status === 'entregue' && fatDados?.faturado) {
+        osUpd.faturado = true; osUpd.data_vencimento_fat = fatDados.vencimento; osUpd.forma_pagamento_fat = fatDados.forma;
+      } else if (status === 'entregue' || (osAtual.status === 'entregue' && status !== 'entregue')) {
+        osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null;
+      }
+      const { error } = await sb.from('ordens_servico').update(osUpd).eq('id', osAtual.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
 
       // Audit log
@@ -1343,28 +1372,27 @@
       // Lançar receita no caixa ao entregar
       const totalOS = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
       if (status === 'entregue' && osAtual.status !== 'entregue') {
-        // Lançar receita no caixa
         const dataHoje = new Date().toISOString().split('T')[0];
+        const isFaturado = fatDados?.faturado || false;
         await sb.from('caixa').insert({
           company_id: APP.company.id,
           tipo: 'entrada',
           descricao: `OS #${String(osAtual.numero).padStart(3,'0')} — ${osAtual.clients?.name || 'Cliente'}`,
           valor: totalOS || 0,
-          data_vencimento: dataHoje,
+          data_vencimento: isFaturado ? fatDados.vencimento : dataHoje,
           categoria: 'servico',
-          forma_pagamento: fatDados && fatDados.forma ? fatDados.forma : null,
-          pago: true
+          forma_pagamento: fatDados?.forma || null,
+          pago: !isFaturado
         });
       }
-      // Estorno: se estava entregue e voltou para outro status
+      // Estorno: se estava entregue e voltou para outro status (cobre pago e faturado)
       if (osAtual.status === 'entregue' && status !== 'entregue') {
         const numPad = String(osAtual.numero).padStart(3,'0');
         await sb.from('caixa')
           .delete()
           .eq('company_id', APP.company.id)
           .ilike('descricao', 'OS #' + numPad + '%')
-          .eq('tipo', 'entrada')
-          .eq('pago', true);
+          .eq('tipo', 'entrada');
       }
 
       osAtual.status         = status;

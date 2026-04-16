@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04161653"></script>
-  <script src="js/lib.js?v=04161653"></script>
-  <script src="js/auth.js?v=04161653"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161653">
+  <script src="js/config.js?v=04161702"></script>
+  <script src="js/lib.js?v=04161702"></script>
+  <script src="js/auth.js?v=04161702"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161702">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -120,6 +120,15 @@
           <p>Acompanhe todas as OS abertas e em andamento.</p>
         </div>
 
+        <!-- Alerta faturados vencidos -->
+        <div id="alerta-fat" style="display:none;align-items:center;gap:12px;padding:12px 16px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.35);margin-bottom:14px;cursor:pointer" onclick="setFiltro('faturado', document.querySelector('[data-filtro=faturado]'))">
+          <span style="font-size:18px">🔔</span>
+          <div style="flex:1">
+            <span style="font-size:13px;font-weight:800;color:#f87171" id="alerta-fat-txt"></span>
+            <span style="font-size:12px;color:var(--text-muted)"> — clique para ver</span>
+          </div>
+        </div>
+
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
           <div class="filter-bar" style="margin-bottom:0">
             <button class="filter-btn active" onclick="setFiltro('todos',this)">Todas</button>
@@ -127,7 +136,7 @@
             <button class="filter-btn" onclick="setFiltro('em_andamento',this)">Em Andamento</button>
             <button class="filter-btn" onclick="setFiltro('aguardando_peca',this)">Aguardando Liberação</button>
             <button class="filter-btn" onclick="setFiltro('pronta',this)">Pronta</button>
-            <button class="filter-btn" onclick="setFiltro('faturado',this)">Faturado</button>
+            <button class="filter-btn" data-filtro="faturado" onclick="setFiltro('faturado',this)">Faturado <span id="badge-fat" style="display:none;background:#f87171;color:#fff;border-radius:10px;padding:0 5px;font-size:10px;margin-left:2px"></span></button>
             <button class="filter-btn" onclick="setFiltro('entregue',this)">Entregue</button>
           </div>
           <div style="position:relative">
@@ -359,12 +368,33 @@
 
     async function carregarOs() {
       const { data } = await sb.from('ordens_servico')
-        .select('*, is_demo, garantia, link_externo, clients(name), orcamentos(numero)')
+        .select('*, is_demo, garantia, link_externo, faturado, data_vencimento_fat, forma_pagamento_fat, clients(name), orcamentos(numero)')
         .eq('company_id', APP.company.id)
         .order('numero', { ascending: false })
         .limit(1000);
       todasOs = data || [];
       renderTabela();
+      _checarAlertaFaturado();
+    }
+
+    function _checarAlertaFaturado() {
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const vencidas = todasOs.filter(o => {
+        if (!o.faturado || !o.data_vencimento_fat) return false;
+        return new Date(o.data_vencimento_fat + 'T00:00:00') < hoje;
+      });
+      const badge = document.getElementById('badge-fat');
+      const alerta = document.getElementById('alerta-fat');
+      if (vencidas.length) {
+        const txt = vencidas.length === 1 ? '1 OS faturada com pagamento vencido!' : `${vencidas.length} OS faturadas com pagamento vencido!`;
+        document.getElementById('alerta-fat-txt').textContent = txt;
+        alerta.style.display = 'flex';
+        badge.textContent = vencidas.length;
+        badge.style.display = 'inline';
+      } else {
+        alerta.style.display = 'none';
+        badge.style.display = 'none';
+      }
     }
 
     function setFiltro(f, btn) {
@@ -376,7 +406,7 @@
 
     function renderTabela() {
       const busca = (document.getElementById('busca-cliente')?.value || '').trim().toLowerCase();
-      let lista = filtroAtivo === 'todos' ? todasOs : todasOs.filter(o => o.status === filtroAtivo);
+      let lista = filtroAtivo === 'todos' ? todasOs : filtroAtivo === 'faturado' ? todasOs.filter(o => o.faturado === true) : todasOs.filter(o => o.status === filtroAtivo);
       if (busca) lista = lista.filter(o => (o.clients?.name || '').toLowerCase().includes(busca));
       const tbody = document.getElementById('tabela-os');
       if (!lista.length) {
@@ -388,11 +418,19 @@
         const origem = o.orcamentos ? `<span class="origem-tag">ORC #${o.orcamentos.numero}</span>` : '<span style="color:var(--text-dim);font-size:11px">Direta</span>';
         const data   = new Date(o.created_at).toLocaleDateString('pt-BR');
         const demoTag = o.is_demo ? '<span style="font-size:10px;font-weight:800;color:#fbbf24;background:rgba(234,179,8,.15);border:1px solid rgba(234,179,8,.3);padding:1px 5px;margin-left:5px">DEMO</span>' : '';
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const fatTag = o.faturado ? (() => {
+          const vd = o.data_vencimento_fat;
+          const vencObj = vd ? new Date(vd + 'T00:00:00') : null;
+          const vencido = vencObj && vencObj < hoje;
+          const label = vd ? vencObj.toLocaleDateString('pt-BR') : '';
+          return `<span style="font-size:10px;font-weight:800;padding:1px 6px;margin-left:5px;background:${vencido ? 'rgba(239,68,68,.15)' : 'rgba(124,58,237,.12)'};color:${vencido ? '#f87171' : '#a78bfa'};border:1px solid ${vencido ? 'rgba(239,68,68,.3)' : 'rgba(124,58,237,.25)'};">${vencido ? '🔔 VENCIDO' : 'FAT'} ${label}</span>`;
+        })() : '';
         return `<tr>
           <td class="mono" style="color:var(--text-dim);font-size:12px">#${o.numero}${demoTag}</td>
           <td style="font-weight:600;color:var(--text)">${esc(nome)}</td>
           <td>${origem}</td>
-          <td><span class="badge badge-${o.status}">${labelStatus(o.status)}</span></td>
+          <td><span class="badge badge-${o.status}">${labelStatus(o.status)}</span>${fatTag}</td>
           ${APP.profile?.role === 'tecnico' ? '' : `<td style="font-family:'Fira Code',monospace;color:var(--accent)">${fmtMoeda(o.total)}</td>`}
           <td style="color:var(--text-dim);font-size:12px">${data}</td>
           <td><div class="actions-cell">

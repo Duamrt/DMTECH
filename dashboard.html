@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04161653"></script>
-  <script src="js/lib.js?v=04161653"></script>
-  <script src="js/auth.js?v=04161653"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161653">
+  <script src="js/config.js?v=04161702"></script>
+  <script src="js/lib.js?v=04161702"></script>
+  <script src="js/auth.js?v=04161702"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04161702">
   <style>
     .banner-bv {
       display: none;
@@ -255,6 +255,16 @@
           <a href="upgrade.html" style="padding:6px 14px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap">Ver planos →</a>
         </div>
 
+        <!-- Alerta OS faturadas vencidas -->
+        <div id="banner-fat-vencido" style="display:none;align-items:center;gap:12px;padding:12px 16px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.35);margin-bottom:16px">
+          <span style="font-size:22px">🔔</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:#f87171" id="fat-vencido-txt"></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:1px">Acesse a lista de OS e confirme os recebimentos pendentes.</div>
+          </div>
+          <a href="os.html" style="padding:6px 14px;background:#ef4444;color:#fff;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap">Ver OS →</a>
+        </div>
+
         <!-- Banner boas-vindas (novo tenant) -->
         <div class="banner-bv" id="banner-bv">
           <div class="banner-bv-icon">🔒</div>
@@ -419,6 +429,24 @@
       document.getElementById('topbar-user').textContent        = nome;
       document.getElementById('nome-empresa').textContent       = empresa;
       document.getElementById('banner-bv-titulo').textContent   = `Bem-vindo(a) à ${empresa}!`;
+
+      // Alerta OS faturadas vencidas (só dono)
+      if (APP.profile?.role !== 'tecnico') {
+        const hoje = new Date().toISOString().split('T')[0];
+        const { data: fatVenc } = await sb.from('ordens_servico')
+          .select('id')
+          .eq('company_id', cid)
+          .eq('faturado', true)
+          .lt('data_vencimento_fat', hoje)
+          .limit(50);
+        if (fatVenc && fatVenc.length) {
+          const n = fatVenc.length;
+          document.getElementById('fat-vencido-txt').textContent = n === 1
+            ? '1 OS faturada com pagamento em atraso!'
+            : `${n} OS faturadas com pagamento em atraso!`;
+          document.getElementById('banner-fat-vencido').style.display = 'flex';
+        }
+      }
 
       // Banner trial
       const diasTrial = trialDiasRestantes();
