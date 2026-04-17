@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04170553"></script>
-  <script src="js/lib.js?v=04170553"></script>
-  <script src="js/auth.js?v=04170553"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04170553">
+  <script src="js/config.js?v=04170711"></script>
+  <script src="js/lib.js?v=04170711"></script>
+  <script src="js/auth.js?v=04170711"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170711">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -347,6 +347,7 @@
     let _aba = 'dados';
     let _novoMembroWA = null;
     let _calcEquipe = [];
+    let _custoHoraCalculado = 0;
     let _equipeData = [];
     let _editingMembro = null;
 
@@ -930,6 +931,7 @@
       const custoFixoH = horasFat > 0 ? custoFixo / horasFat : 0;
       const custoVarH  = cobrado * (pctCom + pctImp + pctTaxa) / 100;
       const lucroH = cobrado - custoFixoH - custoVarH;
+      _custoHoraCalculado = Math.round((custoFixoH + custoVarH) * 100) / 100;
       const margem = cobrado > 0 ? (lucroH / cobrado * 100) : 0;
       const prejuizo = lucroH <= 0;
       const saudavel = lucroH > 0 && margem >= 40;
@@ -996,7 +998,7 @@
         const comissao_padrao   = _n('calc-comissao', 0);
         const valor_hora        = _n('calc-cobrado', 120);
         const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||1;
-        const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct };
+        const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct, custo_hora_calculado: _custoHoraCalculado };
 
         let error, dbResult;
         const _isAdmin = isPlatformAdmin() && !!localStorage.getItem('dmtech-admin-company');

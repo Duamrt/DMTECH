@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04170553"></script>
-  <script src="js/lib.js?v=04170553"></script>
-  <script src="js/auth.js?v=04170553"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04170553">
+  <script src="js/config.js?v=04170711"></script>
+  <script src="js/lib.js?v=04170711"></script>
+  <script src="js/auth.js?v=04170711"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170711">
   <style>
     /* Board */
     .board-outer {
@@ -721,7 +721,7 @@
 
       <div class="hide-tecnico">
         <div class="p-section-title">Mão de Obra</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
           <div>
             <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Horas est.</div>
             <input class="panel-input" type="number" id="p-mo-est" placeholder="0" min="0" step="0.5" oninput="calcMO()">
@@ -730,11 +730,8 @@
             <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Horas reais</div>
             <input class="panel-input" type="number" id="p-mo-reais" placeholder="0" min="0" step="0.5" oninput="calcMO()">
           </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">R$/hora</div>
-            <input class="panel-input" type="number" id="p-mo-custo-hora" placeholder="0" min="0" step="1" oninput="calcMO()">
-          </div>
         </div>
+        <input type="hidden" id="p-mo-custo-hora">
         <div id="p-mo-resultado" style="font-size:11px;color:var(--text-muted);min-height:16px"></div>
       </div>
 
@@ -940,7 +937,7 @@
       document.getElementById('p-link-externo').value  = osAtual.link_externo || '';
       document.getElementById('p-mo-est').value        = osAtual.mo_horas_estimadas || '';
       document.getElementById('p-mo-reais').value      = osAtual.mo_horas_reais || '';
-      document.getElementById('p-mo-custo-hora').value = osAtual.mo_custo_hora || '';
+      document.getElementById('p-mo-custo-hora').value = osAtual.mo_custo_hora || APP.company?.calc_params?.custo_hora_calculado || APP.company?.valor_hora || 0;
       calcMO();
 
       const orcRow = document.getElementById('p-orc-row');
