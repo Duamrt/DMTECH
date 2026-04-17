@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171016"></script>
-  <script src="js/lib.js?v=04171016"></script>
-  <script src="js/auth.js?v=04171016"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171016">
+  <script src="js/config.js?v=04171018"></script>
+  <script src="js/lib.js?v=04171018"></script>
+  <script src="js/auth.js?v=04171018"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171018">
   <style>
     .adm-layout { display: flex; min-height: 100vh; }
     .adm-sidebar {
@@ -185,6 +185,47 @@
       border: 1px dashed var(--border);
     }
     .adm-loading { color: var(--text-dim); font-size: 13px; padding: 20px 0; }
+
+    table.adm { min-width: 720px; }
+
+    @media (max-width: 768px) {
+      .adm-layout { flex-direction: column; }
+      .adm-sidebar {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px 12px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow-x: auto;
+        gap: 8px;
+      }
+      .adm-logo { padding: 0 12px 0 0; border-bottom: none; margin-bottom: 0; border-right: 1px solid var(--border); }
+      .adm-logo .name { font-size: 14px; }
+      .adm-logo .sub  { display: none; }
+      .adm-sidebar nav { display: flex; gap: 4px; flex: 1; }
+      .adm-nav-item { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+      .adm-sidebar > div:last-child {
+        margin-top: 0 !important;
+        padding: 0 !important;
+        border-top: none !important;
+        border-left: 1px solid var(--border);
+        padding-left: 12px !important;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #adm-user-nome { display: none; }
+      .adm-sidebar .btn-adm { padding: 6px 12px; font-size: 11px; width: auto !important; }
+
+      .adm-main { padding: 16px; }
+      .adm-metrics { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+      .adm-metric { padding: 12px; }
+      .adm-metric-val { font-size: 22px; }
+      .adm-title { font-size: 16px; }
+
+      .adm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
   </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#f97316">
