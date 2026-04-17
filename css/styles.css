@@ -7,8 +7,8 @@
   --surface-2:       #1a1a1a;
   --surface-3:       #222222;
   --text:            #ffffff;
-  --text-muted:      #888888;
-  --text-dim:        #444444;
+  --text-muted:      #b8b8b8;  /* antes #888 — contraste 4.8:1 → 11:1 em #111 */
+  --text-dim:        #8a8a8a;  /* antes #444 — contraste 2.5:1 → 5.4:1 */
   --accent:          #f97316;
   --accent-dim:      rgba(249,115,22,.10);
   --accent-glow:     rgba(249,115,22,.35);
@@ -29,10 +29,16 @@ body.light {
   --surface-2:       #f5f5f5;
   --surface-3:       #eaeaea;
   --text:            #111111;
-  --text-muted:      #555555;
-  --text-dim:        #999999;
-  --border:          #e0e0e0;
-  --border-strong:   #cccccc;
+  --text-muted:      #3a3a3a;  /* antes #555 — 12.6:1 em fundo branco (era 7.4:1) */
+  --text-dim:        #5e5e5e;  /* antes #999 — 6.3:1 (era 2.8:1 — falhava WCAG) */
+  --border:          #d4d4d4;  /* antes #e0 — borda mais visível */
+  --border-strong:   #b0b0b0;
+}
+
+/* Fontes pequenas ficam mais legíveis com peso e altura maiores */
+body {
+  font-size: 15px;  /* base era 14 */
+  line-height: 1.55;
 }
 
 /* ─── Reset ─── */
