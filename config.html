@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04170751"></script>
-  <script src="js/lib.js?v=04170751"></script>
-  <script src="js/auth.js?v=04170751"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04170751">
+  <script src="js/config.js?v=04170754"></script>
+  <script src="js/lib.js?v=04170754"></script>
+  <script src="js/auth.js?v=04170754"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170754">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -969,16 +969,17 @@
         if (_calcEquipe[i]) vr += _calcEquipe[i].vale_refeicao||0;
       });
       const h = APP.company?.horario || {};
-      let diasSemana = 0, horasDia = 8;
+      let diasSemana = 0, totalHorasSemana = 0;
       ['seg','ter','qua','qui','sex','sab','dom'].forEach(dia => {
         if (h[dia]?.ativo) {
           diasSemana++;
           const [hA,mA] = (h[dia].abertura||'08:00').split(':').map(Number);
           const [hF,mF] = (h[dia].fechamento||'18:00').split(':').map(Number);
-          horasDia = (hF+mF/60)-(hA+mA/60);
+          totalHorasSemana += (hF+mF/60)-(hA+mA/60);
         }
       });
-      if (!diasSemana) diasSemana = 6;
+      if (!diasSemana) { diasSemana = 6; totalHorasSemana = 48; }
+      const horasDia = totalHorasSemana / diasSemana;
       const diasMes = Math.round(diasSemana * 4.33);
       const fixos   = somarFixos();
       const vagas   = parseInt(document.getElementById('calc-vagas')?.value)||3;
@@ -1015,13 +1016,16 @@
           <div class="calc-breakdown">
             <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:10px">Decomposição por Hora</div>
             <div class="calc-line"><span class="calc-line-lbl">Valor cobrado</span><span class="calc-line-val">R$ ${cobrado.toFixed(2)}</span></div>
-            <div class="calc-line"><span class="calc-line-lbl">Salários (proporcional)</span><span class="calc-line-val" style="color:#f87171">-R$ ${custoFixoH.toFixed(2)}</span></div>
+            <div class="calc-line"><span class="calc-line-lbl">Custo fixo/hora</span><span class="calc-line-val" style="color:#f87171">-R$ ${custoFixoH.toFixed(2)}</span></div>
+            <div class="calc-line" style="font-size:10px;color:var(--text-dim);padding-left:8px"><span>sal+VR R$ ${(salarios+vr).toLocaleString('pt-BR',{minimumFractionDigits:2})} + fix R$ ${fixos.toLocaleString('pt-BR',{minimumFractionDigits:2})} ÷ ${horasFat.toFixed(0)}h</span></div>
             <div class="calc-line"><span class="calc-line-lbl">Impostos (${pctImp}%)</span><span class="calc-line-val" style="color:#f87171">-R$ ${(cobrado*pctImp/100).toFixed(2)}</span></div>
             <div class="calc-line"><span class="calc-line-lbl">Comissão (${pctCom}%)</span><span class="calc-line-val" style="color:#f87171">-R$ ${(cobrado*pctCom/100).toFixed(2)}</span></div>
             <div class="calc-line"><span class="calc-line-lbl">Taxa cartão (${pctTaxa}%)</span><span class="calc-line-val" style="color:#f87171">-R$ ${(cobrado*pctTaxa/100).toFixed(2)}</span></div>
             <div style="height:1px;background:var(--border);margin:6px 0"></div>
             <div class="calc-line"><span class="calc-line-lbl" style="font-weight:700;color:var(--text)">Lucro líquido</span><span class="calc-line-val" style="color:${prejuizo?'#f87171':'#4ade80'};font-size:14px">R$ ${lucroH.toFixed(2)}</span></div>
             <div class="calc-line"><span class="calc-line-lbl">Margem efetiva</span><span class="calc-line-val" style="color:${prejuizo?'#f87171':'#4ade80'}">${margem.toFixed(1)}%</span></div>
+            <div style="height:1px;background:var(--border);margin:6px 0"></div>
+            <div class="calc-line"><span class="calc-line-lbl" style="color:var(--text-dim)">Horas mín. p/ cobrir custos</span><span class="calc-line-val" style="color:var(--accent)">${cobrado>0?Math.ceil(custoFixo/cobrado):'-'}h/mês</span></div>
           </div>
         </div>
         <div style="margin-top:12px;padding:12px 14px;border:1px solid var(--border);font-size:11px;color:var(--text-muted);line-height:1.9">
