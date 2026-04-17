@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04170711"></script>
-  <script src="js/lib.js?v=04170711"></script>
-  <script src="js/auth.js?v=04170711"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04170711">
+  <script src="js/config.js?v=04170748"></script>
+  <script src="js/lib.js?v=04170748"></script>
+  <script src="js/auth.js?v=04170748"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170748">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -348,6 +348,7 @@
     let _novoMembroWA = null;
     let _calcEquipe = [];
     let _custoHoraCalculado = 0;
+    let _itensFixos = [];
     let _equipeData = [];
     let _editingMembro = null;
 
@@ -878,17 +879,32 @@
         equipHtml = '<div style="font-size:13px;color:var(--accent);margin-bottom:16px">Nenhum funcionário ativo. Cadastre na aba Equipe.</div>';
       }
 
+      const itensExist = (c.calc_params||{}).itens_fixos;
+      _itensFixos = itensExist && itensExist.length
+        ? JSON.parse(JSON.stringify(itensExist))
+        : (((c.calc_params||{}).custo_fixo||0) > 0
+            ? [{ nome: 'Custos fixos', valor: (c.calc_params||{}).custo_fixo }]
+            : []);
+
       ct.innerHTML = `
         ${equipHtml}
         <div class="cfg-section">
+          <div class="cfg-section-title">Custos Fixos — itens</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">Aluguel, internet, gás, ferramentas, pró-labore...</div>
+          <div id="calc-fixos-lista"></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+            <button class="cfg-btn cfg-btn-sm" onclick="adicionarItemFixo()">+ Adicionar item</button>
+            <span style="font-size:12px;color:var(--text-dim)">Total: <strong id="calc-fixos-total" style="color:var(--text)">R$ 0</strong></span>
+          </div>
+        </div>
+        <div class="cfg-section">
           <div class="cfg-section-title">Parâmetros</div>
           <div class="cfg-row-3">
-            <div class="cfg-field"><div class="cfg-label">Custos fixos (R$/mês)</div><input class="cfg-input" id="calc-fixos" type="number" value="${(c.calc_params||{}).custo_fixo||0}" min="0" step="100" oninput="calcularCusto()"><div class="cfg-hint">Aluguel, luz, internet...</div></div>
             <div class="cfg-field"><div class="cfg-label">Vagas/Atendimentos</div><input class="cfg-input" id="calc-vagas" type="number" value="${c.capacidade_diaria||3}" min="1" max="50" oninput="calcularCusto()"></div>
             <div class="cfg-field"><div class="cfg-label">Valor hora cobrado (R$)</div><input class="cfg-input" id="calc-cobrado" type="number" value="${c.valor_hora||120}" min="0" step="5" oninput="calcularCusto()"></div>
+            <div class="cfg-field"><div class="cfg-label">Comissão técnicos (%)</div><input class="cfg-input" id="calc-comissao" type="number" value="${c.comissao_padrao??0}" min="0" max="30" oninput="calcularCusto()"></div>
           </div>
           <div class="cfg-row-3">
-            <div class="cfg-field"><div class="cfg-label">Comissão técnicos (%)</div><input class="cfg-input" id="calc-comissao" type="number" value="${c.comissao_padrao??0}" min="0" max="30" oninput="calcularCusto()"></div>
             <div class="cfg-field"><div class="cfg-label">Impostos (%)</div><input class="cfg-input" id="calc-imposto" type="number" value="${(c.calc_params||{}).imposto_pct??0}" min="0" max="30" step="0.5" oninput="calcularCusto()"></div>
             <div class="cfg-field"><div class="cfg-label">Taxa média cartão (%)</div><input class="cfg-input" id="calc-taxa" type="number" value="${(c.calc_params||{}).taxa_cartao_pct??0}" min="0" max="15" step="0.5" oninput="calcularCusto()"></div>
           </div>
@@ -898,7 +914,48 @@
           <div class="calc-header">Simulador de Lucratividade</div>
           <div id="calc-resultado"></div>
         </div>`;
+      renderItensFixos();
       calcularCusto();
+    }
+
+    function renderItensFixos() {
+      const lista = document.getElementById('calc-fixos-lista');
+      if (!lista) return;
+      if (!_itensFixos.length) {
+        lista.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:6px 0">Nenhum item. Clique em "+ Adicionar item".</div>';
+        atualizarTotalFixos();
+        return;
+      }
+      lista.innerHTML = _itensFixos.map((item, i) => `
+        <div style="display:grid;grid-template-columns:1fr 130px 28px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+          <input class="cfg-input" type="text" placeholder="Descrição" value="${esc(item.nome||'')}" oninput="_itensFixos[${i}].nome=this.value" style="font-size:12px;padding:5px 8px">
+          <input class="cfg-input calc-item-fixo" type="number" placeholder="0" value="${item.valor||0}" min="0" step="10" oninput="_itensFixos[${i}].valor=parseFloat(this.value)||0;atualizarTotalFixos()" style="font-size:12px;padding:5px 8px">
+          <button onclick="removerItemFixo(${i})" style="background:none;border:none;color:#f87171;font-size:16px;cursor:pointer;line-height:1;padding:2px">×</button>
+        </div>`).join('');
+      atualizarTotalFixos();
+    }
+
+    function atualizarTotalFixos() {
+      const total = _itensFixos.reduce((s, i) => s + (parseFloat(i.valor)||0), 0);
+      const el = document.getElementById('calc-fixos-total');
+      if (el) el.textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+      calcularCusto();
+    }
+
+    function adicionarItemFixo() {
+      _itensFixos.push({ nome: '', valor: 0 });
+      renderItensFixos();
+      const inputs = document.querySelectorAll('#calc-fixos-lista input[type="text"]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function removerItemFixo(idx) {
+      _itensFixos.splice(idx, 1);
+      renderItensFixos();
+    }
+
+    function somarFixos() {
+      return _itensFixos.reduce((s, i) => s + (parseFloat(i.valor)||0), 0);
     }
 
     function calcularCusto() {
@@ -919,7 +976,7 @@
       });
       if (!diasSemana) diasSemana = 6;
       const diasMes = Math.round(diasSemana * 4.33);
-      const fixos   = parseFloat(document.getElementById('calc-fixos')?.value)||0;
+      const fixos   = somarFixos();
       const vagas   = parseInt(document.getElementById('calc-vagas')?.value)||3;
       const cobrado = parseFloat(document.getElementById('calc-cobrado')?.value)||120;
       const pctCom  = parseFloat(document.getElementById('calc-comissao')?.value)||0;
@@ -992,13 +1049,14 @@
       if (_busy.params) return; _busy.params = true;
       try {
         const _n = (id, def) => { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? def : v; };
-        const custo_fixo        = _n('calc-fixos', 0);
         const imposto_pct       = _n('calc-imposto', 0);
         const taxa_cartao_pct   = _n('calc-taxa', 0);
         const comissao_padrao   = _n('calc-comissao', 0);
         const valor_hora        = _n('calc-cobrado', 120);
         const capacidade_diaria = parseInt(document.getElementById('calc-vagas')?.value)||1;
-        const calc_params = { custo_fixo, imposto_pct, taxa_cartao_pct, custo_hora_calculado: _custoHoraCalculado };
+        const itens_fixos = _itensFixos.filter(i => i.nome || i.valor);
+        const custo_fixo  = itens_fixos.reduce((s, i) => s + (parseFloat(i.valor)||0), 0);
+        const calc_params = { custo_fixo, itens_fixos, imposto_pct, taxa_cartao_pct, custo_hora_calculado: _custoHoraCalculado };
 
         let error, dbResult;
         const _isAdmin = isPlatformAdmin() && !!localStorage.getItem('dmtech-admin-company');
