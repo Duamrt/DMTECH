@@ -1,13 +1,51 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://dmtechapp.com.br",
+  "https://www.dmtechapp.com.br",
+  "http://localhost:3000",
+  "http://localhost:5555",
+];
+
+function corsHeaders(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  const allow = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
+}
+
+function sanitize(s: unknown, max = 500) {
+  return String(s ?? "").replace(/[`$\\]/g, "").slice(0, max);
+}
 
 serve(async (req) => {
+  const CORS = corsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS });
+  }
+
+  // Autenticação JWT
+  const jwt = req.headers.get("authorization") ?? "";
+  if (!jwt) {
+    return new Response(JSON.stringify({ error: "Não autenticado" }), {
+      status: 401, headers: { "Content-Type": "application/json", ...CORS },
+    });
+  }
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const ANON_KEY     = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const caller = createClient(SUPABASE_URL, ANON_KEY, {
+    global: { headers: { authorization: jwt } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { data: { user }, error: authErr } = await caller.auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Não autenticado" }), {
+      status: 401, headers: { "Content-Type": "application/json", ...CORS },
+    });
   }
 
   const GEMINI_KEY = Deno.env.get("GEMINI_KEY");
@@ -18,6 +56,10 @@ serve(async (req) => {
   }
 
   const { action, os } = await req.json();
+  const notes      = sanitize(os?.notes, 500);
+  const clientName = sanitize(os?.client_name, 120);
+  const numero     = String(os?.numero ?? "").replace(/\D/g, "").slice(0, 10);
+  const statusKey  = sanitize(os?.status, 40);
 
   let prompt = "";
 
@@ -26,8 +68,8 @@ serve(async (req) => {
 
 Gere um checklist de campo para o técnico executar este serviço:
 
-Descrição do serviço: ${os.notes || "não informado"}
-Cliente: ${os.client_name}
+Descrição do serviço: ${notes || "não informado"}
+Cliente: ${clientName}
 
 Retorne APENAS os itens do checklist, sem título, sem explicação, no formato:
 ☐ item
@@ -41,15 +83,15 @@ Retorne APENAS os itens do checklist, sem título, sem explicação, no formato:
       pronta: "concluída e pronta",
       entregue: "encerrada",
     };
-    const statusLabel = statusLabels[os.status] || os.status;
+    const statusLabel = statusLabels[statusKey] || statusKey;
 
     prompt = `Você é um assistente de uma empresa de serviços elétricos.
 Escreva uma mensagem curta e profissional para WhatsApp informando o cliente sobre a OS.
 
-Cliente: ${os.client_name}
-OS nº: ${String(os.numero).padStart(3, "0")}
+Cliente: ${clientName}
+OS nº: ${numero.padStart(3, "0")}
 Situação: ${statusLabel}
-Serviço: ${os.notes || "serviço solicitado"}
+Serviço: ${notes || "serviço solicitado"}
 
 Regras:
 - Máximo 3 linhas

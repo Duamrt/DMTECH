@@ -98,7 +98,8 @@ function _mostrarBarraAdmin(nomeEmpresa) {
   const bar = document.createElement('div');
   bar.id = 'dm-admin-bar';
   bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9997;background:#f97316;color:#fff;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;gap:12px';
-  bar.innerHTML = `<span>&#9650; ADMIN — visualizando: <strong>${String(nomeEmpresa ?? '').replace(/</g,'&lt;')}</strong></span><button onclick="sairModoAdmin()" style="background:rgba(0,0,0,.25);border:none;color:#fff;font-size:11px;font-weight:700;font-family:Manrope,sans-serif;padding:4px 12px;cursor:pointer">&#8592; Voltar ao Admin</button>`;
+  const nomeEsc = String(nomeEmpresa ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  bar.innerHTML = `<span>&#9650; ADMIN — visualizando: <strong>${nomeEsc}</strong></span><button onclick="sairModoAdmin()" style="background:rgba(0,0,0,.25);border:none;color:#fff;font-size:11px;font-weight:700;font-family:Manrope,sans-serif;padding:4px 12px;cursor:pointer">&#8592; Voltar ao Admin</button>`;
   document.body.prepend(bar);
   // empurra o conteúdo pra baixo
   document.body.style.paddingTop = (parseInt(document.body.style.paddingTop) || 0) + 32 + 'px';
