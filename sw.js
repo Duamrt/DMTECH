@@ -1,4 +1,4 @@
-const VERSION = 'v04171020';
+const VERSION = 'v04171022';
 const CACHE = 'dmtech-' + VERSION;
 
 self.addEventListener('install', e => {
@@ -9,7 +9,7 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim().catch(() => {}))
   );
 });
 

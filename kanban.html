@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04171020"></script>
-  <script src="js/lib.js?v=04171020"></script>
-  <script src="js/auth.js?v=04171020"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171020">
+  <script src="js/config.js?v=04171022"></script>
+  <script src="js/lib.js?v=04171022"></script>
+  <script src="js/auth.js?v=04171022"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171022">
   <style>
     /* Board */
     .board-outer {
@@ -1921,10 +1921,12 @@ ${empresa}`;
       const ok = await requireAuth();
       if (!ok) return;
 
-      const nome    = APP.profile.name || APP.profile.email || '';
+      const nome    = APP.profile?.name || APP.profile?.email || '';
       const empresa = APP.company?.name || '';
-      document.getElementById('topbar-user').textContent  = nome;
-      document.getElementById('nome-empresa').textContent = empresa;
+      const elUser = document.getElementById('topbar-user');
+      if (elUser) elUser.textContent = nome;
+      const elEmp = document.getElementById('nome-empresa');
+      if (elEmp) elEmp.textContent = empresa;
 
       await carregarOS();
 
