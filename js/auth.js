@@ -85,12 +85,6 @@ async function requireAuth(redirectTo = 'login.html') {
 function _injetarBtnFecharSidebar() {
   const logo = document.querySelector('.sidebar-logo');
   if (!logo || document.getElementById('btn-fechar-sidebar')) return;
-  // Envolve o conteúdo existente num wrapper
-  const wrap = document.createElement('div');
-  wrap.className = 'logo-text';
-  while (logo.firstChild) wrap.appendChild(logo.firstChild);
-  logo.appendChild(wrap);
-  // Botão fechar
   const btn = document.createElement('button');
   btn.id = 'btn-fechar-sidebar';
   btn.innerHTML = '&#8592;';
@@ -128,8 +122,6 @@ function checkPlan() {
   if (plan === 'trial') {
     const trialEnd = c.trial_ends_at ? new Date(c.trial_ends_at) : null;
     if (trialEnd && trialEnd < new Date()) {
-      // Marca como expirado no banco (silencioso)
-      sb.from('companies').update({ plan: 'expirado' }).eq('id', c.id).then(() => {});
       window.location.href = 'upgrade.html';
       return false;
     }
@@ -146,7 +138,7 @@ function trialDiasRestantes() {
 
 async function signOut() {
   await sb.auth.signOut();
-  localStorage.clear();
+  Object.keys(localStorage).filter(k => k.startsWith('dmtech-')).forEach(k => localStorage.removeItem(k));
   window.location.href = 'login.html';
 }
 

@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04161702"></script>
-  <script src="js/lib.js?v=04161702"></script>
-  <script src="js/auth.js?v=04161702"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161702">
+  <script src="js/config.js?v=04170553"></script>
+  <script src="js/lib.js?v=04170553"></script>
+  <script src="js/auth.js?v=04170553"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170553">
   <style>
     /* Board */
     .board-outer {
@@ -959,7 +959,7 @@
 
       // Carrega equipe (uma vez)
       if (!equipe.length) {
-        const { data } = await sb.from('profiles').select('id, name, email').eq('company_id', APP.company.id);
+        const { data } = await sb.from('profiles').select('id, name, email').eq('company_id', APP.company.id).limit(200);
         equipe = data || [];
         const sel = document.getElementById('p-responsavel');
         sel.innerHTML = '<option value="">— sem responsável —</option>';
@@ -1049,8 +1049,7 @@
       itensPanel[idx].quantidade = qtd;
       itensPanel[idx].preco_unit  = preco;
       itensPanel[idx].subtotal    = subtotal;
-      const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-      await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+      await sb.rpc('dm_recalcular_total_os', { p_os_id: osAtual.id, p_company_id: APP.company.id });
       renderItensPanel();
     }
 
@@ -1077,9 +1076,7 @@
       document.getElementById('p-add-qtd').value   = '1';
       document.getElementById('p-add-preco').value = '0';
 
-      // Atualiza total na OS
-      const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-      await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+      await sb.rpc('dm_recalcular_total_os', { p_os_id: osAtual.id, p_company_id: APP.company.id });
     }
 
     /* ── Geração automática de código ── */
@@ -1217,8 +1214,7 @@
         if (error) { dmToast('Erro ao remover item', 'error'); return; }
         itensPanel.splice(idx, 1);
         renderItensPanel();
-        const novoTotal = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
-        await sb.from('ordens_servico').update({ total: novoTotal }).eq('id', osAtual.id);
+        await sb.rpc('dm_recalcular_total_os', { p_os_id: osAtual.id, p_company_id: APP.company.id });
       }, 'Remover', true);
     }
 
@@ -1363,7 +1359,7 @@
       } else if (status === 'entregue' || (osAtual.status === 'entregue' && status !== 'entregue')) {
         osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null;
       }
-      const { error } = await sb.from('ordens_servico').update(osUpd).eq('id', osAtual.id);
+      const { error } = await sb.from('ordens_servico').update(osUpd).eq('id', osAtual.id).eq('company_id', APP.company.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
 
       // Audit log
@@ -1374,7 +1370,7 @@
       if (status === 'entregue' && osAtual.status !== 'entregue') {
         const dataHoje = new Date().toISOString().split('T')[0];
         const isFaturado = fatDados?.faturado || false;
-        await sb.from('caixa').insert({
+        const { error: caixaErr } = await sb.from('caixa').insert({
           company_id: APP.company.id,
           tipo: 'entrada',
           descricao: `OS #${String(osAtual.numero).padStart(3,'0')} — ${osAtual.clients?.name || 'Cliente'}`,
@@ -1384,6 +1380,7 @@
           forma_pagamento: fatDados?.forma || null,
           pago: !isFaturado
         });
+        if (caixaErr) dmToast('OS entregue mas lançamento no caixa falhou: ' + caixaErr.message, 'error');
       }
       // Estorno: se estava entregue e voltou para outro status (cobre pago e faturado)
       if (osAtual.status === 'entregue' && status !== 'entregue') {
@@ -1406,7 +1403,6 @@
       fecharPanel();
       await carregarOS();
       dmToast(status === 'entregue' ? 'OS entregue!' : 'OS atualizada!');
-      if (osAtual?.id) carregarHistoricoOS(osAtual.id);
     }
 
     function calcMO() {

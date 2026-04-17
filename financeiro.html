@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04161702"></script>
-  <script src="js/lib.js?v=04161702"></script>
-  <script src="js/auth.js?v=04161702"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04161702">
+  <script src="js/config.js?v=04170553"></script>
+  <script src="js/lib.js?v=04170553"></script>
+  <script src="js/auth.js?v=04170553"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170553">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -559,7 +559,7 @@
           <td style="font-family:'Fira Code',monospace;color:${cor};text-align:right;font-weight:700">${fmtMoeda(l.valor)}</td>
           <td><div class="actions-cell">
             ${!l.pago ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;color:#4ade80" onclick="marcarPago('${l.id}')">Pago</button>` : ''}
-            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick='abrirEditar(${JSON.stringify(l).replace(/'/g,"&#39;")})'>Editar</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="abrirEditar('${l.id}')">Editar</button>
           </div></td>
         </tr>`;
       }).join('');
@@ -604,7 +604,8 @@
         if (osIds.length) {
           const { data: itens } = await sb.from('os_items')
             .select('tipo, descricao, quantidade, preco_unit, subtotal')
-            .in('os_id', osIds);
+            .in('os_id', osIds)
+            .limit(10000);
           itensOS = itens || [];
         }
 
@@ -912,7 +913,9 @@
       document.getElementById('modal-overlay').classList.add('active');
     }
 
-    function abrirEditar(l) {
+    function abrirEditar(lcId) {
+      const l = todosLanc.find(x => x.id === lcId);
+      if (!l) return;
       editandoId = l.id;
       const isEntrada = l.tipo === 'entrada';
       document.getElementById('modal-titulo').textContent = isEntrada ? 'Editar Receita' : 'Editar Despesa';
