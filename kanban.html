@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04171022"></script>
-  <script src="js/lib.js?v=04171022"></script>
-  <script src="js/auth.js?v=04171022"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171022">
+  <script src="js/config.js?v=04171026"></script>
+  <script src="js/lib.js?v=04171026"></script>
+  <script src="js/auth.js?v=04171026"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171026">
   <style>
     /* Board */
     .board-outer {
@@ -1328,8 +1328,12 @@
       await _executarSalvarStatus(statusSelecionado, null);
     }
 
+    let _salvandoStatus = false;
     async function _executarSalvarStatus(status, fatDados) {
       if (!osAtual) return;
+      if (_salvandoStatus) return;
+      _salvandoStatus = true;
+      try {
       const notes        = document.getElementById('p-notes').value.trim();
       const descTecnico  = document.getElementById('p-desc-tecnico').value.trim() || null;
       const ressalva     = document.getElementById('p-ressalva').value.trim() || null;
@@ -1375,17 +1379,17 @@
           data_vencimento: isFaturado ? fatDados.vencimento : dataHoje,
           categoria: 'servico',
           forma_pagamento: fatDados?.forma || null,
-          pago: !isFaturado
+          pago: !isFaturado,
+          os_id: osAtual.id
         });
         if (caixaErr) dmToast('OS entregue mas lançamento no caixa falhou: ' + caixaErr.message, 'error');
       }
       // Estorno: se estava entregue e voltou para outro status (cobre pago e faturado)
       if (osAtual.status === 'entregue' && status !== 'entregue') {
-        const numPad = String(osAtual.numero).padStart(3,'0');
         await sb.from('caixa')
           .delete()
           .eq('company_id', APP.company.id)
-          .ilike('descricao', 'OS #' + numPad + '%')
+          .eq('os_id', osAtual.id)
           .eq('tipo', 'entrada');
       }
 
@@ -1400,6 +1404,7 @@
       fecharPanel();
       await carregarOS();
       dmToast(status === 'entregue' ? 'OS entregue!' : 'OS atualizada!');
+      } finally { _salvandoStatus = false; }
     }
 
     function calcMO() {

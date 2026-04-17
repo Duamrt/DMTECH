@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171022"></script>
-  <script src="js/lib.js?v=04171022"></script>
-  <script src="js/auth.js?v=04171022"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171022">
+  <script src="js/config.js?v=04171026"></script>
+  <script src="js/lib.js?v=04171026"></script>
+  <script src="js/auth.js?v=04171026"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171026">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -484,7 +484,11 @@
       else if (periodoAtivo === '30')   { desde = new Date(agora); desde.setDate(desde.getDate()-30); }
       else if (periodoAtivo === '90')   { desde = new Date(agora); desde.setDate(desde.getDate()-90); }
       else if (periodoAtivo === 'ano')  desde = new Date(agora.getFullYear(), 0, 1);
-      return lista.filter(l => new Date(l.created_at) >= desde);
+      return lista.filter(l => {
+        // Despesas: filtrar por vencimento (quando existe). Entradas: created_at
+        const dataRef = (l.tipo === 'saida' && l.data_vencimento) ? l.data_vencimento : l.created_at;
+        return new Date(dataRef) >= desde;
+      });
     }
 
     function renderTudo() {

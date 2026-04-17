@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171022"></script>
-  <script src="js/lib.js?v=04171022"></script>
-  <script src="js/auth.js?v=04171022"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171022">
+  <script src="js/config.js?v=04171026"></script>
+  <script src="js/lib.js?v=04171026"></script>
+  <script src="js/auth.js?v=04171026"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171026">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -603,27 +603,30 @@
       const btn = document.getElementById('btn-salvar');
       btn.disabled = true; btn.textContent = 'Salvando...';
 
-      let osId = id;
+      const osDados = {
+        client_id: clientId,
+        status,
+        notes,
+        desc_tecnico: descTecnico,
+        ressalva,
+        mo_horas_estimadas: moHorasEst,
+        mo_horas_reais: moHorasReais,
+        mo_custo_hora: moCustoHora,
+        garantia,
+        link_externo: linkExterno,
+        total
+      };
 
-      if (id) {
-        const { error: updErr } = await sb.from('ordens_servico').update({ client_id: clientId, status, notes, desc_tecnico: descTecnico, ressalva, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora, garantia, link_externo: linkExterno, total }).eq('id', id).eq('company_id', APP.company.id);
-        if (updErr) { dmToast('Erro ao salvar OS: ' + updErr.message, 'error'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
-        await sb.from('os_items').delete().eq('os_id', id);
-      } else {
-        const { data: numData } = await sb.rpc('dm_proximo_numero_os', { p_company_id: APP.company.id });
-        const numero = numData || 1;
-        const { data: novaOs, error: insErr } = await sb.from('ordens_servico').insert({
-          company_id: APP.company.id, client_id: clientId, status, notes, desc_tecnico: descTecnico, ressalva, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora, garantia, link_externo: linkExterno, total, numero
-        }).select().single();
-        if (insErr) { dmToast('Erro ao criar OS: ' + insErr.message, 'error'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
-        osId = novaOs?.id;
-      }
-
-      if (osId && itensAtual.length) {
-        const { error: itemErr } = await sb.from('os_items').insert(
-          itensAtual.map(it => ({ os_id: osId, ...it }))
-        );
-        if (itemErr) dmToast('OS salva mas itens não foram gravados: ' + itemErr.message, 'error');
+      const { data: rpcRes, error: rpcErr } = await sb.rpc('dm_salvar_os_com_itens', {
+        p_company_id: APP.company.id,
+        p_os_id: id || null,
+        p_os_dados: osDados,
+        p_itens: itensAtual
+      });
+      if (rpcErr || !rpcRes?.ok) {
+        dmToast('Erro ao salvar: ' + (rpcErr?.message || rpcRes?.erro || 'desconhecido'), 'error');
+        btn.disabled = false; btn.textContent = 'Salvar';
+        return;
       }
 
       btn.disabled = false; btn.textContent = 'Salvar';
