@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171030"></script>
-  <script src="js/lib.js?v=04171030"></script>
-  <script src="js/auth.js?v=04171030"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171030">
+  <script src="js/config.js?v=04171032"></script>
+  <script src="js/lib.js?v=04171032"></script>
+  <script src="js/auth.js?v=04171032"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171032">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -437,10 +437,24 @@
     })();
 
     async function carregar() {
-      const [{ data: lanc }, { data: prods }] = await Promise.all([
-        sb.from('caixa').select('*').eq('company_id', APP.company.id).order('created_at', { ascending: false }).limit(2000),
+      // Performance: por padrão carrega últimos 12 meses. "todos" pede tudo.
+      let qCaixa = sb.from('caixa').select('*').eq('company_id', APP.company.id);
+      if (periodoAtivo !== 'todos') {
+        const corte = new Date(); corte.setMonth(corte.getMonth() - 12);
+        const corteISO = corte.toISOString().slice(0,10);
+        // Filtra por data_vencimento OU created_at (aceita ambos via OR)
+        qCaixa = qCaixa.or(`data_vencimento.gte.${corteISO},created_at.gte.${corteISO}`);
+      }
+      qCaixa = qCaixa.order('created_at', { ascending: false }).limit(5000);
+
+      const [{ data: lanc, error: errCaixa }, { data: prods, error: errProds }] = await Promise.all([
+        qCaixa,
         sb.from('products').select('name,cost').eq('company_id', APP.company.id)
       ]);
+      if (errCaixa || errProds) {
+        dmToast('Erro ao carregar: ' + (errCaixa?.message || errProds?.message), 'error');
+        return;
+      }
       todosLanc = lanc || [];
       // Mapa nome (lowercase) → custo
       produtosCusto = {};
@@ -469,11 +483,13 @@
     }
 
     /* ── Período ── */
-    function setPeriodo(p, btn) {
+    async function setPeriodo(p, btn) {
+      const recarregar = (p === 'todos' && periodoAtivo !== 'todos') || (p !== 'todos' && periodoAtivo === 'todos');
       periodoAtivo = p;
       document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      renderTudo();
+      if (recarregar) await carregar();
+      else renderTudo();
     }
 
     function filtrarPeriodo(lista) {
