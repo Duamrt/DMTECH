@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04171036"></script>
-  <script src="js/lib.js?v=04171036"></script>
-  <script src="js/auth.js?v=04171036"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171036">
+  <script src="js/config.js?v=04171043"></script>
+  <script src="js/lib.js?v=04171043"></script>
+  <script src="js/auth.js?v=04171043"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171043">
   <style>
     /* Board */
     .board-outer {
@@ -331,6 +331,56 @@
       border-top: 1px solid var(--border);
       flex-shrink: 0;
     }
+    .panel-actions-flow .btn-flow {
+      flex: 1;
+      padding: 12px 10px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'Manrope', sans-serif;
+      cursor: pointer;
+      transition: opacity .12s, background .12s;
+      letter-spacing: .02em;
+    }
+    .btn-flow-back {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .btn-flow-back:hover:not(:disabled) { color: var(--text); border-color: var(--text-muted); }
+    .btn-flow-save {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      flex: 0 0 auto;
+      padding: 12px 16px;
+    }
+    .btn-flow-save:hover { color: var(--text); border-color: var(--text-muted); }
+    .btn-flow-next {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: #fff;
+    }
+    .btn-flow-next:hover:not(:disabled) { opacity: .88; }
+    .btn-flow:disabled { opacity: .3; cursor: not-allowed; }
+    .p-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .status-badge.st-aberta          { background: rgba(59,130,246,.2);  color:#60a5fa; border:1px solid #3b82f6; }
+    .status-badge.st-em_andamento    { background: rgba(245,158,11,.2);  color:#fbbf24; border:1px solid #d97706; }
+    .status-badge.st-aguardando_peca { background: rgba(249,115,22,.2);  color:#fb923c; border:1px solid #ea580c; }
+    .status-badge.st-pronta          { background: rgba(34,197,94,.2);   color:#4ade80; border:1px solid #16a34a; }
+    .status-badge.st-entregue        { background: rgba(107,114,128,.2); color:#9ca3af; border:1px solid #4b5563; }
     .btn-salvar {
       flex: 1;
       padding: 10px;
@@ -659,15 +709,10 @@
           title="Data/hora de início da execução">
       </div>
 
-      <div>
-        <div class="p-section-title">Status</div>
-        <div class="status-grid">
-          <button class="status-btn btn-aberta"          onclick="selecionarStatus('aberta')">Aberta</button>
-          <button class="status-btn btn-em_andamento"    onclick="selecionarStatus('em_andamento')">Em Andamento</button>
-          <button class="status-btn btn-aguardando_peca" onclick="selecionarStatus('aguardando_peca')">Aguard. Liberação</button>
-          <button class="status-btn btn-pronta"          onclick="selecionarStatus('pronta')">Pronta</button>
-          <button class="status-btn btn-entregue"        onclick="selecionarStatus('entregue')">Entregue</button>
-        </div>
+      <!-- Status atual (badge) -->
+      <div class="p-status-row">
+        <div class="p-info-label">Status atual</div>
+        <span id="p-status-badge" class="status-badge">—</span>
       </div>
 
       <!-- Responsável -->
@@ -676,6 +721,30 @@
         <select class="panel-select" id="p-responsavel">
           <option value="">— sem responsável —</option>
         </select>
+      </div>
+
+      <!-- Pagamento (inline, mostra quando avançar pra Entregue) -->
+      <div class="hide-tecnico" id="p-pagamento-bloco">
+        <div class="p-section-title">Pagamento</div>
+        <div style="display:flex;border:1px solid var(--border);margin-bottom:8px">
+          <button type="button" id="entr-btn-agora" onclick="setEntrTipo('agora')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:var(--accent);color:#fff">Pago Agora</button>
+          <button type="button" id="entr-btn-fat" onclick="setEntrTipo('faturado')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;cursor:pointer;background:var(--surface);color:var(--text-muted)">Faturado</button>
+        </div>
+        <div id="entr-venc-row" style="display:none;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Data de vencimento</div>
+          <input type="date" id="entr-vencimento" class="panel-input">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Forma de pagamento</div>
+          <select id="entr-forma" class="panel-select">
+            <option value="pix">PIX</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_debito">Cartão Débito</option>
+            <option value="cartao_credito">Cartão Crédito</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferência</option>
+          </select>
+        </div>
       </div>
 
       <!-- Itens -->
@@ -773,44 +842,14 @@
       <button class="btn-doc" onclick="pdfRecibo()">🧾 Recibo</button>
       <button class="btn-doc" onclick="pdfDemanda()">🔧 Demanda</button>
     </div>
-    <div class="panel-actions">
-      <button class="btn-ver-os" onclick="irParaOS()">Ver OS →</button>
-      <button class="btn-salvar" onclick="salvarStatus()">Salvar</button>
+    <div class="panel-actions panel-actions-flow">
+      <button class="btn-flow btn-flow-back" id="btn-flow-back" onclick="voltarStatus()">← —</button>
+      <button class="btn-flow btn-flow-save" onclick="salvarSemMudarStatus()" title="Salvar alterações sem mudar status">Salvar</button>
+      <button class="btn-flow btn-flow-next" id="btn-flow-next" onclick="avancarStatus()">— →</button>
     </div>
   </div>
 
   <div class="versao" id="versao-rodape"></div>
-
-  <!-- Modal Confirmar Entregue -->
-  <div id="entr-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:var(--surface-2);border:1px solid var(--border);width:100%;max-width:420px;padding:28px;font-family:Manrope,sans-serif">
-      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Confirmar Entrega</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px">Selecione o tipo de recebimento</div>
-      <div style="display:flex;margin-bottom:20px;border:1px solid var(--border)">
-        <button id="entr-btn-agora" onclick="setEntrTipo('agora')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:var(--accent);color:#fff">Pago Agora</button>
-        <button id="entr-btn-fat" onclick="setEntrTipo('faturado')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;cursor:pointer;background:var(--surface);color:var(--text-muted)">Faturado</button>
-      </div>
-      <div id="entr-venc-row" style="display:none;margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Data de Vencimento</div>
-        <input type="date" id="entr-vencimento" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Manrope,sans-serif;font-size:13px;padding:8px 10px">
-      </div>
-      <div style="margin-bottom:20px">
-        <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Forma de pagamento</div>
-        <select id="entr-forma" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:Manrope,sans-serif;font-size:13px;padding:8px 10px">
-          <option value="pix">PIX</option>
-          <option value="dinheiro">Dinheiro</option>
-          <option value="cartao_debito">Cartao Debito</option>
-          <option value="cartao_credito">Cartao Credito</option>
-          <option value="boleto">Boleto</option>
-          <option value="transferencia">Transferencia</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button onclick="fecharModalEntregue()" style="background:none;border:1px solid var(--border);color:var(--text-muted);padding:9px 18px;font-size:13px;font-weight:700;font-family:Manrope,sans-serif;cursor:pointer">Cancelar</button>
-        <button onclick="confirmarEntregue()" style="background:#4ade80;border:none;color:#000;padding:9px 18px;font-size:13px;font-weight:700;font-family:Manrope,sans-serif;cursor:pointer">Confirmar Entrega</button>
-      </div>
-    </div>
-  </div>
 
   <script>
     console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
@@ -950,6 +989,17 @@
 
       selecionarStatus(osAtual.status);
       atualizarBotoesMover();
+
+      // Pagamento: se já entregue, reflete valores salvos; senão preset para PIX/agora
+      if (osAtual.status === 'entregue' && osAtual.faturado) {
+        setEntrTipo('faturado');
+        document.getElementById('entr-vencimento').value = osAtual.data_vencimento_fat || '';
+        document.getElementById('entr-forma').value = osAtual.forma_pagamento_fat || 'pix';
+      } else {
+        setEntrTipo('agora');
+        document.getElementById('entr-vencimento').value = '';
+        document.getElementById('entr-forma').value = osAtual.forma_pagamento_fat || 'pix';
+      }
 
       // Carrega catálogo (uma vez)
       await carregarCatalogo();
@@ -1223,18 +1273,47 @@
 
     function selecionarStatus(s) {
       statusSelecionado = s;
-      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
-      const btn = document.querySelector(`.btn-${s}`);
-      if (btn) btn.classList.add('active');
+      const badge = document.getElementById('p-status-badge');
+      if (badge) {
+        badge.className = 'status-badge st-' + s;
+        badge.textContent = STATUS_LABEL[s] || s;
+      }
       atualizarBotoesMover();
+      atualizarBlocoPagamento();
     }
 
     function atualizarBotoesMover() {
       const idx = COLUNAS.findIndex(c => c.status === statusSelecionado);
-      const btnV = document.getElementById('btn-voltar');
-      const btnA = document.getElementById('btn-avancar');
-      if (btnV) { btnV.disabled = idx <= 0; btnV.style.opacity = idx <= 0 ? '.3' : '1'; }
-      if (btnA) { btnA.disabled = idx >= COLUNAS.length - 1; btnA.style.opacity = idx >= COLUNAS.length - 1 ? '.3' : '1'; }
+      const btnBack = document.getElementById('btn-flow-back');
+      const btnNext = document.getElementById('btn-flow-next');
+      if (btnBack) {
+        if (idx <= 0) {
+          btnBack.disabled = true;
+          btnBack.textContent = '← —';
+        } else {
+          btnBack.disabled = false;
+          btnBack.textContent = '← ' + (STATUS_LABEL[COLUNAS[idx - 1].status] || '').toUpperCase();
+        }
+      }
+      if (btnNext) {
+        if (idx >= COLUNAS.length - 1) {
+          btnNext.disabled = true;
+          btnNext.textContent = '— →';
+        } else {
+          btnNext.disabled = false;
+          btnNext.textContent = (STATUS_LABEL[COLUNAS[idx + 1].status] || '').toUpperCase() + ' →';
+        }
+      }
+    }
+
+    function atualizarBlocoPagamento() {
+      const bloco = document.getElementById('p-pagamento-bloco');
+      if (!bloco) return;
+      const idx = COLUNAS.findIndex(c => c.status === statusSelecionado);
+      const proximoEhEntregue = idx >= 0 && COLUNAS[idx + 1]?.status === 'entregue';
+      // Mostra pagamento quando próximo passo é Entregue OU quando já está em entregue
+      const mostrar = proximoEhEntregue || statusSelecionado === 'entregue';
+      bloco.style.display = mostrar ? '' : 'none';
     }
 
     function moverStatus(dir) {
@@ -1287,46 +1366,50 @@
     let _entrTipo = 'agora';
     function setEntrTipo(tipo) {
       _entrTipo = tipo;
-      document.getElementById('entr-btn-agora').style.background = tipo === 'agora' ? 'var(--accent)' : 'var(--surface)';
-      document.getElementById('entr-btn-agora').style.color = tipo === 'agora' ? '#fff' : 'var(--text-muted)';
-      document.getElementById('entr-btn-fat').style.background = tipo === 'faturado' ? '#7c3aed' : 'var(--surface)';
-      document.getElementById('entr-btn-fat').style.color = tipo === 'faturado' ? '#fff' : 'var(--text-muted)';
-      document.getElementById('entr-venc-row').style.display = tipo === 'faturado' ? 'block' : 'none';
+      const bA = document.getElementById('entr-btn-agora');
+      const bF = document.getElementById('entr-btn-fat');
+      if (bA) { bA.style.background = tipo === 'agora' ? 'var(--accent)' : 'var(--surface)'; bA.style.color = tipo === 'agora' ? '#fff' : 'var(--text-muted)'; }
+      if (bF) { bF.style.background = tipo === 'faturado' ? '#7c3aed' : 'var(--surface)'; bF.style.color = tipo === 'faturado' ? '#fff' : 'var(--text-muted)'; }
+      const row = document.getElementById('entr-venc-row');
+      if (row) row.style.display = tipo === 'faturado' ? 'block' : 'none';
     }
 
-    function fecharModalEntregue() {
-      document.getElementById('entr-overlay').style.display = 'none';
-    }
-
-    function abrirModalEntregue() {
-      setEntrTipo('agora');
-      document.getElementById('entr-vencimento').value = '';
-      document.getElementById('entr-forma').value = 'pix';
-      document.getElementById('entr-overlay').style.display = 'flex';
-    }
-
-    async function confirmarEntregue() {
-      const forma = document.getElementById('entr-forma').value;
-      if (_entrTipo === 'faturado') {
-        const venc = document.getElementById('entr-vencimento').value;
-        if (!venc) { dmToast('Informe a data de vencimento', 'error'); return; }
-        fecharModalEntregue();
-        await _executarSalvarStatus('entregue', { forma, faturado: true, vencimento: venc });
+    // Novo fluxo linear: ← Voltar | Salvar | Avançar →
+    async function avancarStatus() {
+      if (!osAtual) return;
+      const atual = statusSelecionado || osAtual.status;
+      const idx = COLUNAS.findIndex(c => c.status === atual);
+      if (idx < 0 || idx >= COLUNAS.length - 1) return;
+      const proximo = COLUNAS[idx + 1].status;
+      if (proximo === 'entregue') {
+        const forma = document.getElementById('entr-forma')?.value || 'pix';
+        if (_entrTipo === 'faturado') {
+          const venc = document.getElementById('entr-vencimento')?.value;
+          if (!venc) { dmToast('Informe a data de vencimento para faturar', 'error'); return; }
+          await _executarSalvarStatus('entregue', { forma, faturado: true, vencimento: venc });
+        } else {
+          await _executarSalvarStatus('entregue', { forma, faturado: false });
+        }
       } else {
-        fecharModalEntregue();
-        await _executarSalvarStatus('entregue', { forma, faturado: false });
+        await _executarSalvarStatus(proximo, null);
       }
     }
 
-    async function salvarStatus() {
-      if (!osAtual || !statusSelecionado) return;
-      // Faturado: abre modal antes de salvar
-      if (statusSelecionado === 'entregue') {
-        abrirModalEntregue();
-        return;
-      }
-      await _executarSalvarStatus(statusSelecionado, null);
+    async function voltarStatus() {
+      if (!osAtual) return;
+      const atual = statusSelecionado || osAtual.status;
+      const idx = COLUNAS.findIndex(c => c.status === atual);
+      if (idx <= 0) return;
+      await _executarSalvarStatus(COLUNAS[idx - 1].status, null);
     }
+
+    async function salvarSemMudarStatus() {
+      if (!osAtual) return;
+      await _executarSalvarStatus(osAtual.status, null);
+    }
+
+    // Compat: mantém salvarStatus() caso algum lugar ainda chame
+    async function salvarStatus() { await avancarStatus(); }
 
     let _salvandoStatus = false;
     async function _executarSalvarStatus(status, fatDados) {
