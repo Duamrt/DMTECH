@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171026"></script>
-  <script src="js/lib.js?v=04171026"></script>
-  <script src="js/auth.js?v=04171026"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171026">
+  <script src="js/config.js?v=04171030"></script>
+  <script src="js/lib.js?v=04171030"></script>
+  <script src="js/auth.js?v=04171030"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171030">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -140,7 +140,7 @@
             <button class="filter-btn" onclick="setFiltro('entregue',this)">Entregue</button>
           </div>
           <div style="position:relative">
-            <input id="busca-cliente" type="text" placeholder="Buscar por cliente..." oninput="renderTabela()"
+            <input id="busca-cliente" type="text" placeholder="Buscar por cliente..." oninput="_buscaDebounced()"
               style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Manrope',sans-serif;font-size:13px;padding:7px 12px 7px 32px;width:200px">
             <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;pointer-events:none">⌕</span>
           </div>
@@ -401,6 +401,12 @@
       renderTabela();
     }
 
+    let _buscaTimer = null;
+    function _buscaDebounced() {
+      clearTimeout(_buscaTimer);
+      _buscaTimer = setTimeout(renderTabela, 180);
+    }
+
     function renderTabela() {
       const busca = (document.getElementById('busca-cliente')?.value || '').trim().toLowerCase();
       let lista = filtroAtivo === 'todos' ? todasOs : filtroAtivo === 'faturado' ? todasOs.filter(o => o.faturado === true) : todasOs.filter(o => o.status === filtroAtivo);
@@ -629,6 +635,9 @@
         return;
       }
 
+      const labelOs = `OS #${String(rpcRes.numero).padStart(3,'0')}`;
+      await auditLog(id ? 'update' : 'create', 'os', rpcRes.os_id, labelOs, { status, total, itens: itensAtual.length });
+
       btn.disabled = false; btn.textContent = 'Salvar';
       fecharModal();
       await carregarOs();
@@ -637,10 +646,12 @@
     function excluir() {
       const id = document.getElementById('os-id').value;
       if (!id) return;
+      const numero = document.getElementById('os-numero').textContent || '';
       dmConfirm('Excluir esta OS? Esta ação não pode ser desfeita.', async () => {
         const { data, error } = await sb.rpc('dm_excluir_os', { p_os_id: id, p_company_id: APP.company.id });
         if (error) { dmToast('Erro: ' + error.message, 'error'); return; }
         if (data && !data.ok) { dmToast(data.erro, 'error'); return; }
+        await auditLog('delete', 'os', id, `OS ${numero}`);
         fecharModal();
         await carregarOs();
       }, 'Excluir', true);

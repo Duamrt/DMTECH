@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171026"></script>
-  <script src="js/lib.js?v=04171026"></script>
-  <script src="js/auth.js?v=04171026"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171026">
+  <script src="js/config.js?v=04171030"></script>
+  <script src="js/lib.js?v=04171030"></script>
+  <script src="js/auth.js?v=04171030"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171030">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -975,6 +975,7 @@
 
       btn.disabled = false; btn.textContent = 'Salvar';
       if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      await auditLog(editandoId ? 'update' : 'create', 'caixa', editandoId || null, desc, { tipo, valor, categoria, pago });
       dmToast(editandoId ? 'Atualizado' : 'Lançamento registrado');
       fecharModal();
       await carregar();
@@ -983,14 +984,18 @@
     async function marcarPago(id) {
       const { error } = await sb.from('caixa').update({ pago: true }).eq('id', id).eq('company_id', APP.company.id);
       if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      await auditLog('update', 'caixa', id, 'Marcar como pago', { pago: true });
       dmToast('Marcado como pago');
       await carregar();
     }
 
     function excluir() {
+      const desc = document.getElementById('lc-desc')?.value || '';
+      const idExcluir = editandoId;
       dmConfirm('Excluir este lançamento? Esta ação não pode ser desfeita.', async () => {
-        const { error } = await sb.from('caixa').delete().eq('id', editandoId).eq('company_id', APP.company.id);
+        const { error } = await sb.from('caixa').delete().eq('id', idExcluir).eq('company_id', APP.company.id);
         if (error) { dmToast('Erro: '+error.message,'error'); return; }
+        await auditLog('delete', 'caixa', idExcluir, desc);
         dmToast('Lançamento excluído');
         fecharModal();
         await carregar();

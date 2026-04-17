@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171026"></script>
-  <script src="js/lib.js?v=04171026"></script>
-  <script src="js/auth.js?v=04171026"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171026">
+  <script src="js/config.js?v=04171030"></script>
+  <script src="js/lib.js?v=04171030"></script>
+  <script src="js/auth.js?v=04171030"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171030">
   <style>
     .search-bar {
       display: flex;
@@ -556,17 +556,20 @@
       const btn = document.getElementById('btn-salvar');
       btn.disabled = true; btn.textContent = 'Salvando...';
 
-      let error;
+      let error, novoId = id;
       if (id) {
         ({ error } = await sb.from('clients').update(payload).eq('id', id));
       } else {
         payload.company_id = APP.company.id;
-        ({ error } = await sb.from('clients').insert(payload));
+        const { data, error: insErr } = await sb.from('clients').insert(payload).select('id').single();
+        error = insErr;
+        novoId = data?.id;
       }
 
       btn.disabled = false; btn.textContent = 'Salvar';
 
       if (error) { alert('Erro ao salvar: ' + error.message); return; }
+      await auditLog(id ? 'update' : 'create', 'cliente', novoId, name);
       fecharModal();
       await carregar();
     }
@@ -670,6 +673,7 @@
       btn.disabled = false; btn.textContent = 'Importar';
 
       if (error) { alert('Erro: ' + error.message); return; }
+      await auditLog('import', 'cliente', null, `Importação CSV`, { total: payload.length });
       fecharImport();
       await carregar();
       alert(`${payload.length} clientes importados com sucesso.`);
@@ -687,9 +691,11 @@
     function excluir() {
       const id = document.getElementById('cliente-id').value;
       if (!id) return;
+      const nome = document.getElementById('c-name')?.value || '';
       dmConfirm('Excluir este cliente? Esta ação não pode ser desfeita e removerá o histórico de OS vinculadas.', async () => {
         const { error } = await sb.from('clients').delete().eq('id', id);
         if (error) { dmToast('Erro ao excluir: ' + error.message, 'error'); return; }
+        await auditLog('delete', 'cliente', id, nome);
         fecharModal();
         await carregar();
       }, 'Excluir', true);

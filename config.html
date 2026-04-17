@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171026"></script>
-  <script src="js/lib.js?v=04171026"></script>
-  <script src="js/auth.js?v=04171026"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171026">
+  <script src="js/config.js?v=04171030"></script>
+  <script src="js/lib.js?v=04171030"></script>
+  <script src="js/auth.js?v=04171030"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171030">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -385,20 +385,24 @@
     }
     function renderAba() {
       const ct = document.getElementById('cfg-content');
-      switch (_aba) {
-        case 'dados':        renderDados(ct);        break;
-        case 'valores':      renderValores(ct);      break;
-        case 'maquininhas':  renderMaquininhas(ct);  break;
-        case 'horario':      renderHorario(ct);      break;
-        case 'pix':          renderPix(ct);          break;
-        case 'mensagens':    renderMensagens(ct);    break;
-        case 'logo':         renderLogo(ct);         break;
-        case 'calculadora':  renderCalculadora(ct);  break;
-        case 'plano':        renderPlano(ct);        break;
-        case 'tv':           renderTV(ct);           break;
-        case 'equipe':       renderEquipe(ct);       break;
-        case 'permissoes':   renderPermissoes(ct);   break;
-      }
+      const onErr = e => { ct.innerHTML = `<div style="color:#f87171;padding:20px">Erro ao carregar: ${e?.message||e}</div>`; };
+      try {
+        const ret = (() => { switch (_aba) {
+          case 'dados':        return renderDados(ct);
+          case 'valores':      return renderValores(ct);
+          case 'maquininhas':  return renderMaquininhas(ct);
+          case 'horario':      return renderHorario(ct);
+          case 'pix':          return renderPix(ct);
+          case 'mensagens':    return renderMensagens(ct);
+          case 'logo':         return renderLogo(ct);
+          case 'calculadora':  return renderCalculadora(ct);
+          case 'plano':        return renderPlano(ct);
+          case 'tv':           return renderTV(ct);
+          case 'equipe':       return renderEquipe(ct);
+          case 'permissoes':   return renderPermissoes(ct);
+        }})();
+        if (ret && typeof ret.catch === 'function') ret.catch(onErr);
+      } catch(e) { onErr(e); }
     }
 
     // ══════════════════════════════════════════
@@ -1214,6 +1218,7 @@
       dmConfirm(`Remover ${nome} da equipe?`, async () => {
         const { error } = await sb.from('profiles').update({ company_id: null }).eq('id', id);
         if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+        await auditLog('delete', 'membro_equipe', id, nome);
         dmToast(`${nome} removido.`);
         renderEquipe(document.getElementById('cfg-content'));
       }, 'Remover', true);
@@ -1286,6 +1291,7 @@
       cbs.forEach(cb => { perms[cb.dataset.mod] = cb.checked; });
       const { error } = await sb.from('profiles').update({ permissions: perms }).eq('id', uid);
       if (error) { dmToast('Erro: '+error.message, 'error'); return; }
+      await auditLog('update', 'permissoes', uid, 'Permissões técnico', perms);
       dmToast('Permissões salvas!');
     }
 
@@ -1339,6 +1345,7 @@
       if (data.id) {
         await sb.rpc('update_member_profile', { p_profile_id: data.id, p_name: nome, p_whatsapp: whatsapp, p_salario_base: salario, p_vale_refeicao: vr });
       }
+      await auditLog('create', 'membro_equipe', data.id || null, nome, { email });
       const primeiro = nome.split(' ')[0];
       const appUrl = window.location.origin + '/login.html';
       const texto = `Olá ${primeiro}! Seu acesso foi criado.\n\nE-mail: ${email}\nSenha: ${senha}\nLink: ${appUrl}`;
