@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04170748"></script>
-  <script src="js/lib.js?v=04170748"></script>
-  <script src="js/auth.js?v=04170748"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04170748">
+  <script src="js/config.js?v=04170751"></script>
+  <script src="js/lib.js?v=04170751"></script>
+  <script src="js/auth.js?v=04170751"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04170751">
   <style>
     .config-layout { display:grid; grid-template-columns:210px 1fr; gap:28px; max-width:1000px; }
     .cfg-nav { position:sticky; top:0; }
@@ -871,7 +871,7 @@
                 <span style="font-weight:700;font-size:13px">${esc((m.name||'').split(' ')[0])}</span>
                 <span style="font-size:11px;color:var(--text-dim);margin-left:6px">${roleLabel[m.role]||m.role}</span>
               </div>
-              <input class="cfg-input calc-sal" data-idx="${i}" type="number" value="${m.salario_base||0}" min="0" step="50" oninput="calcularCusto()" style="padding:6px 8px;font-size:12px">
+              <input class="cfg-input calc-sal" data-idx="${i}" type="number" value="${m.salario_base||0}" min="0" step="50" oninput="atualizarTotalFixos()" style="padding:6px 8px;font-size:12px">
             </div>`).join('')}
           <button class="cfg-btn cfg-btn-sm" style="margin-top:8px" onclick="salvarSalarios()">Salvar salários</button>
         </div>`;
@@ -936,9 +936,13 @@
     }
 
     function atualizarTotalFixos() {
-      const total = _itensFixos.reduce((s, i) => s + (parseFloat(i.valor)||0), 0);
+      const itens = _itensFixos.reduce((s, i) => s + (parseFloat(i.valor)||0), 0);
+      let salarios = 0;
+      document.querySelectorAll('.calc-sal').forEach(input => { salarios += parseFloat(input.value)||0; });
+      _calcEquipe.forEach(m => { salarios += m.vale_refeicao||0; });
+      const total = salarios + itens;
       const el = document.getElementById('calc-fixos-total');
-      if (el) el.textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+      if (el) el.innerHTML = `R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})} <span style="font-weight:400;color:var(--text-dim)">(sal. R$ ${salarios.toLocaleString('pt-BR',{minimumFractionDigits:2})} + fix. R$ ${itens.toLocaleString('pt-BR',{minimumFractionDigits:2})})</span>`;
       calcularCusto();
     }
 
