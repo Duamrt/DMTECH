@@ -1,4 +1,4 @@
-const VERSION = 'v04171018';
+const VERSION = 'v04171020';
 const CACHE = 'dmtech-' + VERSION;
 
 self.addEventListener('install', e => {
@@ -15,6 +15,10 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = e.request.url;
+  // Só http/https: ignora chrome-extension://, data:, blob:, etc
+  if (!url.startsWith('http')) return;
+  // Só GET pode ser cacheado
+  if (e.request.method !== 'GET') return;
   // Supabase, APIs externas e fontes: sempre rede, sem cache
   if (url.includes('supabase.co') || url.includes('googleapis') || url.includes('gstatic') || url.includes('jsdelivr')) {
     return;
