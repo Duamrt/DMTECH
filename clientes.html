@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04171050"></script>
-  <script src="js/lib.js?v=04171050"></script>
-  <script src="js/auth.js?v=04171050"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04171050">
+  <script src="js/config.js?v=04171124"></script>
+  <script src="js/lib.js?v=04171124"></script>
+  <script src="js/auth.js?v=04171124"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04171124">
   <style>
     .search-bar {
       display: flex;
@@ -437,7 +437,7 @@
       }
       tbody.innerHTML = lista.map(c => `
         <tr style="cursor:pointer" onclick="abrirModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">
-          <td style="color:var(--text);font-weight:600">${esc(c.name)}</td>
+          <td style="color:var(--text);font-weight:800;font-size:15px">${esc(c.name)}</td>
           <td>${esc(c.phone)}</td>
           <td class="mono">${esc(c.cpf_cnpj)}</td>
           <td>${esc(c.city)}</td>
