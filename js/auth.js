@@ -252,8 +252,10 @@ function dmConfirm(msg, onConfirm, btnLabel = 'Confirmar', danger = false) {
 
 async function auditLog(action, entity, entityId, entityLabel, details) {
   if (!APP?.company?.id) return;
+  // Super admin impersonando outra empresa: não polui audit da empresa cliente
+  if (APP.profile?.company_id && APP.profile.company_id !== APP.company.id) return;
   try {
-    await sb.from('audit_log').insert({
+    const { error } = await sb.from('audit_log').insert({
       company_id: APP.company.id,
       user_id: APP.user?.id || null,
       user_name: APP.profile?.name || APP.profile?.email || '',
@@ -262,6 +264,7 @@ async function auditLog(action, entity, entityId, entityLabel, details) {
       entity_label: entityLabel || null,
       details: details || null
     });
+    if (error) console.warn('[auditLog]', error.message);
   } catch(e) { console.warn('[auditLog]', e?.message || e); }
 }
 
