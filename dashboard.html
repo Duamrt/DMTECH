@@ -8,163 +8,109 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="js/config.js?v=04181247"></script>
   <script src="js/lib.js?v=04181247"></script>
   <script src="js/auth.js?v=04181247"></script>
   <link rel="stylesheet" href="css/styles.css?v=04181247">
   <style>
-    .banner-bv {
-      display: none;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 16px 18px;
-      background: rgba(34,197,94,.06);
-      border: 1px solid rgba(34,197,94,.3);
-      margin-bottom: 20px;
+    /* Banners (trial, fat-vencido, bv, demo, wizard) */
+    .banner-bv { display:none; align-items:flex-start; gap:14px; padding:16px 18px; background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.3); margin-bottom:20px; }
+    .banner-bv.show { display:flex; }
+    .banner-bv-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
+    .banner-bv-body { flex:1; }
+    .banner-bv-titulo { font-size:14px; font-weight:800; color:var(--text); margin-bottom:4px; }
+    .banner-bv-texto  { font-size:12px; color:var(--text-muted); line-height:1.5; }
+    .banner-bv-fechar { background:none; border:none; color:var(--text-dim); font-size:16px; cursor:pointer; flex-shrink:0; line-height:1; padding:2px 4px; }
+    .banner-bv-fechar:hover { color:var(--text); }
+    .banner-bv-btn { margin-top:10px; padding:7px 14px; background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.4); color:#4ade80; font-size:12px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; transition:opacity .12s; }
+    .banner-bv-btn:hover { opacity:.8; }
+    .banner-demo { display:none; align-items:center; gap:12px; padding:12px 16px; background:rgba(234,179,8,.06); border:1px solid rgba(234,179,8,.35); margin-bottom:20px; }
+    .banner-demo.show { display:flex; }
+    .banner-demo-texto { flex:1; font-size:12px; color:#fbbf24; font-weight:600; }
+    .banner-demo-sub   { font-weight:400; color:var(--text-muted); margin-top:2px; font-size:11px; }
+    .banner-demo-btn { padding:6px 12px; background:rgba(234,179,8,.12); border:1px solid rgba(234,179,8,.4); color:#fbbf24; font-size:11px; font-weight:700; font-family:'Manrope',sans-serif; cursor:pointer; white-space:nowrap; }
+    .badge-demo { background:rgba(234,179,8,.15); color:#fbbf24; border:1px solid rgba(234,179,8,.3); font-size:10px; font-weight:800; padding:1px 5px; margin-left:6px; vertical-align:middle; }
+    .wizard-card { display:none; padding:20px 22px; background:var(--surface-2); border:1px solid var(--border); margin-bottom:24px; }
+    .wizard-card.show { display:block; }
+    .wizard-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+    .wizard-titulo { font-size:13px; font-weight:800; color:var(--text); flex:1; }
+    .wizard-progresso { font-size:11px; color:var(--accent); font-weight:700; font-family:'Fira Code',monospace; }
+    .wizard-fechar { background:none; border:none; color:var(--text-dim); font-size:15px; cursor:pointer; padding:2px 4px; line-height:1; }
+    .wizard-fechar:hover { color:var(--text); }
+    .wizard-bar { height:3px; background:var(--border); margin-bottom:18px; border-radius:2px; overflow:hidden; }
+    .wizard-bar-fill { height:100%; background:var(--accent); border-radius:2px; transition:width .4s ease; }
+    .wizard-steps { display:flex; flex-direction:column; gap:0; }
+    .wizard-step { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--border-subtle,rgba(255,255,255,.04)); }
+    .wizard-step:last-child { border-bottom:none; }
+    .wizard-check { width:20px; height:20px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; }
+    .wizard-check.done { border-color:#4ade80; background:rgba(74,222,128,.12); color:#4ade80; }
+    .wizard-step-body { flex:1; min-width:0; }
+    .wizard-step-titulo { font-size:13px; font-weight:700; color:var(--text); }
+    .wizard-step.done .wizard-step-titulo { color:var(--text-muted); text-decoration:line-through; text-decoration-color:var(--text-dim); }
+    .wizard-step-sub { font-size:11px; color:var(--text-dim); margin-top:2px; }
+    .wizard-step-link { font-size:11px; font-weight:700; color:var(--accent); text-decoration:none; flex-shrink:0; white-space:nowrap; }
+    .wizard-step-link:hover { opacity:.8; }
+    .wizard-step.done .wizard-step-link { display:none; }
+
+    /* Hero + Period bar */
+    .hero-dash { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; gap:16px; flex-wrap:wrap; }
+    .hero-dash h2 { font-size:24px; font-weight:700; color:var(--text); letter-spacing:-.3px; line-height:1.2; }
+    .hero-dash h2 span { color:var(--accent); }
+    .hero-dash p { font-size:12px; color:var(--text-muted); margin-top:4px; font-family:'Fira Code',monospace; }
+    .hero-actions { display:flex; gap:8px; }
+    .pill { background:var(--surface); border:1px solid var(--border); padding:8px 14px; font-size:12px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:6px; font-weight:600; text-decoration:none; font-family:'Manrope',sans-serif; }
+    .pill:hover { border-color:var(--border-strong); color:var(--text); }
+    .pill.primary { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; }
+    .pill.primary:hover { background:#fb923c; color:#fff; }
+
+    /* KPIs modernos */
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:12px; }
+    .metrics-secondary { grid-template-columns:1fr 1fr 1.4fr; margin-bottom:18px; }
+    .metric { background:var(--surface); border:1px solid var(--border); padding:18px; position:relative; transition:border-color .15s; }
+    .metric:hover { border-color:var(--border-strong); }
+    .metric-label { font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+    .metric-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); }
+    .metric-value { font-size:24px; font-weight:800; color:var(--text); letter-spacing:-.5px; line-height:1.2; margin-bottom:3px; }
+    .metric-sub { font-size:11px; color:var(--text-muted); margin-bottom:10px; font-family:'Fira Code',monospace; }
+    .metric-change { font-size:11px; color:#4ade80; font-weight:700; font-family:'Fira Code',monospace; }
+    .metric-change.down { color:#ef4444; }
+    .metric-change.neutral { color:var(--text-dim); }
+    .metric-warn { border-color:rgba(239,68,68,.35); background:linear-gradient(180deg,rgba(239,68,68,.04),var(--surface)); }
+    .metric-top { background:linear-gradient(135deg,rgba(249,115,22,.06),var(--surface)); }
+    .top-mec { display:flex; align-items:center; gap:12px; margin-top:6px; }
+    .top-mec-av { width:44px; height:44px; border-radius:50%; background:var(--accent-dim); border:1px solid rgba(249,115,22,.35); display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--accent); font-size:15px; flex-shrink:0; }
+    .top-mec-info { flex:1; min-width:0; }
+    .top-mec-info b { display:block; color:var(--text); font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .top-mec-info span { font-size:11px; color:var(--text-muted); font-family:'Fira Code',monospace; }
+    .top-mec-trophy { margin-left:auto; font-size:22px; flex-shrink:0; }
+
+    /* Charts grid */
+    .chart-grid { display:grid; grid-template-columns:1.6fr 1fr; gap:12px; margin-bottom:18px; }
+    .chart-card { background:var(--surface); border:1px solid var(--border); overflow:hidden; }
+    .chart-head { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--border); }
+    .chart-title { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:700; }
+    .chart-value { font-size:20px; font-weight:800; color:var(--text); margin:4px 0 8px; letter-spacing:-.3px; }
+    .chart-body { padding:16px 18px; }
+    .legend { display:flex; gap:14px; font-size:11px; color:var(--text-muted); font-weight:600; }
+    .legend-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:middle; }
+    .tabs { display:flex; gap:3px; background:var(--surface-2); padding:3px; }
+    .tab { padding:5px 11px; font-size:10px; color:var(--text-muted); cursor:pointer; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+    .tab.active { background:var(--accent); color:#fff; }
+    .chart-box { position:relative; height:240px; }
+    .pie-box { position:relative; height:200px; margin-bottom:10px; }
+    .ai-hint { background:var(--surface-2); border:1px dashed var(--border-strong); padding:10px 12px; font-size:11px; color:var(--text-muted); display:flex; align-items:flex-start; gap:8px; margin-top:12px; font-family:'Fira Code',monospace; line-height:1.4; }
+    .ai-hint b { color:var(--accent); font-family:'Manrope',sans-serif; white-space:nowrap; }
+
+    @media(max-width:1100px) {
+      .metrics { grid-template-columns:repeat(2,1fr); }
+      .metrics-secondary { grid-template-columns:1fr; }
+      .chart-grid { grid-template-columns:1fr; }
     }
-    .banner-bv.show { display: flex; }
-    .banner-bv-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-    .banner-bv-body { flex: 1; }
-    .banner-bv-titulo { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-    .banner-bv-texto  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-    .banner-bv-fechar { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; flex-shrink: 0; line-height: 1; padding: 2px 4px; }
-    .banner-bv-fechar:hover { color: var(--text); }
-    .banner-bv-btn {
-      margin-top: 10px;
-      padding: 7px 14px;
-      background: rgba(34,197,94,.15);
-      border: 1px solid rgba(34,197,94,.4);
-      color: #4ade80;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: 'Manrope', sans-serif;
-      cursor: pointer;
-      transition: opacity .12s;
+    @media(max-width:700px) {
+      .metrics { grid-template-columns:1fr 1fr; }
+      .hero-dash { flex-direction:column; align-items:flex-start; }
     }
-    .banner-bv-btn:hover { opacity: .8; }
-    /* Banner demo ativo */
-    .banner-demo {
-      display: none;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      background: rgba(234,179,8,.06);
-      border: 1px solid rgba(234,179,8,.35);
-      margin-bottom: 20px;
-    }
-    .banner-demo.show { display: flex; }
-    .banner-demo-texto { flex: 1; font-size: 12px; color: #fbbf24; font-weight: 600; }
-    .banner-demo-sub   { font-weight: 400; color: var(--text-muted); margin-top: 2px; font-size: 11px; }
-    .banner-demo-btn {
-      padding: 6px 12px;
-      background: rgba(234,179,8,.12);
-      border: 1px solid rgba(234,179,8,.4);
-      color: #fbbf24;
-      font-size: 11px;
-      font-weight: 700;
-      font-family: 'Manrope', sans-serif;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .badge-demo { background: rgba(234,179,8,.15); color: #fbbf24; border: 1px solid rgba(234,179,8,.3); font-size: 10px; font-weight: 800; padding: 1px 5px; margin-left: 6px; vertical-align: middle; }
-    /* Wizard setup */
-    .wizard-card {
-      display: none;
-      padding: 20px 22px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
-    .wizard-card.show { display: block; }
-    .wizard-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .wizard-titulo {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--text);
-      flex: 1;
-    }
-    .wizard-progresso {
-      font-size: 11px;
-      color: var(--accent);
-      font-weight: 700;
-      font-family: 'Fira Code', monospace;
-    }
-    .wizard-fechar {
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      font-size: 15px;
-      cursor: pointer;
-      padding: 2px 4px;
-      line-height: 1;
-    }
-    .wizard-fechar:hover { color: var(--text); }
-    .wizard-bar {
-      height: 3px;
-      background: var(--border);
-      margin-bottom: 18px;
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .wizard-bar-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: width .4s ease;
-    }
-    .wizard-steps { display: flex; flex-direction: column; gap: 0; }
-    .wizard-step {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.04));
-    }
-    .wizard-step:last-child { border-bottom: none; }
-    .wizard-check {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid var(--border);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 800;
-    }
-    .wizard-check.done {
-      border-color: #4ade80;
-      background: rgba(74,222,128,.12);
-      color: #4ade80;
-    }
-    .wizard-step-body { flex: 1; min-width: 0; }
-    .wizard-step-titulo {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .wizard-step.done .wizard-step-titulo { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--text-dim); }
-    .wizard-step-sub {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
-    .wizard-step-link {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent);
-      text-decoration: none;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .wizard-step-link:hover { opacity: .8; }
-    .wizard-step.done .wizard-step-link { display: none; }
   </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#f97316">
@@ -185,39 +131,21 @@
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section">Principal</div>
-        <a href="dashboard.html" class="nav-item active">
-          <span class="nav-icon">⊞</span> Dashboard
-        </a>
-        <a href="minha-fila.html" class="nav-item">
-          <span class="nav-icon">◫</span> Minha Fila
-        </a>
-        <a href="clientes.html" class="nav-item">
-          <span class="nav-icon">◎</span> Clientes
-        </a>
-        <a href="orcamentos.html" class="nav-item">
-          <span class="nav-icon">◨</span> Orçamentos
-        </a>
-        <a href="os.html" class="nav-item">
-          <span class="nav-icon">◈</span> Ordens de Serviço
-        </a>
-        <a href="kanban.html" class="nav-item">
-          <span class="nav-icon">▦</span> Kanban
-        </a>
-        <a href="catalogo.html" class="nav-item">
-          <span class="nav-icon">◧</span> Catálogo
-        </a>
+        <a href="dashboard.html" class="nav-item active"><span class="nav-icon">⊞</span> Dashboard</a>
+        <a href="minha-fila.html" class="nav-item"><span class="nav-icon">◫</span> Minha Fila</a>
+        <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+        <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+        <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+        <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+        <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
         <a href="fornecedores.html" class="nav-item"><span class="nav-icon">◪</span> Fornecedores</a>
         <div class="nav-section">Financeiro</div>
         <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Caixa</a>
         <a href="notas-fiscais.html" class="nav-item"><span class="nav-icon">⊟</span> Nota Fiscal</a>
         <a href="folha.html" class="nav-item"><span class="nav-icon">⊠</span> Folha</a>
         <div class="nav-section">Sistema</div>
-                <a href="audit.html" class="nav-item">
-          <span class="nav-icon">&#9677;</span> Auditoria
-        </a>
-        <a href="config.html" class="nav-item">
-          <span class="nav-icon">⚙</span> Configurações
-        </a>
+        <a href="audit.html" class="nav-item"><span class="nav-icon">&#9677;</span> Auditoria</a>
+        <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
         <a href="meu-plano.html" class="nav-item"><span class="nav-icon">◆</span> Minha Assinatura</a>
       </nav>
       <div class="sidebar-footer" id="versao-sidebar"></div>
@@ -241,9 +169,16 @@
       <!-- Content -->
       <div class="content">
 
-        <div class="page-header">
-          <h2 id="titulo-boas-vindas">Olá!</h2>
-          <p>Visão geral do seu negócio hoje.</p>
+        <!-- HERO -->
+        <div class="hero-dash">
+          <div>
+            <h2 id="titulo-boas-vindas">Olá!</h2>
+            <p id="sub-hoje">Visão geral do seu negócio hoje.</p>
+          </div>
+          <div class="hero-actions">
+            <a href="orcamentos.html" class="pill">◧ Novo Orçamento</a>
+            <a href="os.html" class="pill primary">+ Nova OS</a>
+          </div>
         </div>
 
         <!-- Banner trial -->
@@ -298,31 +233,87 @@
           <button class="banner-demo-btn" onclick="limparDemo()">Remover dados demo</button>
         </div>
 
-        <!-- KPIs -->
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-label">OS Abertas</div>
-            <div class="kpi-value" id="qtd-os">—</div>
-            <div class="kpi-sub">em andamento</div>
+        <!-- METRICS PRIMARIAS -->
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label"><span class="metric-dot"></span>Faturamento do Mês</div>
+            <div class="metric-value" id="m-fat">—</div>
+            <div class="metric-sub" id="m-fat-sub">aguardando dados</div>
+            <div class="metric-change neutral" id="m-fat-var">&nbsp;</div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Orçamentos em Aberto</div>
-            <div class="kpi-value" id="qtd-orc">—</div>
-            <div class="kpi-sub" id="val-orc">aguardando aprovação</div>
+          <div class="metric">
+            <div class="metric-label"><span class="metric-dot"></span>OS Concluídas</div>
+            <div class="metric-value" id="m-os">—</div>
+            <div class="metric-sub" id="m-os-sub">entregues no mês</div>
+            <div class="metric-change neutral" id="m-os-var">&nbsp;</div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Faturamento do mês</div>
-            <div class="kpi-value" id="fat-mes">—</div>
-            <div class="kpi-sub">OS entregues este mês</div>
+          <div class="metric">
+            <div class="metric-label"><span class="metric-dot"></span>Novos Clientes</div>
+            <div class="metric-value" id="m-novos">—</div>
+            <div class="metric-sub" id="m-novos-sub">cadastrados no mês</div>
+            <div class="metric-change neutral" id="m-novos-var">&nbsp;</div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Clientes</div>
-            <div class="kpi-value" id="qtd-clientes">—</div>
-            <div class="kpi-sub">cadastrados</div>
+          <div class="metric">
+            <div class="metric-label"><span class="metric-dot"></span>OS Abertas</div>
+            <div class="metric-value" id="m-abertas">—</div>
+            <div class="metric-sub" id="m-abertas-sub">em andamento</div>
+            <div class="metric-change neutral">&nbsp;</div>
           </div>
         </div>
 
-        <!-- OS Recentes -->
+        <!-- METRICS SECUNDARIAS -->
+        <div class="metrics metrics-secondary">
+          <div class="metric">
+            <div class="metric-label"><span class="metric-dot"></span>Ticket Médio</div>
+            <div class="metric-value" id="m-ticket">—</div>
+            <div class="metric-sub" id="m-ticket-sub">por OS finalizada</div>
+            <div class="metric-change neutral" id="m-ticket-var">&nbsp;</div>
+          </div>
+          <div class="metric" id="m-inad-card">
+            <div class="metric-label"><span class="metric-dot" style="background:#ef4444"></span>Inadimplência</div>
+            <div class="metric-value" id="m-inad">R$ 0</div>
+            <div class="metric-sub" id="m-inad-sub">sem pendências</div>
+            <div class="metric-change neutral" id="m-inad-var">tudo em dia ✓</div>
+          </div>
+          <div class="metric metric-top" id="m-top-card">
+            <div class="metric-label"><span class="metric-dot"></span>Top Técnico · <span id="m-top-mes">—</span></div>
+            <div id="m-top-content" style="padding:16px 0;text-align:center;font-size:12px;color:var(--text-dim);font-family:'Fira Code',monospace">Aguardando dados do mês</div>
+          </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Tendência de Faturamento · 30 dias</div>
+                <div class="chart-value" id="chart-total">—</div>
+                <div class="legend">
+                  <span><span class="legend-dot" style="background:var(--accent)"></span>Serviços</span>
+                  <span><span class="legend-dot" style="background:var(--surface-3)"></span>Produtos</span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-body">
+              <div class="chart-box"><canvas id="barChart"></canvas></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Receita por Categoria</div>
+                <div class="chart-value" id="pie-total">—</div>
+                <div style="font-size:11px;color:var(--text-dim);font-family:'Fira Code',monospace" id="pie-periodo">—</div>
+              </div>
+            </div>
+            <div class="chart-body">
+              <div class="pie-box"><canvas id="pieChart"></canvas></div>
+              <div class="ai-hint" id="ai-hint" style="display:none"><b>💡 Insight:</b><span id="ai-hint-txt"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OS Recentes (preservado) -->
         <div class="section">
           <div class="section-header">
             <span class="section-title">OS Recentes</span>
@@ -331,24 +322,16 @@
           <div class="section-body">
             <table class="data-table">
               <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Cliente</th>
-                  <th>Serviço</th>
-                  <th>Status</th>
-                  <th>Data</th>
-                </tr>
+                <tr><th>#</th><th>Cliente</th><th>Serviço</th><th>Status</th><th>Data</th></tr>
               </thead>
               <tbody id="tabela-os">
-                <tr>
-                  <td colspan="5" class="empty-state">Nenhuma OS cadastrada ainda.</td>
-                </tr>
+                <tr><td colspan="5" class="empty-state">Nenhuma OS cadastrada ainda.</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Orçamentos em Aberto -->
+        <!-- Orçamentos em Aberto (preservado) -->
         <div class="section">
           <div class="section-header">
             <span class="section-title">Orçamentos em Aberto</span>
@@ -357,18 +340,10 @@
           <div class="section-body">
             <table class="data-table">
               <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Cliente</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Validade</th>
-                </tr>
+                <tr><th>#</th><th>Cliente</th><th>Status</th><th>Total</th><th>Validade</th></tr>
               </thead>
               <tbody id="tabela-orc">
-                <tr>
-                  <td colspan="5" class="empty-state">Nenhum orçamento em aberto.</td>
-                </tr>
+                <tr><td colspan="5" class="empty-state">Nenhum orçamento em aberto.</td></tr>
               </tbody>
             </table>
           </div>
@@ -398,24 +373,17 @@
     }
 
     const fmt = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const fmtK = v => v >= 1000 ? 'R$ ' + (v/1000).toFixed(1).replace('.0','') + 'k' : fmt(v);
+    const fmtPct = v => (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(1) + '%';
+    const initials = nome => (nome||'?').trim().split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase();
 
-    function statusOsLabel(s) {
-      return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' }[s] || s;
-    }
-    function statusOsBadge(s) {
-      const map = { aberta:'badge-orange', em_andamento:'badge-yellow', pronta:'badge-green', entregue:'badge-muted', aguardando_peca:'badge-red' };
-      return map[s] || '';
-    }
-    function statusOrcLabel(s) {
-      return { rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', reprovado:'Reprovado' }[s] || s;
-    }
-    function statusOrcBadge(s) {
-      return { rascunho:'badge-muted', enviado:'badge-orange', aprovado:'badge-green', reprovado:'badge-red' }[s] || '';
-    }
-    function fmtData(d) {
-      if (!d) return '—';
-      return new Date(d).toLocaleDateString('pt-BR');
-    }
+    function statusOsLabel(s) { return { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Peça', pronta:'Pronta', entregue:'Entregue' }[s] || s; }
+    function statusOsBadge(s) { return { aberta:'badge-orange', em_andamento:'badge-yellow', pronta:'badge-green', entregue:'badge-muted', aguardando_peca:'badge-red' }[s] || ''; }
+    function statusOrcLabel(s) { return { rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', reprovado:'Reprovado' }[s] || s; }
+    function statusOrcBadge(s) { return { rascunho:'badge-muted', enviado:'badge-orange', aprovado:'badge-green', reprovado:'badge-red' }[s] || ''; }
+    function fmtData(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('pt-BR'); }
+
+    let _barChart = null, _pieChart = null;
 
     (async () => {
       const ok = await requireAuth();
@@ -426,25 +394,35 @@
       const empresa = APP.company?.name || '';
       const cid     = APP.company?.id;
 
-      document.getElementById('titulo-boas-vindas').textContent = `Olá, ${nome}!`;
+      const primeiroNome = nome.split(' ')[0] || 'Visitante';
+      document.getElementById('titulo-boas-vindas').innerHTML = `Olá, <span>${primeiroNome}</span>!`;
+      document.getElementById('sub-hoje').textContent = `Visão geral · ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`;
       document.getElementById('topbar-user').textContent        = nome;
       document.getElementById('nome-empresa').textContent       = empresa;
       document.getElementById('banner-bv-titulo').textContent   = `Bem-vindo(a) à ${empresa}!`;
 
+      // Datas
+      const agora = new Date();
+      const hoje = agora.toISOString().split('T')[0];
+      const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
+      const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59).toISOString();
+      const inicioMesAnt = new Date(agora.getFullYear(), agora.getMonth() - 1, 1).toISOString();
+      const fimMesAnt = new Date(agora.getFullYear(), agora.getMonth(), 0, 23, 59, 59).toISOString();
+      const inicio30d = new Date(agora); inicio30d.setDate(agora.getDate() - 29);
+      const inicio30dStr = inicio30d.toISOString();
+      const nomeMes = agora.toLocaleDateString('pt-BR', {month:'long'});
+      document.getElementById('m-top-mes').textContent = nomeMes;
+      document.getElementById('pie-periodo').textContent = `01 ${nomeMes.slice(0,3)} – ${new Date(agora.getFullYear(), agora.getMonth() + 1, 0).getDate()} ${nomeMes.slice(0,3)}`;
+
       // Alerta OS faturadas vencidas (só dono)
       if (APP.profile?.role !== 'tecnico') {
-        const hoje = new Date().toISOString().split('T')[0];
         const { data: fatVenc } = await sb.from('ordens_servico')
-          .select('id')
-          .eq('company_id', cid)
-          .eq('faturado', true)
-          .lt('data_vencimento_fat', hoje)
-          .limit(50);
+          .select('id').eq('company_id', cid).eq('faturado', true)
+          .lt('data_vencimento_fat', hoje).limit(50);
         if (fatVenc && fatVenc.length) {
           const n = fatVenc.length;
           document.getElementById('fat-vencido-txt').textContent = n === 1
-            ? '1 OS faturada com pagamento em atraso!'
-            : `${n} OS faturadas com pagamento em atraso!`;
+            ? '1 OS faturada com pagamento em atraso!' : `${n} OS faturadas com pagamento em atraso!`;
           document.getElementById('banner-fat-vencido').style.display = 'flex';
         }
       }
@@ -454,66 +432,178 @@
       if (diasTrial !== null && diasTrial >= 0) {
         const bannerTrial = document.getElementById('banner-trial');
         bannerTrial.style.display = 'flex';
-        const txt = diasTrial === 0 ? 'Último dia de trial!'
-                  : diasTrial === 1 ? '1 dia de trial restante'
-                  : `${diasTrial} dias de trial restantes`;
+        const txt = diasTrial === 0 ? 'Último dia de trial!' : diasTrial === 1 ? '1 dia de trial restante' : `${diasTrial} dias de trial restantes`;
         document.getElementById('trial-dias-txt').textContent = txt;
       }
 
-      const agora   = new Date();
-      const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
-
-      // Busca paralela
+      // Busca paralela expandida
       const [
-        { data: osAbertas },
-        { data: osConcluidas },
-        { data: clientes },
-        { data: orcAbertos },
-        { data: osRecentes },
-        { data: orcRecentes }
+        osMes,
+        osMesAnt,
+        osAbertas,
+        osSemPag,
+        clientes,
+        novosClientes,
+        novosClientesAnt,
+        tecnicos,
+        orcAbertos,
+        osRecentesData,
+        orcRecentes,
+        itensMes
       ] = await Promise.all([
-        sb.from('ordens_servico').select('id')
-          .eq('company_id', cid)
-          .in('status', ['aberta','em_andamento','aguardando_peca','pronta']),
-        sb.from('ordens_servico').select('total')
-          .eq('company_id', cid)
-          .eq('status', 'entregue')
-          .gte('updated_at', inicioMes),
-        sb.from('clients').select('id')
-          .eq('company_id', cid),
-        sb.from('orcamentos').select('id,numero,total,status,validade,clients(name)')
-          .eq('company_id', cid)
-          .in('status', ['rascunho','enviado'])
-          .order('created_at', { ascending: false }),
-        sb.from('ordens_servico').select('id,numero,status,total,created_at,notes,clients(name)')
-          .eq('company_id', cid)
-          .order('created_at', { ascending: false })
-          .limit(5),
-        sb.from('orcamentos').select('id,numero,status,total,validade,clients(name)')
-          .eq('company_id', cid)
-          .in('status', ['rascunho','enviado'])
-          .order('created_at', { ascending: false })
-          .limit(5)
+        sb.from('ordens_servico').select('id,total,updated_at,created_at,started_at,responsavel_id').eq('company_id', cid).eq('status', 'entregue').gte('updated_at', inicioMes).lte('updated_at', fimMes),
+        sb.from('ordens_servico').select('id,total,updated_at,created_at').eq('company_id', cid).eq('status', 'entregue').gte('updated_at', inicioMesAnt).lte('updated_at', fimMesAnt),
+        sb.from('ordens_servico').select('id').eq('company_id', cid).in('status', ['aberta','em_andamento','aguardando_peca','pronta']),
+        sb.from('ordens_servico').select('id,total').eq('company_id', cid).eq('faturado', true).lt('data_vencimento_fat', hoje),
+        sb.from('clients').select('id,created_at').eq('company_id', cid),
+        sb.from('clients').select('id').eq('company_id', cid).gte('created_at', inicioMes),
+        sb.from('clients').select('id').eq('company_id', cid).gte('created_at', inicioMesAnt).lt('created_at', inicioMes),
+        sb.from('profiles').select('id,name').eq('company_id', cid).in('role', ['tecnico','dono','admin']),
+        sb.from('orcamentos').select('id,numero,total,status,validade,clients(name)').eq('company_id', cid).in('status', ['rascunho','enviado']).order('created_at', { ascending: false }),
+        sb.from('ordens_servico').select('id,numero,status,total,created_at,notes,is_demo,clients(name)').eq('company_id', cid).order('created_at', { ascending: false }).limit(5),
+        sb.from('orcamentos').select('id,numero,status,total,validade,is_demo,clients(name)').eq('company_id', cid).in('status', ['rascunho','enviado']).order('created_at', { ascending: false }).limit(5),
+        sb.from('os_items').select('tipo,subtotal,os_id,ordens_servico!inner(company_id,status,updated_at)').eq('ordens_servico.company_id', cid).eq('ordens_servico.status', 'entregue').gte('ordens_servico.updated_at', inicio30dStr)
       ]);
 
-      // KPIs
-      document.getElementById('qtd-os').textContent       = osAbertas?.length ?? 0;
-      document.getElementById('qtd-clientes').textContent = clientes?.length ?? 0;
+      const osM = osMes.data || [];
+      const osMA = osMesAnt.data || [];
+      const osAb = osAbertas.data || [];
+      const osSP = osSemPag.data || [];
+      const cli = clientes.data || [];
+      const novos = novosClientes.data || [];
+      const novosAnt = novosClientesAnt.data || [];
+      const tecs = tecnicos.data || [];
+      const orcAb = orcAbertos.data || [];
+      const itens = itensMes.data || [];
 
-      const totalOrc = (orcAbertos || []).reduce((a, o) => a + (o.total || 0), 0);
-      document.getElementById('qtd-orc').textContent = orcAbertos?.length ?? 0;
-      document.getElementById('val-orc').textContent = totalOrc > 0 ? fmt(totalOrc) + ' em aberto' : 'aguardando aprovação';
+      // Cálculos
+      const fatMes = osM.reduce((s,o) => s + (o.total||0), 0);
+      const fatAnt = osMA.reduce((s,o) => s + (o.total||0), 0);
+      const fatVar = fatAnt > 0 ? ((fatMes-fatAnt)/fatAnt*100) : 0;
+      const osCount = osM.length;
+      const osAntCount = osMA.length;
+      const osVar = osAntCount > 0 ? ((osCount-osAntCount)/osAntCount*100) : 0;
+      const novosCount = novos.length;
+      const novosAntCount = novosAnt.length;
+      const novosVar = novosAntCount > 0 ? ((novosCount-novosAntCount)/novosAntCount*100) : 0;
+      const ticket = osCount ? fatMes/osCount : 0;
+      const ticketAnt = osAntCount ? fatAnt/osAntCount : 0;
+      const ticketVar = ticketAnt > 0 ? ((ticket-ticketAnt)/ticketAnt*100) : 0;
+      const inadTotal = osSP.reduce((s,o) => s + (o.total||0), 0);
+      const inadPct = fatMes > 0 ? (inadTotal/fatMes*100) : 0;
 
-      const fatMes = (osConcluidas || []).reduce((a, o) => a + (o.total || 0), 0);
-      document.getElementById('fat-mes').textContent = fmt(fatMes);
+      // Top técnico
+      const tecMap = {};
+      tecs.forEach(t => { tecMap[t.id] = {nome:t.name||'—', os:0, valor:0}; });
+      osM.forEach(o => { if (o.responsavel_id && tecMap[o.responsavel_id]) { tecMap[o.responsavel_id].os++; tecMap[o.responsavel_id].valor += o.total||0; } });
+      const ranking = Object.values(tecMap).sort((a,b) => b.valor-a.valor);
+      const topTec = ranking[0] && ranking[0].os > 0 ? ranking[0] : null;
+      const topTecPct = topTec && fatMes > 0 ? (topTec.valor/fatMes*100) : 0;
 
-      // Tabela OS Recentes — inclui is_demo para badge
-      const osRecentesComDemo = await sb.from('ordens_servico')
-        .select('id,numero,status,total,created_at,notes,is_demo,clients(name)')
-        .eq('company_id', cid).order('created_at', { ascending: false }).limit(5);
+      // Render KPIs
+      document.getElementById('m-fat').textContent = fatMes >= 1000 ? fmtK(fatMes) : fmt(fatMes);
+      document.getElementById('m-fat-sub').textContent = osCount ? `${osCount} OS entregues` : 'sem OS entregues';
+      if (fatAnt > 0) {
+        const el = document.getElementById('m-fat-var');
+        el.textContent = fmtPct(fatVar) + ' vs mês anterior';
+        el.className = 'metric-change ' + (fatVar < 0 ? 'down' : (fatVar === 0 ? 'neutral' : ''));
+      } else {
+        document.getElementById('m-fat-var').textContent = 'sem histórico';
+      }
+
+      document.getElementById('m-os').textContent = osCount;
+      if (osAntCount > 0) {
+        const el = document.getElementById('m-os-var');
+        el.textContent = fmtPct(osVar) + ' vs mês anterior';
+        el.className = 'metric-change ' + (osVar < 0 ? 'down' : (osVar === 0 ? 'neutral' : ''));
+      } else {
+        document.getElementById('m-os-var').textContent = 'sem histórico';
+      }
+
+      document.getElementById('m-novos').textContent = novosCount;
+      if (novosAntCount > 0) {
+        const el = document.getElementById('m-novos-var');
+        el.textContent = fmtPct(novosVar) + ' vs mês anterior';
+        el.className = 'metric-change ' + (novosVar < 0 ? 'down' : (novosVar === 0 ? 'neutral' : ''));
+      } else {
+        document.getElementById('m-novos-var').textContent = `${cli.length} total`;
+      }
+
+      document.getElementById('m-abertas').textContent = osAb.length;
+
+      document.getElementById('m-ticket').textContent = ticket >= 1000 ? fmtK(ticket) : fmt(ticket);
+      if (ticketAnt > 0) {
+        const el = document.getElementById('m-ticket-var');
+        el.textContent = fmtPct(ticketVar) + ' vs mês anterior';
+        el.className = 'metric-change ' + (ticketVar < 0 ? 'down' : (ticketVar === 0 ? 'neutral' : ''));
+      }
+
+      // Inadimplência
+      if (osSP.length > 0) {
+        document.getElementById('m-inad-card').classList.add('metric-warn');
+        const elInad = document.getElementById('m-inad');
+        elInad.textContent = fmt(inadTotal);
+        elInad.style.color = '#ef4444';
+        document.getElementById('m-inad-sub').textContent = `${osSP.length} OS em atraso${fatMes > 0 ? ' · ' + inadPct.toFixed(1) + '% do faturamento' : ''}`;
+        const elVar = document.getElementById('m-inad-var');
+        elVar.textContent = 'cobrar pendências';
+        elVar.className = 'metric-change down';
+      }
+
+      // Top técnico card
+      if (topTec) {
+        document.getElementById('m-top-content').outerHTML = `
+          <div class="top-mec" id="m-top-content">
+            <div class="top-mec-av">${initials(topTec.nome)}</div>
+            <div class="top-mec-info">
+              <b>${esc(topTec.nome)}</b>
+              <span>${topTec.os} OS · ${fmt(topTec.valor)} gerados</span>
+            </div>
+            <div class="top-mec-trophy">🏆</div>
+          </div>
+          ${topTecPct > 0 ? `<div class="metric-change" style="margin-top:10px">▲ ${topTecPct.toFixed(0)}% da produção da equipe</div>` : ''}
+        `;
+      }
+
+      // Bar chart 30 dias (serviço vs produto via os_items.tipo)
+      const serieDias = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(agora); d.setDate(d.getDate() - i);
+        const ds = d.toISOString().split('T')[0];
+        let svc = 0, prd = 0;
+        itens.forEach(it => {
+          const upd = it.ordens_servico?.updated_at || '';
+          if (upd.startsWith(ds)) {
+            if (it.tipo === 'servico') svc += it.subtotal||0;
+            else prd += it.subtotal||0;
+          }
+        });
+        serieDias.push({ label: d.getDate().toString().padStart(2,'0'), servicos: svc, produtos: prd });
+      }
+      const totServ = itens.filter(i => i.tipo==='servico').reduce((s,i)=>s+(i.subtotal||0),0);
+      const totProd = itens.filter(i => i.tipo!=='servico').reduce((s,i)=>s+(i.subtotal||0),0);
+      const totChart = totServ + totProd;
+      document.getElementById('chart-total').textContent = fmt(totChart);
+      document.getElementById('pie-total').textContent = fmt(fatMes);
+
+      requestAnimationFrame(() => {
+        desenharBarChart(serieDias);
+        desenharPieChart(totServ, totProd);
+      });
+
+      // AI Hint
+      if (totServ > totProd && totServ > 0) {
+        document.getElementById('ai-hint').style.display = 'flex';
+        document.getElementById('ai-hint-txt').textContent = ` Mão de obra representa ${((totServ/totChart)*100).toFixed(0)}% da receita — margem forte em serviços.`;
+      } else if (totProd > totServ * 2 && totProd > 0) {
+        document.getElementById('ai-hint').style.display = 'flex';
+        document.getElementById('ai-hint-txt').textContent = ` Produtos dominam — revisar preço de mão de obra pode aumentar margem.`;
+      }
+
+      // Tabela OS Recentes
       const tbOs = document.getElementById('tabela-os');
-      if (osRecentesComDemo.data?.length) {
-        tbOs.innerHTML = osRecentesComDemo.data.map(o => {
+      if (osRecentesData.data?.length) {
+        tbOs.innerHTML = osRecentesData.data.map(o => {
           const demoTag = o.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
           return `<tr>
             <td>#${o.numero}${demoTag}</td>
@@ -525,10 +615,10 @@
         }).join('');
       }
 
-      // Tabela Orçamentos em Aberto
+      // Tabela Orçamentos
       const tbOrc = document.getElementById('tabela-orc');
-      if (orcRecentes?.length) {
-        tbOrc.innerHTML = orcRecentes.map(o => {
+      if (orcRecentes.data?.length) {
+        tbOrc.innerHTML = orcRecentes.data.map(o => {
           const demoTag = o.is_demo ? '<span class="badge-demo">DEMO</span>' : '';
           return `<tr>
             <td>#${o.numero}${demoTag}</td>
@@ -545,7 +635,7 @@
 
       // Banner boas-vindas: mostra quando dashboard vazio e não foi dispensado
       const bannerKey = `dmtech-bv-${cid}`;
-      const dashVazio = !clientes?.length && !osAbertas?.length && !orcAbertos?.length;
+      const dashVazio = !cli.length && !osAb.length && !orcAb.length;
       if (dashVazio && !localStorage.getItem(bannerKey)) {
         document.getElementById('banner-bv').classList.add('show');
       }
@@ -556,11 +646,60 @@
         const { data: servicos } = await sb.from('services').select('id').eq('company_id', cid).limit(1);
         const temEmpresaConfig = !!(APP.company?.phone);
         const temServico = !!(servicos?.length);
-        const temCliente = !!(clientes?.length);
-        const temOS     = !!(osAbertas?.length || osConcluidas?.length);
+        const temCliente = !!(cli.length);
+        const temOS     = !!(osAb.length || osM.length);
         renderWizard({ temEmpresaConfig, temServico, temCliente, temOS });
       }
     })();
+
+    function desenharBarChart(serie) {
+      const ctx = document.getElementById('barChart');
+      if (!ctx) return;
+      if (_barChart) _barChart.destroy();
+      _barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: serie.map(d => d.label),
+          datasets: [
+            { label: 'Serviços', data: serie.map(d => d.servicos), backgroundColor: '#f97316', borderRadius: 2, barThickness: 9 },
+            { label: 'Produtos', data: serie.map(d => d.produtos), backgroundColor: '#2a2a2a', borderRadius: 2, barThickness: 9 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { backgroundColor:'#111', borderColor:'#f97316', borderWidth:1, padding:10, titleFont:{family:'Manrope',weight:'bold'}, bodyFont:{family:'Fira Code'}, callbacks:{label:(c)=>c.dataset.label+': '+new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(c.parsed.y)} } },
+          scales: {
+            x: { grid:{display:false}, ticks:{color:'#8a8a8a',font:{size:10,family:'Fira Code'}} },
+            y: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#8a8a8a',font:{size:10,family:'Fira Code'},callback:v=>v>=1000?'R$ '+(v/1000).toFixed(1).replace('.0','')+'k':'R$ '+v} }
+          }
+        }
+      });
+    }
+
+    function desenharPieChart(servicos, produtos) {
+      const ctx = document.getElementById('pieChart');
+      if (!ctx) return;
+      if (_pieChart) _pieChart.destroy();
+      const hasData = (servicos + produtos) > 0;
+      _pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Serviços / Mão de obra', 'Produtos / Peças'],
+          datasets: [{
+            data: hasData ? [servicos, produtos] : [1, 0],
+            backgroundColor: hasData ? ['#f97316', '#2a2a2a'] : ['#1a1a1a', '#1a1a1a'],
+            borderColor: '#111', borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: {
+            legend: { position:'bottom', labels:{color:'#b8b8b8',font:{size:11,family:'Manrope',weight:'600'},padding:10,boxWidth:8,boxHeight:8} },
+            tooltip: { backgroundColor:'#111', borderColor:'#f97316', borderWidth:1, padding:10, titleFont:{family:'Manrope',weight:'bold'}, bodyFont:{family:'Fira Code'}, callbacks:{label:(c)=>c.label+': '+new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(c.parsed)} }
+          }
+        }
+      });
+    }
 
     const WIZARD_STEPS = [
       { id: 'empresa', titulo: 'Dados da empresa',       sub: 'Telefone, endereço e informações de contato.',  href: 'config.html',     cta: 'Configurar →' },
@@ -572,7 +711,7 @@
     function renderWizard({ temEmpresaConfig, temServico, temCliente, temOS }) {
       const feito = [temEmpresaConfig, temServico, temCliente, temOS];
       const qtdFeito = feito.filter(Boolean).length;
-      if (qtdFeito === 4) return; // tudo pronto — não exibe
+      if (qtdFeito === 4) return;
       document.getElementById('wizard-setup').classList.add('show');
       document.getElementById('wizard-prog').textContent = `${qtdFeito} de 4`;
       document.getElementById('wizard-fill').style.width = `${(qtdFeito / 4) * 100}%`;
@@ -616,50 +755,28 @@
       btn.disabled = true; btn.textContent = 'Carregando...';
       const cid = APP.company?.id;
 
-      // Cliente demo
-      const { data: c1 } = await sb.from('clients').insert({
-        company_id: cid, name: 'João Silva (Demo)', phone: '(11) 99999-0001',
-        email: 'joao@demo.com', is_demo: true
-      }).select().single();
+      const { data: c1 } = await sb.from('clients').insert({ company_id: cid, name: 'João Silva (Demo)', phone: '(11) 99999-0001', email: 'joao@demo.com', is_demo: true }).select().single();
+      const { data: c2 } = await sb.from('clients').insert({ company_id: cid, name: 'Maria Souza (Demo)', phone: '(11) 99999-0002', is_demo: true }).select().single();
 
-      const { data: c2 } = await sb.from('clients').insert({
-        company_id: cid, name: 'Maria Souza (Demo)', phone: '(11) 99999-0002',
-        is_demo: true
-      }).select().single();
-
-      // Próximo número OS
       const { data: maxOs } = await sb.from('ordens_servico').select('numero').eq('company_id', cid).order('numero', { ascending: false }).limit(1);
       let numOs = maxOs?.length ? maxOs[0].numero + 1 : 1;
 
-      // OS 1 — em andamento
-      const { data: os1 } = await sb.from('ordens_servico').insert({
-        company_id: cid, client_id: c1?.id || null, numero: numOs++,
-        status: 'em_andamento', notes: 'Instalação de ar-condicionado split 12.000 BTUs', total: 850, is_demo: true
-      }).select().single();
+      const { data: os1 } = await sb.from('ordens_servico').insert({ company_id: cid, client_id: c1?.id || null, numero: numOs++, status: 'em_andamento', notes: 'Instalação de ar-condicionado split 12.000 BTUs', total: 850, is_demo: true }).select().single();
       if (os1) await sb.from('os_items').insert([
         { os_id: os1.id, tipo: 'servico', descricao: 'Instalação ar-condicionado', quantidade: 1, preco_unit: 350, subtotal: 350 },
         { os_id: os1.id, tipo: 'produto', descricao: 'Suporte externo + tubulação', quantidade: 1, preco_unit: 500, subtotal: 500 }
       ]);
 
-      // OS 2 — pronta
-      const { data: os2 } = await sb.from('ordens_servico').insert({
-        company_id: cid, client_id: c2?.id || null, numero: numOs++,
-        status: 'pronta', notes: 'Manutenção preventiva e limpeza completa', total: 280, is_demo: true
-      }).select().single();
+      const { data: os2 } = await sb.from('ordens_servico').insert({ company_id: cid, client_id: c2?.id || null, numero: numOs++, status: 'pronta', notes: 'Manutenção preventiva e limpeza completa', total: 280, is_demo: true }).select().single();
       if (os2) await sb.from('os_items').insert([
         { os_id: os2.id, tipo: 'servico', descricao: 'Manutenção preventiva', quantidade: 1, preco_unit: 180, subtotal: 180 },
         { os_id: os2.id, tipo: 'produto', descricao: 'Gás R-410A (carga)', quantidade: 1, preco_unit: 100, subtotal: 100 }
       ]);
 
-      // Orçamento demo
       const { data: maxOrc } = await sb.from('orcamentos').select('numero').eq('company_id', cid).order('numero', { ascending: false }).limit(1);
       const numOrc = maxOrc?.length ? maxOrc[0].numero + 1 : 1;
       const validade = new Date(); validade.setDate(validade.getDate() + 15);
-      const { data: orc1 } = await sb.from('orcamentos').insert({
-        company_id: cid, client_id: c1?.id || null, numero: numOrc,
-        status: 'enviado', notes: 'Proposta para instalação de 3 splits', total: 2400,
-        validade: validade.toISOString().split('T')[0], is_demo: true
-      }).select().single();
+      const { data: orc1 } = await sb.from('orcamentos').insert({ company_id: cid, client_id: c1?.id || null, numero: numOrc, status: 'enviado', notes: 'Proposta para instalação de 3 splits', total: 2400, validade: validade.toISOString().split('T')[0], is_demo: true }).select().single();
       if (orc1) await sb.from('orcamento_items').insert([
         { orcamento_id: orc1.id, tipo: 'servico', descricao: 'Instalação (3 unidades)', quantidade: 3, preco_unit: 350, subtotal: 1050 },
         { orcamento_id: orc1.id, tipo: 'produto', descricao: 'Split 12.000 BTU Inverter', quantidade: 3, preco_unit: 450, subtotal: 1350 }
@@ -672,20 +789,16 @@
     async function limparDemo() {
       const cid = APP.company?.id;
       dmConfirm('Remover todos os dados de demonstração?', async () => {
-        // Ordem: itens → os/orc/caixa → clientes
         const { data: osDemo } = await sb.from('ordens_servico').select('id').eq('company_id', cid).eq('is_demo', true);
         const { data: orcDemo } = await sb.from('orcamentos').select('id').eq('company_id', cid).eq('is_demo', true);
-
         const osIds  = (osDemo  || []).map(r => r.id);
         const orcIds = (orcDemo || []).map(r => r.id);
-
         if (osIds.length)  await sb.from('os_items').delete().in('os_id', osIds);
         if (orcIds.length) await sb.from('orcamento_items').delete().in('orcamento_id', orcIds);
         if (osIds.length)  await sb.from('ordens_servico').delete().in('id', osIds);
         if (orcIds.length) await sb.from('orcamentos').delete().in('id', orcIds);
         await sb.from('caixa').delete().eq('company_id', cid).eq('is_demo', true);
         await sb.from('clients').delete().eq('company_id', cid).eq('is_demo', true);
-
         dmToast('Dados de demonstração removidos.');
         location.reload();
       }, 'Remover', true);
