@@ -152,28 +152,25 @@
     .kb{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px;}
     @media(max-width:1000px){.kb{grid-template-columns:repeat(2,1fr);}}
     @media(max-width:560px){.kb{grid-template-columns:1fr;}}
-    .kb__col{background:rgba(255,255,255,0.02);border:1px solid var(--ln2);border-radius:var(--r2);padding:12px;min-height:320px;display:flex;flex-direction:column;gap:8px;}
-    .kb__colhdr{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px;border-bottom:1px solid var(--ln2);margin-bottom:4px;}
-    .kb__colttl{font-family:var(--head);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--w2);}
-    .kb__colcount{font-family:var(--mono);font-size:10px;color:var(--w3);background:var(--sf3);padding:2px 6px;border-radius:var(--r);}
-    .kb__col--aguard .kb__colttl{color:var(--w3);}
-    .kb__col--wip   .kb__colttl{color:var(--amber);}
-    .kb__col--peca  .kb__colttl{color:var(--orange-l);}
-    .kb__col--pronto .kb__colttl{color:var(--green);}
-    .kb__col--ent   .kb__colttl{color:var(--w3);}
-    .kb__card{background:var(--sf);border:1px solid var(--ln2);border-left:3px solid var(--w4);border-radius:var(--r);padding:10px 10px 9px;cursor:grab;transition:transform .12s, border-color .12s;}
-    .kb__card:hover{transform:translateY(-2px);border-left-color:var(--amber);}
-    .kb__col--aguard .kb__card{border-left-color:var(--w3);}
-    .kb__col--wip    .kb__card{border-left-color:var(--amber);}
-    .kb__col--peca   .kb__card{border-left-color:var(--orange-l);}
-    .kb__col--pronto .kb__card{border-left-color:var(--green);}
-    .kb__col--ent    .kb__card{border-left-color:var(--green-d);opacity:.75;}
-    .kb__num{font-family:var(--mono);font-size:10px;color:var(--w3);letter-spacing:1px;margin-bottom:3px;}
-    .kb__srv{font-family:var(--body);font-size:13px;font-weight:600;color:var(--w);line-height:1.25;margin-bottom:4px;}
-    .kb__cli{font-family:var(--mono);font-size:10px;color:var(--w2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
-    .kb__meta{display:flex;justify-content:space-between;align-items:center;gap:6px;padding-top:6px;border-top:1px solid var(--ln);}
-    .kb__val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);}
-    .kb__tech{font-family:var(--mono);font-size:9px;color:var(--w3);text-transform:uppercase;letter-spacing:.5px;}
+    .kb__col{background:rgba(255,255,255,0.02);border:1px solid var(--ln2);border-top:3px solid var(--col-c);border-radius:var(--r2);padding:10px 10px 12px;min-height:320px;display:flex;flex-direction:column;gap:8px;}
+    .kb__col[data-s="aberta"]          {--col-c:#60a5fa;}
+    .kb__col[data-s="em_andamento"]    {--col-c:#fbbf24;}
+    .kb__col[data-s="aguardando_peca"] {--col-c:#fb923c;}
+    .kb__col[data-s="pronta"]          {--col-c:#4ade80;}
+    .kb__col[data-s="entregue"]        {--col-c:#6b7280;}
+    .kb__colhdr{display:flex;justify-content:space-between;align-items:center;padding:6px 4px 10px;border-bottom:1px solid var(--ln);margin-bottom:4px;}
+    .kb__colttl{font-family:var(--head);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--col-c);}
+    .kb__colcount{font-family:var(--mono);font-size:10px;color:var(--w3);background:var(--sf3);padding:2px 7px;border-radius:var(--r);}
+    .kb__card{background:var(--sf);border:1px solid var(--ln2);border-radius:var(--r);padding:10px 10px 9px;cursor:grab;transition:transform .12s, border-color .12s;}
+    .kb__card:hover{transform:translateY(-2px);border-color:var(--col-c);}
+    .kb__card--demo{border-style:dashed;opacity:.85;}
+    .kb__num{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--w);font-weight:700;margin-bottom:5px;letter-spacing:.5px;}
+    .kb__tag{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:var(--sf3);color:var(--w2);letter-spacing:.5px;border:1px solid var(--ln2);}
+    .kb__tag--orc{background:rgba(96,165,250,.1);color:#60a5fa;border-color:rgba(96,165,250,.3);}
+    .kb__cli{font-family:var(--body);font-size:13px;font-weight:600;color:var(--w);line-height:1.2;margin-bottom:4px;}
+    .kb__resp{font-family:var(--mono);font-size:10px;color:var(--w3);margin-bottom:5px;letter-spacing:.3px;}
+    .kb__notes{font-family:var(--body);font-size:11px;color:var(--w2);line-height:1.35;margin-bottom:6px;}
+    .kb__date{font-family:var(--mono);font-size:9px;color:var(--w4);text-align:right;letter-spacing:.5px;}
     .kb-note{margin-top:18px;padding:14px 18px;border:1px solid var(--ln2);border-left:3px solid var(--amber);border-radius:var(--r2);background:var(--sf);display:flex;gap:14px;align-items:flex-start;}
     .kb-note__ic{color:var(--amber);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;flex-shrink:0;}
     .kb-note__txt{font-size:13px;color:var(--w2);line-height:1.5;}
@@ -181,114 +178,114 @@
   </style>
 
   <div class="kb reveal" data-reveal>
-    <div class="kb__col kb__col--aguard">
-      <div class="kb__colhdr"><span class="kb__colttl">Aguardando</span><span class="kb__colcount">2</span></div>
+    <div class="kb__col" data-s="aberta">
+      <div class="kb__colhdr"><span class="kb__colttl">Aberta</span><span class="kb__colcount">2</span></div>
       <div class="kb__card">
-        <div class="kb__num">OS #16</div>
-        <div class="kb__srv">Instal. tomada lava-louça</div>
-        <div class="kb__cli">Eduarda Melo</div>
-        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">sem técnico</span></div>
+        <div class="kb__num">OS #018 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">AUTO POSTO CENTRAL</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Troca de 3 luminárias LED na cobertura da pista</div>
+        <div class="kb__date">17/04/26</div>
       </div>
       <div class="kb__card">
-        <div class="kb__num">OS #06</div>
-        <div class="kb__srv">4 chuveiros + vídeo porteiro</div>
-        <div class="kb__cli">Rômulo Augusto</div>
-        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">sem técnico</span></div>
-      </div>
-    </div>
-
-    <div class="kb__col kb__col--wip">
-      <div class="kb__colhdr"><span class="kb__colttl">Em execução</span><span class="kb__colcount">2</span></div>
-      <div class="kb__card">
-        <div class="kb__num">OS #07</div>
-        <div class="kb__srv">Elétrica de galpão</div>
-        <div class="kb__cli">RD Distribuidora</div>
-        <div class="kb__meta"><span class="kb__val">R$ 10.000</span><span class="kb__tech">Josimar</span></div>
-      </div>
-      <div class="kb__card">
-        <div class="kb__num">OS #08</div>
-        <div class="kb__srv">Elétrica lanchonete</div>
-        <div class="kb__cli">RD Distribuidora</div>
-        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">Técnico 2</span></div>
+        <div class="kb__num">OS #017 <span class="kb__tag kb__tag--orc">ORC #008</span></div>
+        <div class="kb__cli">CLÍNICA VIDA</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Instalação de CFTV · 6 câmeras + DVR</div>
+        <div class="kb__date">17/04/26</div>
       </div>
     </div>
 
-    <div class="kb__col kb__col--peca">
-      <div class="kb__colhdr"><span class="kb__colttl">Aguard. peça</span><span class="kb__colcount">2</span></div>
+    <div class="kb__col" data-s="em_andamento">
+      <div class="kb__colhdr"><span class="kb__colttl">Em Andamento</span><span class="kb__colcount">2</span></div>
       <div class="kb__card">
-        <div class="kb__num">OS #13</div>
-        <div class="kb__srv">Bomba elétrica + perfil</div>
-        <div class="kb__cli">Diego Belo</div>
-        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">Josimar</span></div>
+        <div class="kb__num">OS #016 <span class="kb__tag kb__tag--orc">ORC #007</span></div>
+        <div class="kb__cli">SUPERMERCADO BOA SAFRA</div>
+        <div class="kb__resp">👤 Rafael</div>
+        <div class="kb__notes">Troca do quadro geral de 32 disjuntores + DR</div>
+        <div class="kb__date">15/04/26</div>
       </div>
       <div class="kb__card">
-        <div class="kb__num">OS #05</div>
-        <div class="kb__srv">Elétrica de 5 apartamentos</div>
-        <div class="kb__cli">Edilaine Barbosa</div>
-        <div class="kb__meta"><span class="kb__val">R$ 22.000</span><span class="kb__tech">Josimar</span></div>
-      </div>
-    </div>
-
-    <div class="kb__col kb__col--pronto">
-      <div class="kb__colhdr"><span class="kb__colttl">Pronto</span><span class="kb__colcount">5</span></div>
-      <div class="kb__card">
-        <div class="kb__num">OS #14</div>
-        <div class="kb__srv">Manut. motor portão</div>
-        <div class="kb__cli">Tele Corte</div>
-        <div class="kb__meta"><span class="kb__val">R$ 129</span><span class="kb__tech">Josimar</span></div>
-      </div>
-      <div class="kb__card">
-        <div class="kb__num">OS #12</div>
-        <div class="kb__srv">Manut. motor portão</div>
-        <div class="kb__cli">Norton JCL</div>
-        <div class="kb__meta"><span class="kb__val">R$ 50</span><span class="kb__tech">Josimar</span></div>
-      </div>
-      <div class="kb__card">
-        <div class="kb__num">OS #11</div>
-        <div class="kb__srv">Manut. bomba elétrica</div>
-        <div class="kb__cli">Marcos Vinícius</div>
-        <div class="kb__meta"><span class="kb__val">R$ 100</span><span class="kb__tech">Técnico 2</span></div>
-      </div>
-      <div class="kb__card">
-        <div class="kb__num">OS #10</div>
-        <div class="kb__srv">Manut. câmera</div>
-        <div class="kb__cli">RD Separação</div>
-        <div class="kb__meta"><span class="kb__val">R$ 250</span><span class="kb__tech">Josimar</span></div>
-      </div>
-      <div class="kb__card">
-        <div class="kb__num">OS #04</div>
-        <div class="kb__srv">Nova entrada monofásica</div>
-        <div class="kb__cli">RD Separação</div>
-        <div class="kb__meta"><span class="kb__val">R$ 450</span><span class="kb__tech">Josimar</span></div>
+        <div class="kb__num">OS #015 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">FARMÁCIA DROGA MAIS</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Instalação de alarme com 4 sensores</div>
+        <div class="kb__date">15/04/26</div>
       </div>
     </div>
 
-    <div class="kb__col kb__col--ent">
-      <div class="kb__colhdr"><span class="kb__colttl">Entregue</span><span class="kb__colcount">3</span></div>
+    <div class="kb__col" data-s="aguardando_peca">
+      <div class="kb__colhdr"><span class="kb__colttl">Aguard. Liberação</span><span class="kb__colcount">2</span></div>
       <div class="kb__card">
-        <div class="kb__num">OS #15</div>
-        <div class="kb__srv">Elétrica + câmera + alarme</div>
-        <div class="kb__cli">3A Auto Peças</div>
-        <div class="kb__meta"><span class="kb__val">R$ 1.000</span><span class="kb__tech">Josimar</span></div>
+        <div class="kb__num">OS #014 <span class="kb__tag kb__tag--orc">ORC #006</span></div>
+        <div class="kb__cli">CONDOMÍNIO SOLAR DOS IPÊS</div>
+        <div class="kb__resp">👤 Rafael</div>
+        <div class="kb__notes">Aguardando aprovação do síndico · 2 motores de portão</div>
+        <div class="kb__date">14/04/26</div>
       </div>
       <div class="kb__card">
-        <div class="kb__num">OS #09</div>
-        <div class="kb__srv">5 tomadas + circuito 20A</div>
-        <div class="kb__cli">DM Empório</div>
-        <div class="kb__meta"><span class="kb__val">R$ 585</span><span class="kb__tech">Técnico 2</span></div>
+        <div class="kb__num">OS #013 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">MARIA DAS GRAÇAS</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Peça em trânsito · fonte 5A p/ cerca elétrica</div>
+        <div class="kb__date">13/04/26</div>
+      </div>
+    </div>
+
+    <div class="kb__col" data-s="pronta">
+      <div class="kb__colhdr"><span class="kb__colttl">Pronta</span><span class="kb__colcount">3</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #012 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">SR. JOSÉ ALVES</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Manutenção motor de portão deslizante · testada</div>
+        <div class="kb__date">12/04/26</div>
       </div>
       <div class="kb__card">
-        <div class="kb__num">OS #03</div>
-        <div class="kb__srv">Manut. tomada geladeira</div>
-        <div class="kb__cli">Carla Eduarda</div>
-        <div class="kb__meta"><span class="kb__val">R$ 60</span><span class="kb__tech">Josimar</span></div>
+        <div class="kb__num">OS #011 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">LOJA BELEZA &amp; CIA</div>
+        <div class="kb__resp">👤 Rafael</div>
+        <div class="kb__notes">Manutenção de vídeo porteiro e chuveiro</div>
+        <div class="kb__date">11/04/26</div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #010 <span class="kb__tag kb__tag--orc">ORC #005</span></div>
+        <div class="kb__cli">PADARIA PÃO DE OURO</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Nova entrada monofásica padrão Neo Energia</div>
+        <div class="kb__date">10/04/26</div>
+      </div>
+    </div>
+
+    <div class="kb__col" data-s="entregue">
+      <div class="kb__colhdr"><span class="kb__colttl">Entregue</span><span class="kb__colcount">5</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #009 <span class="kb__tag kb__tag--orc">ORC #004</span></div>
+        <div class="kb__cli">3A AUTO PEÇAS</div>
+        <div class="kb__resp">👤 Rafael</div>
+        <div class="kb__notes">Elétrica + instalação de câmera e alarme</div>
+        <div class="kb__date">08/04/26</div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #008 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">DM EMPÓRIO</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">5 tomadas de sobrepor + circuito novo 20A</div>
+        <div class="kb__date">07/04/26</div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #007 <span class="kb__tag">Direta</span></div>
+        <div class="kb__cli">SRA. CARLA</div>
+        <div class="kb__resp">👤 Leandro</div>
+        <div class="kb__notes">Manutenção elétrica na tomada da geladeira</div>
+        <div class="kb__date">05/04/26</div>
       </div>
     </div>
   </div>
 
   <div class="kb-note reveal" data-reveal>
     <div class="kb-note__ic">▲ ACONTECEU AGORA</div>
-    <div class="kb-note__txt">Josimar arrastou a <strong>OS #10 (manut. câmera · RD Separação)</strong> pra coluna PRONTO. Recepção já viu o card novo, pode ligar pra RD vir buscar. A <strong>TV do pátio</strong>, se tiver uma tela na loja, atualiza sozinha.</div>
+    <div class="kb-note__txt">Rafael arrastou a <strong>OS #011 (vídeo porteiro · Loja Beleza &amp; Cia)</strong> pra coluna PRONTA. Recepção já viu o card, pode avisar o cliente que pode buscar. Se tiver <strong>TV do pátio</strong> ligada na loja, a OS aparece lá na hora.</div>
   </div>
 
   <div class="sec__bignum reveal" data-reveal>
