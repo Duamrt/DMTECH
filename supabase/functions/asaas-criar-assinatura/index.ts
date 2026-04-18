@@ -23,6 +23,12 @@ Deno.serve(async(req)=>{
   const {data:co,error:ce}=await sb.from("companies").select("id,name,cnpj,email,phone,whatsapp,asaas_customer_id").eq("id",company_id).single();
   if(ce||!co)return json({error:"company_not_found"},404);
   try{
+    const {data:exi}=await sb.from("assinaturas").select("*").eq("company_id",company_id).in("status",["ativa","atrasada","suspensa"]).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    if(exi&&exi.plano===plano){
+      let iu:string|null=null;
+      try{const ps=await asaas(`/payments?subscription=${exi.asaas_subscription_id}&status=PENDING&limit=1`);if(ps?.data?.[0])iu=ps.data[0].invoiceUrl??ps.data[0].bankSlipUrl??null;}catch(_){}
+      return json({ok:true,assinatura:exi,subscription_id:exi.asaas_subscription_id,invoice_url:iu,duplicado:true});
+    }
     let cid=co.asaas_customer_id;
     if(!cid){
       const c=await asaas("/customers",{method:"POST",body:JSON.stringify({name:co.name,cpfCnpj:(co.cnpj??"").replace(/\D/g,"")||undefined,email:co.email??undefined,mobilePhone:(co.whatsapp??co.phone??"").replace(/\D/g,"")||undefined,externalReference:co.id})});
