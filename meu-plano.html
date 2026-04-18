@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04181124"></script>
-  <script src="js/auth.js?v=04181124"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04181124">
+  <script src="js/config.js?v=04181206"></script>
+  <script src="js/auth.js?v=04181206"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04181206">
   <style>
     .mp-wrap{max-width:900px;margin:0 auto;padding:24px 20px;}
     .banner{padding:18px 22px;border-radius:10px;border:1px solid var(--border);margin-bottom:22px;display:flex;gap:14px;align-items:center;}
@@ -149,7 +149,7 @@
 <div id="dm-loading"><div class="dm-spin"></div></div>
 
 <script>
-const APP_VERSION = 'v04181900';
+const APP_VERSION = 'v04181200';
 const PLANOS = [
   { id:'profissional', nome:'Profissional', valor:250.00,
     desc:'Pra quem atende e quer profissionalizar.',
@@ -222,7 +222,58 @@ function renderDetalhes(){
     <div><div class="det-lab">Próximo vencimento</div><div class="det-val">${fmtD(ASSINATURA.proximo_vencimento)}</div></div>
     <div><div class="det-lab">Último pagamento</div><div class="det-val">${ASSINATURA.ultimo_pagamento_em?new Date(ASSINATURA.ultimo_pagamento_em).toLocaleDateString('pt-BR'):'—'}</div></div>
     <div><div class="det-lab">Status</div><div class="det-val">${esc(ASSINATURA.status)}</div></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+    <button class="plano-btn" style="flex:1;min-width:160px;" onclick="trocarCartao()">💳 Trocar cartão / forma de pagamento</button>
+    <button class="plano-btn" style="flex:1;min-width:160px;background:transparent;border:1px solid #ef4444;color:#ef4444;" onclick="cancelarAssinatura()">Cancelar assinatura</button>
   </div></div>`;
+}
+
+async function trocarCartao(){
+  if (!ASSINATURA) return;
+  document.getElementById('dm-loading').classList.add('open');
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-gerenciar-assinatura`,{
+      method:'POST',
+      headers:{'authorization':`Bearer ${session.access_token}`,'content-type':'application/json','apikey':SUPABASE_ANON_KEY},
+      body: JSON.stringify({ action:'proxima_cobranca', assinatura_id: ASSINATURA.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Erro');
+    if (data.invoice_url) window.open(data.invoice_url, '_blank');
+    else alert('Não há cobrança pendente pra trocar forma de pagamento agora.');
+  } catch (e) { alert('Erro: '+e.message); }
+  finally { document.getElementById('dm-loading').classList.remove('open'); }
+}
+
+async function cancelarAssinatura(){
+  if (!ASSINATURA) return;
+  const ok = await abrirConfirmMP({
+    tag:'Cancelar assinatura',
+    titulo:'Deseja mesmo cancelar?',
+    texto:'Sua assinatura será encerrada <strong>imediatamente</strong>. Você pode reativar escolhendo um plano depois.',
+    okLabel:'Sim, cancelar',
+    cancelLabel:'Manter assinatura',
+    danger:true,
+  });
+  if (!ok) return;
+  document.getElementById('dm-loading').classList.add('open');
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-gerenciar-assinatura`,{
+      method:'POST',
+      headers:{'authorization':`Bearer ${session.access_token}`,'content-type':'application/json','apikey':SUPABASE_ANON_KEY},
+      body: JSON.stringify({ action:'cancelar', assinatura_id: ASSINATURA.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Erro');
+    await carregarAssinatura();
+    const { data: co2 } = await sb.from('companies').select('*').eq('id', APP.company.id).single();
+    APP.company = co2;
+    render();
+  } catch (e) { alert('Erro: '+e.message); }
+  finally { document.getElementById('dm-loading').classList.remove('open'); }
 }
 
 function renderPlanos(){
@@ -323,6 +374,6 @@ async function assinar(planoId, valor){
 console.log(`%c🟠 DMTech — Minha Assinatura ${APP_VERSION}`,'color:#f97316;font-weight:bold;');
 init();
 </script>
-<div style="position:fixed;bottom:6px;left:8px;font-family:'Fira Code',monospace;font-size:9px;color:var(--text-dim);z-index:100;letter-spacing:1px;">DMTech v04181900</div>
+<div style="position:fixed;bottom:6px;left:8px;font-family:'Fira Code',monospace;font-size:9px;color:var(--text-dim);z-index:100;letter-spacing:1px;">DMTech v04181200</div>
 </body>
 </html>

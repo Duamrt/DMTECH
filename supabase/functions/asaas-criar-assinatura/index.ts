@@ -23,7 +23,7 @@ Deno.serve(async(req)=>{
   const {data:co,error:ce}=await sb.from("companies").select("id,name,cnpj,email,phone,whatsapp,asaas_customer_id").eq("id",company_id).single();
   if(ce||!co)return json({error:"company_not_found"},404);
   try{
-    const {data:exi}=await sb.from("assinaturas").select("*").eq("company_id",company_id).in("status",["ativa","atrasada","suspensa"]).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    const {data:exi}=await sb.from("assinaturas").select("*").eq("company_id",company_id).in("status",["pendente","ativa","atrasada","suspensa"]).order("created_at",{ascending:false}).limit(1).maybeSingle();
     if(exi&&exi.plano===plano){
       let iu:string|null=null;
       try{const ps=await asaas(`/payments?subscription=${exi.asaas_subscription_id}&status=PENDING&limit=1`);if(ps?.data?.[0])iu=ps.data[0].invoiceUrl??ps.data[0].bankSlipUrl??null;}catch(_){}
@@ -38,9 +38,9 @@ Deno.serve(async(req)=>{
     const nd=new Date();nd.setDate(nd.getDate()+7);
     const ndi=nd.toISOString().slice(0,10);
     const sub=await asaas("/subscriptions",{method:"POST",body:JSON.stringify({customer:cid,billingType:forma_pagamento,value:Number(valor),nextDueDate:ndi,cycle:ciclo,description:`DMTech - Plano ${plano}`,externalReference:`dmtech:${co.id}`})});
-    const {data:a,error:ae}=await sb.from("assinaturas").insert({company_id:co.id,asaas_customer_id:cid,asaas_subscription_id:sub.id,plano,valor:Number(valor),ciclo,forma_pagamento,status:"ativa",proximo_vencimento:ndi}).select().single();
+    const {data:a,error:ae}=await sb.from("assinaturas").insert({company_id:co.id,asaas_customer_id:cid,asaas_subscription_id:sub.id,plano,valor:Number(valor),ciclo,forma_pagamento,status:"pendente",proximo_vencimento:ndi}).select().single();
     if(ae)throw ae;
-    await sb.from("companies").update({status_pagamento:"ativo",plano,plan:plano,trial_ate:null,trial_ends_at:null}).eq("id",co.id);
+    // Não ativa company aqui. Webhook PAYMENT_RECEIVED/CONFIRMED faz isso.
     let invoiceUrl:string|null=null;
     try{const ps=await asaas(`/payments?subscription=${sub.id}&limit=1`);if(ps?.data?.[0])invoiceUrl=ps.data[0].invoiceUrl??ps.data[0].bankSlipUrl??null;}catch(_){}
     return json({ok:true,assinatura:a,subscription_id:sub.id,invoice_url:invoiceUrl});
