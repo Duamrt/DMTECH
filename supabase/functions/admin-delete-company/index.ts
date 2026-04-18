@@ -32,13 +32,8 @@ serve(async (req) => {
   });
 
   // Verificar se quem chama é admin da plataforma
-  const jwt = req.headers.get("authorization") ?? "";
-  const caller = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { authorization: jwt } },
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const { data: { user }, error: authErr } = await caller.auth.getUser();
+  const jwt = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
+  const { data: { user }, error: authErr } = await admin.auth.getUser(jwt);
   if (authErr || !user) {
     return new Response(JSON.stringify({ error: "Não autenticado" }), {
       status: 401, headers: { "Content-Type": "application/json", ...CORS },
@@ -78,8 +73,12 @@ serve(async (req) => {
 
   const userIds = (profilesData ?? []).map((p: { id: string }) => p.id);
 
-  // Deletar dados da empresa via RPC (já existente)
-  const { error: rpcErr } = await admin.rpc("admin_delete_company", {
+  // Cliente com JWT do user pra RPC respeitar auth.uid()
+  const asUser = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    global: { headers: { authorization: `Bearer ${jwt}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { error: rpcErr } = await asUser.rpc("admin_delete_company", {
     p_company_id: company_id,
   });
 

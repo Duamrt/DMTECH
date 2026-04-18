@@ -28,24 +28,19 @@ serve(async (req) => {
 
   const SUPABASE_URL      = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_ROLE_KEY  = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
-  const ANON_KEY          = Deno.env.get("SUPABASE_ANON_KEY")!;
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
   // Autenticar chamador
-  const jwt = req.headers.get("authorization") ?? "";
+  const jwt = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
   if (!jwt) {
     return new Response(JSON.stringify({ error: "Não autenticado" }), {
       status: 401, headers: { "Content-Type": "application/json", ...CORS },
     });
   }
-  const caller = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { authorization: jwt } },
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  const { data: { user }, error: authErr } = await caller.auth.getUser();
+  const { data: { user }, error: authErr } = await admin.auth.getUser(jwt);
   if (authErr || !user) {
     return new Response(JSON.stringify({ error: "Não autenticado" }), {
       status: 401, headers: { "Content-Type": "application/json", ...CORS },
