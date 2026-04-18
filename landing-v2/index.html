@@ -140,7 +140,7 @@
   <div class="sec-trans__lbl mono">↓ 01 <span class="dim">·</span> KANBAN DO PÁTIO <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 01 · KANBAN ============ -->
+<!-- ============ SEÇÃO 01 · KANBAN (colunas reais) ============ -->
 <section class="sec" id="gantt">
   <div class="sec__head">
     <div class="sec__eye">01 <span class="dim">·</span> KANBAN · OS EM TEMPO REAL</div>
@@ -148,58 +148,151 @@
     <p class="sec__sub">Cinco colunas, igual o fluxo da sua oficina: aguardando, em execução, aguardando peça, pronto, entregue. Dono vê tudo. Técnico vê só o que é dele. Recepcionista vê o que falta avisar o cliente.</p>
   </div>
 
-  <div class="gantt-wrap">
-    <div class="gantt">
-      <div class="gantt__hdr">
-        <span>KANBAN · 14 OS ATIVAS</span>
-        <span>ABRIL 2026 · tempo real</span>
+  <style>
+    .kb{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px;}
+    @media(max-width:1000px){.kb{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:560px){.kb{grid-template-columns:1fr;}}
+    .kb__col{background:rgba(255,255,255,0.02);border:1px solid var(--ln2);border-radius:var(--r2);padding:12px;min-height:320px;display:flex;flex-direction:column;gap:8px;}
+    .kb__colhdr{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px;border-bottom:1px solid var(--ln2);margin-bottom:4px;}
+    .kb__colttl{font-family:var(--head);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--w2);}
+    .kb__colcount{font-family:var(--mono);font-size:10px;color:var(--w3);background:var(--sf3);padding:2px 6px;border-radius:var(--r);}
+    .kb__col--aguard .kb__colttl{color:var(--w3);}
+    .kb__col--wip   .kb__colttl{color:var(--amber);}
+    .kb__col--peca  .kb__colttl{color:var(--orange-l);}
+    .kb__col--pronto .kb__colttl{color:var(--green);}
+    .kb__col--ent   .kb__colttl{color:var(--w3);}
+    .kb__card{background:var(--sf);border:1px solid var(--ln2);border-left:3px solid var(--w4);border-radius:var(--r);padding:10px 10px 9px;cursor:grab;transition:transform .12s, border-color .12s;}
+    .kb__card:hover{transform:translateY(-2px);border-left-color:var(--amber);}
+    .kb__col--aguard .kb__card{border-left-color:var(--w3);}
+    .kb__col--wip    .kb__card{border-left-color:var(--amber);}
+    .kb__col--peca   .kb__card{border-left-color:var(--orange-l);}
+    .kb__col--pronto .kb__card{border-left-color:var(--green);}
+    .kb__col--ent    .kb__card{border-left-color:var(--green-d);opacity:.75;}
+    .kb__num{font-family:var(--mono);font-size:10px;color:var(--w3);letter-spacing:1px;margin-bottom:3px;}
+    .kb__srv{font-family:var(--body);font-size:13px;font-weight:600;color:var(--w);line-height:1.25;margin-bottom:4px;}
+    .kb__cli{font-family:var(--mono);font-size:10px;color:var(--w2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+    .kb__meta{display:flex;justify-content:space-between;align-items:center;gap:6px;padding-top:6px;border-top:1px solid var(--ln);}
+    .kb__val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);}
+    .kb__tech{font-family:var(--mono);font-size:9px;color:var(--w3);text-transform:uppercase;letter-spacing:.5px;}
+    .kb-note{margin-top:18px;padding:14px 18px;border:1px solid var(--ln2);border-left:3px solid var(--amber);border-radius:var(--r2);background:var(--sf);display:flex;gap:14px;align-items:flex-start;}
+    .kb-note__ic{color:var(--amber);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.5px;flex-shrink:0;}
+    .kb-note__txt{font-size:13px;color:var(--w2);line-height:1.5;}
+    .kb-note__txt strong{color:var(--w);}
+  </style>
+
+  <div class="kb reveal" data-reveal>
+    <div class="kb__col kb__col--aguard">
+      <div class="kb__colhdr"><span class="kb__colttl">Aguardando</span><span class="kb__colcount">2</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #16</div>
+        <div class="kb__srv">Instal. tomada lava-louça</div>
+        <div class="kb__cli">Eduarda Melo</div>
+        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">sem técnico</span></div>
       </div>
-      <div class="gantt__scale">
-        <span></span><span>AGUARD.</span><span>EXECUÇÃO</span><span>AGUARD. PEÇA</span><span>PRONTO</span>
-      </div>
-      <div class="gantt__svg-wrap">
-        <ul class="gantt__list" id="ganttList">
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #16</b><span>tomada lava-louça · Eduarda</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wait" style="left:0%; width:16%;">AGUARDANDO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #08</b><span>elétrica lanchonete · RD Distribuidora</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:20%; width:20%;">EM EXECUÇÃO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #07</b><span>elétrica galpão · RD Distribuidora</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:20%; width:20%;">EM EXECUÇÃO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #13</b><span>bomba elétrica · Diego Belo</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:44%; width:20%;">AGUARDANDO PEÇA</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #14</b><span>motor portão · Tele Corte</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:68%; width:18%;">PRONTO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #10</b><span>manut. câmera · RD Separação</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:68%; width:18%;">PRONTO</div></div>
-          </li>
-        </ul>
+      <div class="kb__card">
+        <div class="kb__num">OS #06</div>
+        <div class="kb__srv">4 chuveiros + vídeo porteiro</div>
+        <div class="kb__cli">Rômulo Augusto</div>
+        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">sem técnico</span></div>
       </div>
     </div>
 
-    <aside class="gantt__alert">
-      <div class="gantt__alert-tag">O QUE MUDOU AGORA</div>
-      <div class="gantt__alert-ttl">OS #10 foi pra "PRONTO".<br/>Recepção já pode avisar o cliente.</div>
-      <div class="gantt__alert-body">
-        › <strong>Técnico</strong> arrastou o card ao fechar a OS<br/>
-        › <strong>Recepção</strong> vê o card novo na coluna PRONTO<br/>
-        › <strong>TV do pátio</strong> atualiza — cliente que tá na loja vê
+    <div class="kb__col kb__col--wip">
+      <div class="kb__colhdr"><span class="kb__colttl">Em execução</span><span class="kb__colcount">2</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #07</div>
+        <div class="kb__srv">Elétrica de galpão</div>
+        <div class="kb__cli">RD Distribuidora</div>
+        <div class="kb__meta"><span class="kb__val">R$ 10.000</span><span class="kb__tech">Josimar</span></div>
       </div>
-    </aside>
+      <div class="kb__card">
+        <div class="kb__num">OS #08</div>
+        <div class="kb__srv">Elétrica lanchonete</div>
+        <div class="kb__cli">RD Distribuidora</div>
+        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">Técnico 2</span></div>
+      </div>
+    </div>
+
+    <div class="kb__col kb__col--peca">
+      <div class="kb__colhdr"><span class="kb__colttl">Aguard. peça</span><span class="kb__colcount">2</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #13</div>
+        <div class="kb__srv">Bomba elétrica + perfil</div>
+        <div class="kb__cli">Diego Belo</div>
+        <div class="kb__meta"><span class="kb__val">R$ —</span><span class="kb__tech">Josimar</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #05</div>
+        <div class="kb__srv">Elétrica de 5 apartamentos</div>
+        <div class="kb__cli">Edilaine Barbosa</div>
+        <div class="kb__meta"><span class="kb__val">R$ 22.000</span><span class="kb__tech">Josimar</span></div>
+      </div>
+    </div>
+
+    <div class="kb__col kb__col--pronto">
+      <div class="kb__colhdr"><span class="kb__colttl">Pronto</span><span class="kb__colcount">5</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #14</div>
+        <div class="kb__srv">Manut. motor portão</div>
+        <div class="kb__cli">Tele Corte</div>
+        <div class="kb__meta"><span class="kb__val">R$ 129</span><span class="kb__tech">Josimar</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #12</div>
+        <div class="kb__srv">Manut. motor portão</div>
+        <div class="kb__cli">Norton JCL</div>
+        <div class="kb__meta"><span class="kb__val">R$ 50</span><span class="kb__tech">Josimar</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #11</div>
+        <div class="kb__srv">Manut. bomba elétrica</div>
+        <div class="kb__cli">Marcos Vinícius</div>
+        <div class="kb__meta"><span class="kb__val">R$ 100</span><span class="kb__tech">Técnico 2</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #10</div>
+        <div class="kb__srv">Manut. câmera</div>
+        <div class="kb__cli">RD Separação</div>
+        <div class="kb__meta"><span class="kb__val">R$ 250</span><span class="kb__tech">Josimar</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #04</div>
+        <div class="kb__srv">Nova entrada monofásica</div>
+        <div class="kb__cli">RD Separação</div>
+        <div class="kb__meta"><span class="kb__val">R$ 450</span><span class="kb__tech">Josimar</span></div>
+      </div>
+    </div>
+
+    <div class="kb__col kb__col--ent">
+      <div class="kb__colhdr"><span class="kb__colttl">Entregue</span><span class="kb__colcount">3</span></div>
+      <div class="kb__card">
+        <div class="kb__num">OS #15</div>
+        <div class="kb__srv">Elétrica + câmera + alarme</div>
+        <div class="kb__cli">3A Auto Peças</div>
+        <div class="kb__meta"><span class="kb__val">R$ 1.000</span><span class="kb__tech">Josimar</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #09</div>
+        <div class="kb__srv">5 tomadas + circuito 20A</div>
+        <div class="kb__cli">DM Empório</div>
+        <div class="kb__meta"><span class="kb__val">R$ 585</span><span class="kb__tech">Técnico 2</span></div>
+      </div>
+      <div class="kb__card">
+        <div class="kb__num">OS #03</div>
+        <div class="kb__srv">Manut. tomada geladeira</div>
+        <div class="kb__cli">Carla Eduarda</div>
+        <div class="kb__meta"><span class="kb__val">R$ 60</span><span class="kb__tech">Josimar</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kb-note reveal" data-reveal>
+    <div class="kb-note__ic">▲ ACONTECEU AGORA</div>
+    <div class="kb-note__txt">Josimar arrastou a <strong>OS #10 (manut. câmera · RD Separação)</strong> pra coluna PRONTO. Recepção já viu o card novo, pode ligar pra RD vir buscar. A <strong>TV do pátio</strong>, se tiver uma tela na loja, atualiza sozinha.</div>
   </div>
 
   <div class="sec__bignum reveal" data-reveal>
-    1 TELA <span class="dim">·</span> KANBAN ARRASTÁVEL <span class="dim">·</span> TV DO PÁTIO PÚBLICA
+    1 TELA <span class="dim">·</span> 5 COLUNAS <span class="dim">·</span> TV DO PÁTIO PÚBLICA
   </div>
 </section>
 
