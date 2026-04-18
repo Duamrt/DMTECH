@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04180701"></script>
-  <script src="js/auth.js?v=04180701"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04180701">
+  <script src="js/config.js?v=04180929"></script>
+  <script src="js/auth.js?v=04180929"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04180929">
   <style>
     .mp-wrap{max-width:900px;margin:0 auto;padding:24px 20px;}
     .banner{padding:18px 22px;border-radius:10px;border:1px solid var(--border);margin-bottom:22px;display:flex;gap:14px;align-items:center;}
@@ -43,6 +43,8 @@
     .plano-feat{list-style:none;margin:6px 0;display:flex;flex-direction:column;gap:6px;}
     .plano-feat li{font-size:13px;color:var(--text);padding-left:18px;position:relative;}
     .plano-feat li::before{content:"✓";color:#22c55e;font-weight:700;position:absolute;left:0;}
+    .plano-formas{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px;}
+    .plano-formas span{font-family:'Fira Code',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:var(--surface);color:var(--text-muted);letter-spacing:.5px;border:1px solid var(--border);}
     .plano-btn{padding:11px;background:var(--accent);border:none;border-radius:6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;cursor:pointer;margin-top:auto;font-family:Manrope,sans-serif;}
     .plano-btn:hover{filter:brightness(1.08);}
     .plano-btn:disabled{opacity:.5;cursor:not-allowed;}
@@ -147,7 +149,7 @@
 <div id="dm-loading"><div class="dm-spin"></div></div>
 
 <script>
-const APP_VERSION = 'v04181800';
+const APP_VERSION = 'v04181900';
 const PLANOS = [
   { id:'profissional', nome:'Profissional', valor:250.00,
     desc:'Pra quem atende e quer profissionalizar.',
@@ -235,6 +237,7 @@ function renderPlanos(){
       <div class="plano-valor"><span class="plano-valor-n">${fmt(p.valor).replace('R$','R$ ')}</span><span class="plano-valor-c">/mês</span></div>
       <div class="plano-desc">${esc(p.desc)}</div>
       <ul class="plano-feat">${p.features.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>
+      <div class="plano-formas"><span>💳 Cartão</span><span>PIX</span><span>Boleto</span></div>
       <button class="plano-btn ${atual?'ghost':''}" ${atual||!ehDono?'disabled':''} onclick="assinar('${p.id}',${p.valor})">${lbl}</button>
     </div>`;
   }).join('');
@@ -281,7 +284,7 @@ async function assinar(planoId, valor){
   const ok = await abrirConfirmMP({
     tag:'Confirmar assinatura',
     titulo:`${nomePlano} — ${fmt(valor)}/mês`,
-    texto:`Você vai ativar a assinatura <strong>${nomePlano}</strong> por <strong>${fmt(valor)}/mês</strong> e será redirecionado para o pagamento (cartão ou PIX).<br><br>Sem fidelidade. Cancele quando quiser.`,
+    texto:`Você vai ativar a assinatura <strong>${nomePlano}</strong> por <strong>${fmt(valor)}/mês</strong> e será redirecionado para o pagamento (cartão, PIX ou boleto).<br><br>Sem fidelidade. Cancele quando quiser.`,
     okLabel:'Continuar para o pagamento',
   });
   if (!ok) return;
@@ -320,6 +323,6 @@ async function assinar(planoId, valor){
 console.log(`%c🟠 DMTech — Minha Assinatura ${APP_VERSION}`,'color:#f97316;font-weight:bold;');
 init();
 </script>
-<div style="position:fixed;bottom:6px;left:8px;font-family:'Fira Code',monospace;font-size:9px;color:var(--text-dim);z-index:100;letter-spacing:1px;">DMTech v04181800</div>
+<div style="position:fixed;bottom:6px;left:8px;font-family:'Fira Code',monospace;font-size:9px;color:var(--text-dim);z-index:100;letter-spacing:1px;">DMTech v04181900</div>
 </body>
 </html>
