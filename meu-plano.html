@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMTech — Minha Assinatura</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js?v=04181600"></script>
+  <script src="js/auth.js?v=04181600"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04181600">
+  <style>
+    .mp-wrap{max-width:900px;margin:0 auto;padding:24px 20px;}
+    .banner{padding:18px 22px;border-radius:10px;border:1px solid var(--border);margin-bottom:22px;display:flex;gap:14px;align-items:center;}
+    .banner.trial{background:rgba(59,130,246,.08);border-color:#3b82f6;}
+    .banner.ativo{background:rgba(34,197,94,.08);border-color:#22c55e;}
+    .banner.atrasado{background:rgba(234,88,12,.08);border-color:#ea580c;}
+    .banner.bloqueado,.banner.cancelado{background:rgba(239,68,68,.08);border-color:#ef4444;}
+    .banner-ic{font-size:26px;}
+    .banner-tit{font-size:17px;font-weight:800;color:var(--text);}
+    .banner-sub{font-size:13px;color:var(--text-muted);margin-top:3px;}
+
+    .sec{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:16px;}
+    .sec-tit{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;}
+    .det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+    .det-lab{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-family:'Fira Code',monospace;margin-bottom:4px;}
+    .det-val{font-size:14px;color:var(--text);font-weight:600;}
+
+    .planos-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media(max-width:620px){.planos-grid{grid-template-columns:1fr;}}
+    .plano-card{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s;}
+    .plano-card:hover{border-color:var(--accent);}
+    .plano-card.atual{border-color:var(--accent);background:rgba(249,115,22,.06);}
+    .plano-card.destaque{border-color:var(--accent);}
+    .plano-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:3px 8px;border-radius:4px;background:rgba(249,115,22,.15);color:var(--accent);align-self:flex-start;font-family:'Fira Code',monospace;}
+    .plano-nome{font-size:20px;font-weight:800;color:var(--text);}
+    .plano-valor{display:flex;align-items:baseline;gap:4px;}
+    .plano-valor-n{font-size:32px;font-weight:800;color:var(--accent);letter-spacing:-1px;}
+    .plano-valor-c{font-size:12px;color:var(--text-muted);}
+    .plano-desc{font-size:13px;color:var(--text-muted);line-height:1.5;}
+    .plano-feat{list-style:none;margin:6px 0;display:flex;flex-direction:column;gap:6px;}
+    .plano-feat li{font-size:13px;color:var(--text);padding-left:18px;position:relative;}
+    .plano-feat li::before{content:"✓";color:#22c55e;font-weight:700;position:absolute;left:0;}
+    .plano-btn{padding:11px;background:var(--accent);border:none;border-radius:6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;cursor:pointer;margin-top:auto;font-family:Manrope,sans-serif;}
+    .plano-btn:hover{filter:brightness(1.08);}
+    .plano-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .plano-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+
+    /* modal custom */
+    .mp-mod-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:10001;padding:20px;}
+    .mp-mod-ov.open{display:flex;}
+    .mp-mod-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;max-width:440px;width:100%;overflow:hidden;}
+    .mp-mod-head{background:rgba(249,115,22,.1);border-bottom:1px solid var(--accent);padding:12px 22px;font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:2px;font-family:'Fira Code',monospace;}
+    .mp-mod-body{padding:24px;}
+    .mp-mod-tit{font-size:20px;font-weight:800;color:var(--text);margin-bottom:10px;}
+    .mp-mod-txt{font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}
+    .mp-mod-txt strong{color:var(--text);}
+    .mp-mod-foot{display:flex;gap:10px;padding:14px 24px 20px;justify-content:flex-end;}
+    .mp-btn{padding:10px 20px;border:none;border-radius:6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:Manrope,sans-serif;}
+    .mp-btn.cancel{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+    .mp-btn.confirm{background:var(--accent);color:#fff;}
+    .mp-btn.danger{background:#ef4444;color:#fff;}
+
+    #dm-loading{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:10002;}
+    #dm-loading.open{display:flex;}
+    .dm-spin{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--accent);border-radius:50%;animation:dmspin .8s linear infinite;}
+    @keyframes dmspin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-name">DMTech</div>
+      <div class="logo-sub" id="nome-empresa">—</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <a href="dashboard.html" class="nav-item"><span class="nav-icon">⊞</span> Dashboard</a>
+      <a href="minha-fila.html" class="nav-item"><span class="nav-icon">◫</span> Minha Fila</a>
+      <a href="clientes.html" class="nav-item"><span class="nav-icon">◎</span> Clientes</a>
+      <a href="orcamentos.html" class="nav-item"><span class="nav-icon">◨</span> Orçamentos</a>
+      <a href="os.html" class="nav-item"><span class="nav-icon">◈</span> Ordens de Serviço</a>
+      <a href="kanban.html" class="nav-item"><span class="nav-icon">▦</span> Kanban</a>
+      <a href="catalogo.html" class="nav-item"><span class="nav-icon">◧</span> Catálogo</a>
+      <a href="fornecedores.html" class="nav-item"><span class="nav-icon">◪</span> Fornecedores</a>
+      <div class="nav-section">Financeiro</div>
+      <a href="financeiro.html" class="nav-item"><span class="nav-icon">◉</span> Caixa</a>
+      <a href="notas-fiscais.html" class="nav-item"><span class="nav-icon">⊟</span> Nota Fiscal</a>
+      <a href="folha.html" class="nav-item"><span class="nav-icon">⊠</span> Folha</a>
+      <div class="nav-section">Sistema</div>
+      <a href="audit.html" class="nav-item"><span class="nav-icon">◑</span> Auditoria</a>
+      <a href="config.html" class="nav-item"><span class="nav-icon">⚙</span> Configurações</a>
+      <a href="meu-plano.html" class="nav-item active"><span class="nav-icon">◆</span> Minha Assinatura</a>
+    </nav>
+    <div class="sidebar-footer" id="versao-sidebar"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="btn-hamburger" onclick="toggleSidebar()">&#9776;</button>
+      <div class="topbar-title">Minha Assinatura</div>
+    </div>
+
+    <div class="mp-wrap" id="body">
+      <div style="text-align:center;color:var(--text-muted);padding:40px;">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- modal -->
+<div class="mp-mod-ov" id="mp-mod-ov" onclick="if(event.target===this)fecharModalMP()">
+  <div class="mp-mod-box">
+    <div class="mp-mod-head" id="mp-mod-tag">Confirmação</div>
+    <div class="mp-mod-body">
+      <div class="mp-mod-tit" id="mp-mod-tit">—</div>
+      <div class="mp-mod-txt" id="mp-mod-txt">—</div>
+    </div>
+    <div class="mp-mod-foot">
+      <button class="mp-btn cancel" id="mp-btn-cancel" onclick="fecharModalMP()">Cancelar</button>
+      <button class="mp-btn confirm" id="mp-btn-ok" onclick="_mpRes(true)">Confirmar</button>
+    </div>
+  </div>
+</div>
+<div id="dm-loading"><div class="dm-spin"></div></div>
+
+<script>
+const APP_VERSION = 'v04181600';
+const PLANOS = [
+  { id:'profissional', nome:'Profissional', valor:250.00,
+    desc:'Pra quem atende e quer profissionalizar.',
+    features:['OS ilimitadas','Clientes ilimitados','Orçamentos com PDF','Catálogo + Estoque','Financeiro básico','Kanban de OS','Suporte WhatsApp'] },
+  { id:'empresarial', nome:'Empresarial', valor:450.00, destaque:true,
+    desc:'Pra equipes com múltiplos técnicos e crescimento.',
+    features:['Tudo do Profissional','Equipe com comissão','Folha de pagamento','Fornecedores + NF','Relatórios gerenciais','Auditoria completa','Multi-usuário'] },
+];
+
+let ASSINATURA = null;
+
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';}
+function fmt(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function fmtD(d){if(!d)return '—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('pt-BR');}
+
+let _mpCb=null;
+function _mpRes(r){if(_mpCb)_mpCb(r);fecharModalMP();}
+function fecharModalMP(){document.getElementById('mp-mod-ov').classList.remove('open');_mpCb=null;}
+function abrirConfirmMP({tag='Confirmação',titulo='Tem certeza?',texto='',okLabel='Confirmar',cancelLabel='Cancelar',danger=false}){
+  document.getElementById('mp-mod-tag').textContent=tag;
+  document.getElementById('mp-mod-tit').textContent=titulo;
+  document.getElementById('mp-mod-txt').innerHTML=texto;
+  const b=document.getElementById('mp-btn-ok');
+  b.textContent=okLabel; b.className='mp-btn '+(danger?'danger':'confirm');
+  document.getElementById('mp-btn-cancel').textContent=cancelLabel;
+  document.getElementById('mp-mod-ov').classList.add('open');
+  return new Promise(r=>{_mpCb=r;});
+}
+
+async function init(){
+  const ok = await requireAuth('login.html');
+  if (!ok) return;
+  document.getElementById('nome-empresa').textContent = APP.company?.name || '—';
+  document.getElementById('versao-sidebar').textContent = APP_VERSION;
+  await carregarAssinatura();
+  render();
+}
+
+async function carregarAssinatura(){
+  const { data } = await sb.from('assinaturas').select('*')
+    .eq('company_id', APP.company.id).in('status',['ativa','atrasada','suspensa'])
+    .order('created_at',{ascending:false}).limit(1).maybeSingle();
+  ASSINATURA = data;
+}
+
+function renderBanner(){
+  const st = APP.company?.status_pagamento || 'trial';
+  const dias = APP.company?.dias_atraso || 0;
+  const trialEnd = APP.company?.trial_ends_at || APP.company?.trial_ate;
+  const nd = ASSINATURA?.proximo_vencimento;
+  let ic='',t='',s='';
+  if(st==='trial'){ic='🎁';t='Você está em período de teste';s=trialEnd?`Teste grátis até ${fmtD(String(trialEnd).slice(0,10))}. Escolha um plano abaixo.`:'Escolha um plano abaixo.';}
+  else if(st==='ativo'){ic='✅';t='Assinatura ativa';s=nd?`Próxima cobrança: ${fmtD(nd)} — ${fmt(ASSINATURA?.valor)}`:'Tudo certo.';}
+  else if(st==='atrasado'){ic='⚠️';t='Pagamento em atraso';s=`${dias} dia(s). Bloqueio automático em ${Math.max(0,7-dias)} dia(s).`;}
+  else if(st==='bloqueado'){ic='🚫';t='Acesso bloqueado';s='Regularize o pagamento.';}
+  else if(st==='cancelado'){ic='❌';t='Assinatura cancelada';s='Reative escolhendo um plano.';}
+  return `<div class="banner ${st}"><div class="banner-ic">${ic}</div><div><div class="banner-tit">${t}</div><div class="banner-sub">${esc(s)}</div></div></div>`;
+}
+
+function renderDetalhes(){
+  if (!ASSINATURA) return '';
+  const forma=({CREDIT_CARD:'Cartão de crédito',PIX:'PIX',BOLETO:'Boleto',UNDEFINED:'A definir'})[ASSINATURA.forma_pagamento]||ASSINATURA.forma_pagamento;
+  const cart=ASSINATURA.cartao_ultimos_digitos?`${ASSINATURA.cartao_bandeira||''} •••• ${ASSINATURA.cartao_ultimos_digitos}`:'—';
+  return `<div class="sec"><div class="sec-tit">Detalhes da assinatura</div><div class="det-grid">
+    <div><div class="det-lab">Plano</div><div class="det-val">${esc(ASSINATURA.plano)}</div></div>
+    <div><div class="det-lab">Valor</div><div class="det-val">${fmt(ASSINATURA.valor)}</div></div>
+    <div><div class="det-lab">Ciclo</div><div class="det-val">${ASSINATURA.ciclo==='YEARLY'?'Anual':'Mensal'}</div></div>
+    <div><div class="det-lab">Forma de pagamento</div><div class="det-val">${esc(forma)}</div></div>
+    <div><div class="det-lab">Cartão</div><div class="det-val">${esc(cart)}</div></div>
+    <div><div class="det-lab">Próximo vencimento</div><div class="det-val">${fmtD(ASSINATURA.proximo_vencimento)}</div></div>
+    <div><div class="det-lab">Último pagamento</div><div class="det-val">${ASSINATURA.ultimo_pagamento_em?new Date(ASSINATURA.ultimo_pagamento_em).toLocaleDateString('pt-BR'):'—'}</div></div>
+    <div><div class="det-lab">Status</div><div class="det-val">${esc(ASSINATURA.status)}</div></div>
+  </div></div>`;
+}
+
+function renderPlanos(){
+  const planoAtual = ASSINATURA?.plano || APP.company?.plan || APP.company?.plano;
+  const ehDono = APP.profile?.role === 'dono';
+  const cards = PLANOS.map(p=>{
+    const atual = p.id === planoAtual && ASSINATURA;
+    const lbl = atual ? 'Plano atual' : (ASSINATURA ? 'Mudar para este' : 'Assinar');
+    return `<div class="plano-card ${atual?'atual':''} ${p.destaque?'destaque':''}">
+      ${atual?'<span class="plano-badge">SEU PLANO</span>':(p.destaque?'<span class="plano-badge">MAIS ESCOLHIDO</span>':'')}
+      <div class="plano-nome">${esc(p.nome)}</div>
+      <div class="plano-valor"><span class="plano-valor-n">${fmt(p.valor).replace('R$','R$ ')}</span><span class="plano-valor-c">/mês</span></div>
+      <div class="plano-desc">${esc(p.desc)}</div>
+      <ul class="plano-feat">${p.features.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>
+      <button class="plano-btn ${atual?'ghost':''}" ${atual||!ehDono?'disabled':''} onclick="assinar('${p.id}',${p.valor})">${lbl}</button>
+    </div>`;
+  }).join('');
+  return `<div class="sec"><div class="sec-tit">Planos disponíveis</div><div class="planos-grid">${cards}</div>${!ehDono?'<div style="text-align:center;color:var(--text-muted);font-size:12px;margin-top:14px;">Apenas o dono pode alterar o plano.</div>':''}</div>`;
+}
+
+function render(){ document.getElementById('body').innerHTML = renderBanner() + renderDetalhes() + renderPlanos(); }
+
+async function assinar(planoId, valor){
+  if (APP.profile?.role !== 'dono'){ alert('Apenas o dono pode assinar'); return; }
+  const nomePlano = PLANOS.find(p=>p.id===planoId)?.nome || planoId;
+  const ok = await abrirConfirmMP({
+    tag:'Confirmar assinatura',
+    titulo:`${nomePlano} — ${fmt(valor)}/mês`,
+    texto:`Você vai ativar a assinatura <strong>${nomePlano}</strong> por <strong>${fmt(valor)}/mês</strong> e será redirecionado para o pagamento (cartão ou PIX).<br><br>Sem fidelidade. Cancele quando quiser.`,
+    okLabel:'Continuar para o pagamento',
+  });
+  if (!ok) return;
+  document.getElementById('dm-loading').classList.add('open');
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/asaas-criar-assinatura`,{
+      method:'POST',
+      headers:{
+        'authorization':`Bearer ${session.access_token}`,
+        'content-type':'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        company_id: APP.company.id,
+        plano: planoId,
+        valor: valor,
+        ciclo: 'MONTHLY',
+        forma_pagamento: 'UNDEFINED',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Erro ao criar assinatura');
+    if (data.invoice_url) window.open(data.invoice_url, '_blank');
+    await carregarAssinatura();
+    const { data: co2 } = await sb.from('companies').select('*').eq('id', APP.company.id).single();
+    APP.company = co2;
+    render();
+  } catch (e) {
+    console.error(e); alert('Erro: '+e.message);
+  } finally {
+    document.getElementById('dm-loading').classList.remove('open');
+  }
+}
+
+console.log(`%c🟠 DMTech — Minha Assinatura ${APP_VERSION}`,'color:#f97316;font-weight:bold;');
+init();
+</script>
+<div style="position:fixed;bottom:6px;left:8px;font-family:'Fira Code',monospace;font-size:9px;color:var(--text-dim);z-index:100;letter-spacing:1px;">DMTech v04181600</div>
+</body>
+</html>

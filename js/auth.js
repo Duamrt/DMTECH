@@ -62,8 +62,9 @@ async function requireAuth(redirectTo = 'login.html') {
 
   // Verificar plano (exceto páginas de acesso livre e admin)
   const page = window.location.pathname.split('/').pop() || 'index.html';
-  const paginasExentas = ['upgrade.html', 'admin.html', 'login.html', 'signup.html', 'landing.html'];
+  const paginasExentas = ['upgrade.html', 'admin.html', 'login.html', 'signup.html', 'landing.html', 'meu-plano.html'];
   if (!paginasExentas.includes(page) && !isPlatformAdmin()) {
+    if (!checkPagamento()) return false;
     if (!checkPlan()) return false;
   }
 
@@ -126,6 +127,19 @@ function checkPlan() {
       window.location.href = 'upgrade.html';
       return false;
     }
+  }
+  return true;
+}
+
+// Bloqueio por inadimplência Asaas (status=bloqueado/cancelado ou atraso > 7d)
+function checkPagamento() {
+  const c = APP.company;
+  if (!c) return true; // deixa passar se não tem company - checkPlan vai tratar
+  const st = c.status_pagamento;
+  const dias = c.dias_atraso || 0;
+  if (st === 'bloqueado' || st === 'cancelado' || (st === 'atrasado' && dias > 7)) {
+    window.location.href = 'meu-plano.html';
+    return false;
   }
   return true;
 }
