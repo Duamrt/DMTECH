@@ -82,12 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const crumb = document.getElementById('crumb');
   if (crumb) {
     const sections = [
-      { id: 'hero',     path: ['KANBAN', 'OS', 'EXECUÇÃO'] },
-      { id: 'wa',       path: ['WHATSAPP', 'IA', 'OS'] },
-      { id: 'mcmv',     path: ['OS', 'NFS-E', 'ISS'] },
+      { id: 'hero',     path: ['PAINEL', 'DMTECH', 'RESUMO'] },
+      { id: 'gantt',    path: ['KANBAN', 'PÁTIO', 'OS'] },
+      { id: 'wa',       path: ['OS', 'NOVA', 'CATÁLOGO'] },
       { id: 'pl',       path: ['FINANCEIRO', 'P&L', 'FLUXO'] },
-      { id: 'gantt',    path: ['KANBAN', 'PÁTIO', 'TÉCNICOS'] },
-      { id: 'op',       path: ['ROTINA', 'ESTOQUE', 'NOTAS'] },
+      { id: 'mcmv',     path: ['TÉCNICO', 'MINHA FILA', 'HOJE'] },
+      { id: 'op',       path: ['ROTINA', 'CATÁLOGO', 'FOLHA'] },
       { id: 'quem',     path: ['DMTECH', 'ORIGEM', 'BRASIL'] },
       { id: 'planos',   path: ['COMERCIAL', 'PLANOS', 'PREÇOS'] },
       { id: 'faq',      path: ['AJUDA', 'FAQ', 'DÚVIDAS'] },
@@ -229,16 +229,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const pciList = document.getElementById('pciList');
   if (pciList) {
     const cats = [
-      ['Deslocamento',                    100, 'R$ 40,00',   'green'],
-      ['Diagnóstico',                     100, 'R$ 60,00',   'green'],
-      ['Mão de obra — manut. corretiva',  100, 'R$ 140,00',  'green'],
-      ['Capacitor 20uF',                  100, 'R$ 32,00',   'green'],
-      ['Parafuso/fixação',                100, 'R$ 8,00',    'green'],
-      ['Teste final',                     100, 'R$ 0,00',    'green'],
-      ['Garantia 90 dias',                100, 'incluso',    'green'],
-      ['ISS retido',                      100, '3%',         'green'],
-      ['Discriminação NFS-e',             100, 'pronto',     'green'],
-      ['Tomador (CPF do cliente)',        100, 'preenchido', 'green'],
+      ['OS #03 · Carla · manut. tomada',         100, 'ENTREGUE',       'green'],
+      ['OS #09 · DM Empório · 5 tomadas',        100, 'ENTREGUE',       'green'],
+      ['OS #15 · 3A Auto · câmera + alarme',     100, 'ENTREGUE',       'green'],
+      ['OS #10 · RD Separação · câmera',         100, 'PRONTO',         'yellow'],
+      ['OS #11 · Marcos Vinícius · bomba',       100, 'PRONTO',         'yellow'],
+      ['OS #07 · RD · elétrica galpão',           68, 'EM EXECUÇÃO',    'yellow'],
+      ['OS #08 · RD · lanchonete',                42, 'EM EXECUÇÃO',    'orange'],
+      ['OS #13 · Diego Belo · bomba',              0, 'AGUARD. PEÇA',   'orange'],
+      ['OS #05 · Edilaine · 5 aptos',              0, 'AGUARD. PEÇA',   'orange'],
+      ['OS #16 · Eduarda Melo · tomada',           0, 'AGUARDANDO',     'empty'],
     ];
     const frag = document.createDocumentFragment();
     cats.forEach(([name, pct, val, color], i) => {

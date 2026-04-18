@@ -4,17 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>DMTech — Sistema pra prestador de serviço técnico</title>
-<meta name="description" content="Sistema feito em campo, não no escritório. Kanban de OS, orçamento rápido, financeiro por cliente, NFS-e pronta pra prefeitura. 7 dias grátis." />
+<meta name="description" content="Kanban de OS, orçamento rápido, financeiro por cliente, folha de equipe. Feito em campo, não no escritório." />
 
-<!-- Open Graph / WhatsApp preview -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="DMTech — Sistema pra prestador de serviço técnico" />
-<meta property="og:description" content="Feito em campo, não no escritório. Kanban de OS, orçamento rápido, financeiro por cliente, NFS-e pronta pra prefeitura." />
+<meta property="og:description" content="Kanban de OS, orçamento rápido, financeiro por cliente, folha de equipe. Feito em campo, não no escritório." />
 <meta property="og:url" content="https://dmtechapp.com.br/landing-v2/" />
 <meta property="og:locale" content="pt_BR" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="DMTech — Sistema pra prestador de serviço técnico" />
-<meta name="twitter:description" content="Feito em campo, não no escritório. Kanban de OS, orçamento rápido, financeiro por cliente, NFS-e pronta pra prefeitura." />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -46,59 +43,56 @@
       <span data-theme-label>DARK</span>
     </button>
     <span class="pipe">|</span>
-    <a href="#wa" class="linkish">FALAR</a>
+    <a href="#wa-final" class="linkish">FALAR</a>
   </div>
 </header>
 
 <!-- ============ HERO ============ -->
 <section class="hero" id="hero">
-  <!-- Camada 1: cards isométricos flutuando -->
   <div class="iso" aria-hidden="true">
     <div class="iso__stage" id="isoStage">
       <div class="iso__card iso--receita"  data-d="0"    data-z="120"  style="--x:-380px; --y:-220px;">
-        <span class="iso__val">R$ 184.600</span>
-        <span class="iso__lbl">RECEITA DO MÊS</span>
+        <span class="iso__val">R$ 34.624</span>
+        <span class="iso__lbl">FATURADO NO MÊS</span>
       </div>
       <div class="iso__card iso--custo"    data-d="800"  data-z="40"   style="--x:280px; --y:-260px;">
-        <span class="iso__val">R$ 112.700</span>
+        <span class="iso__val">R$ 20.410</span>
         <span class="iso__lbl">CUSTO TOTAL</span>
       </div>
       <div class="iso__card iso--lucro iso--big" data-d="400" data-z="180" style="--x:420px; --y:40px;">
-        <span class="iso__val">R$ 71.900</span>
+        <span class="iso__val">R$ 14.214</span>
         <span class="iso__lbl">LUCRO</span>
       </div>
       <div class="iso__card iso--margem"   data-d="1200" data-z="80"   style="--x:-480px; --y:120px;">
-        <span class="iso__val">38,9%</span>
+        <span class="iso__val">41,0%</span>
         <span class="iso__lbl">MARGEM</span>
       </div>
       <div class="iso__card iso--obras"    data-d="600"  data-z="60"   style="--x:-180px; --y:240px;">
-        <span class="iso__val">18</span>
-        <span class="iso__lbl">OS ATIVAS</span>
+        <span class="iso__val">14</span>
+        <span class="iso__lbl">OS NO MÊS</span>
       </div>
       <div class="iso__card iso--estoque"  data-d="1000" data-z="100"  style="--x:160px; --y:260px;">
-        <span class="iso__val">R$ 21.480</span>
-        <span class="iso__lbl">ESTOQUE PEÇAS</span>
+        <span class="iso__val">R$ 548</span>
+        <span class="iso__lbl">TICKET MÉDIO</span>
       </div>
       <div class="iso__card iso--prop"     data-d="1400" data-z="30"   style="--x:-320px; --y:-40px;">
-        <span class="iso__val iso__val--split"><b>55</b><i>/</i><b>45</b></span>
-        <span class="iso__lbl">MÃO · PEÇA</span>
+        <span class="iso__val iso__val--split"><b>60</b><i>/</i><b>40</b></span>
+        <span class="iso__lbl">MÃO · MATERIAL</span>
       </div>
     </div>
   </div>
 
-  <!-- Papel milimetrado -->
   <div class="graph-paper" aria-hidden="true"></div>
 
-  <!-- Camada 2-3: foco -->
   <div class="hero__focus">
     <div class="hero__meta mono">
       <span class="hero__meta-dot"></span>
-      PAINEL DMTECH <span class="dim">·</span> ABRIL 2026 <span class="dim">·</span> 18 OS ATIVAS
+      PAINEL DMTECH <span class="dim">·</span> ABRIL 2026 <span class="dim">·</span> 14 OS NO MÊS
     </div>
 
-    <div class="bignum" id="bignum" data-target="71900.00">
+    <div class="bignum" id="bignum" data-target="14214.00">
       <span class="bignum__cur">R$</span>
-      <span class="bignum__val" id="bignumVal">71.900,00</span>
+      <span class="bignum__val" id="bignumVal">14.214,00</span>
     </div>
 
     <div class="bignum__row">
@@ -107,9 +101,9 @@
       </div>
       <div class="pci">
         <div class="pci__track">
-          <div class="pci__fill" style="--w:38.9%"></div>
+          <div class="pci__fill" style="--w:41%"></div>
         </div>
-        <div class="pci__num mono"><span id="pciPct">38,9</span>% MARGEM</div>
+        <div class="pci__num mono"><span id="pciPct">41,0</span>% MARGEM</div>
       </div>
     </div>
 
@@ -119,7 +113,7 @@
     </h1>
 
     <div class="hero__links">
-      <a href="#wa" class="arrow-link arrow-link--primary">
+      <a href="#wa-final" class="arrow-link arrow-link--primary">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-1 1.1-.2.2-.4.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.5-.9-2.1-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4.9 2.8 1.1 3c.1.2 2 3.1 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4zM12 2.2c-5.4 0-9.8 4.4-9.8 9.8 0 1.7.5 3.4 1.3 4.8L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.4 0 9.8-4.4 9.8-9.8S17.4 2.2 12 2.2z"/></svg>
         <span class="arrow-link__txt">Falar com a equipe no WhatsApp</span>
         <span class="arrow-link__arrow">→</span>
@@ -132,7 +126,6 @@
     </div>
   </div>
 
-  <!-- Régua de canteiro -->
   <div class="ruler" aria-hidden="true">
     <div class="ruler__marks"></div>
     <div class="ruler__legend mono">
@@ -141,215 +134,202 @@
   </div>
 </section>
 
-<!-- Transição -->
+<!-- Transição 00→01 -->
 <div class="sec-trans" aria-hidden="true">
   <div class="sec-trans__line"></div>
-  <div class="sec-trans__lbl mono">↓ 01 <span class="dim">·</span> WHATSAPP VIRA OS <span class="dim">·</span> CONTINUE ROLANDO</div>
+  <div class="sec-trans__lbl mono">↓ 01 <span class="dim">·</span> KANBAN DO PÁTIO <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 2: WHATSAPP → OS ============ -->
+<!-- ============ SEÇÃO 01 · KANBAN ============ -->
+<section class="sec" id="gantt">
+  <div class="sec__head">
+    <div class="sec__eye">01 <span class="dim">·</span> KANBAN · OS EM TEMPO REAL</div>
+    <h2 class="sec__title">O pátio inteiro numa tela.<br/>Você arrasta. Todo mundo vê.</h2>
+    <p class="sec__sub">Cinco colunas, igual o fluxo da sua oficina: aguardando, em execução, aguardando peça, pronto, entregue. Dono vê tudo. Técnico vê só o que é dele. Recepcionista vê o que falta avisar o cliente.</p>
+  </div>
+
+  <div class="gantt-wrap">
+    <div class="gantt">
+      <div class="gantt__hdr">
+        <span>KANBAN · 14 OS ATIVAS</span>
+        <span>ABRIL 2026 · tempo real</span>
+      </div>
+      <div class="gantt__scale">
+        <span></span><span>AGUARD.</span><span>EXECUÇÃO</span><span>AGUARD. PEÇA</span><span>PRONTO</span>
+      </div>
+      <div class="gantt__svg-wrap">
+        <ul class="gantt__list" id="ganttList">
+          <li class="gantt__row reveal" data-reveal>
+            <div class="gantt__lbl"><b>OS #16</b><span>tomada lava-louça · Eduarda</span></div>
+            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wait" style="left:0%; width:16%;">AGUARDANDO</div></div>
+          </li>
+          <li class="gantt__row reveal" data-reveal>
+            <div class="gantt__lbl"><b>OS #08</b><span>elétrica lanchonete · RD Distribuidora</span></div>
+            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:20%; width:20%;">EM EXECUÇÃO</div></div>
+          </li>
+          <li class="gantt__row reveal" data-reveal>
+            <div class="gantt__lbl"><b>OS #07</b><span>elétrica galpão · RD Distribuidora</span></div>
+            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:20%; width:20%;">EM EXECUÇÃO</div></div>
+          </li>
+          <li class="gantt__row reveal" data-reveal>
+            <div class="gantt__lbl"><b>OS #13</b><span>bomba elétrica · Diego Belo</span></div>
+            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:44%; width:20%;">AGUARDANDO PEÇA</div></div>
+          </li>
+          <li class="gantt__row reveal" data-reveal>
+            <div class="gantt__lbl"><b>OS #14</b><span>motor portão · Tele Corte</span></div>
+            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:68%; width:18%;">PRONTO</div></div>
+          </li>
+          <li class="gantt__row reveal" data-reveal>
+            <div class="gantt__lbl"><b>OS #10</b><span>manut. câmera · RD Separação</span></div>
+            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:68%; width:18%;">PRONTO</div></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <aside class="gantt__alert">
+      <div class="gantt__alert-tag">O QUE MUDOU AGORA</div>
+      <div class="gantt__alert-ttl">OS #10 foi pra "PRONTO".<br/>Recepção já pode avisar o cliente.</div>
+      <div class="gantt__alert-body">
+        › <strong>Técnico</strong> arrastou o card ao fechar a OS<br/>
+        › <strong>Recepção</strong> vê o card novo na coluna PRONTO<br/>
+        › <strong>TV do pátio</strong> atualiza — cliente que tá na loja vê
+      </div>
+    </aside>
+  </div>
+
+  <div class="sec__bignum reveal" data-reveal>
+    1 TELA <span class="dim">·</span> KANBAN ARRASTÁVEL <span class="dim">·</span> TV DO PÁTIO PÚBLICA
+  </div>
+</section>
+
+<!-- Transição 01→02 -->
+<div class="sec-trans" aria-hidden="true">
+  <div class="sec-trans__line"></div>
+  <div class="sec-trans__lbl mono">↓ 02 <span class="dim">·</span> OS EM 30 SEGUNDOS <span class="dim">·</span> CONTINUE ROLANDO</div>
+</div>
+
+<!-- ============ SEÇÃO 02 · OS EM 30s ============ -->
 <section class="sec2" id="wa">
   <div class="sec2__head">
-    <div class="sec2__eye mono">01 <span class="dim">·</span> WHATSAPP VIRA OS</div>
-    <h2 class="sec2__title">Cliente manda mensagem no WhatsApp.<br/>OS entra no kanban sozinha.</h2>
-    <p class="sec2__sub">Áudio ou texto. A IA entende o problema, cria a OS, sugere serviço e peça, e avisa o técnico de plantão.</p>
+    <div class="sec2__eye mono">02 <span class="dim">·</span> OS EM 30 SEGUNDOS</div>
+    <h2 class="sec2__title">Cliente chega.<br/>OS entra no kanban.</h2>
+    <p class="sec2__sub">Autocomplete de cliente, serviço e peça já cadastrados. Aperta salvar, vai pro kanban. Sem redigitar nada que já tá no catálogo.</p>
   </div>
 
   <div class="sec2__grid">
-    <!-- Timeline -->
-    <ol class="timeline" aria-label="Etapas do processo">
+    <ol class="timeline" aria-label="Etapas de criação">
       <li class="timeline__item">
         <div class="timeline__num mono">01</div>
         <div class="timeline__bar"><i></i></div>
-        <div class="timeline__lbl">MENSAGEM</div>
-        <div class="timeline__meta mono">09:14</div>
+        <div class="timeline__lbl">CLIENTE</div>
+        <div class="timeline__meta mono">já cadastrado</div>
       </li>
       <li class="timeline__item">
         <div class="timeline__num mono">02</div>
         <div class="timeline__bar"><i></i></div>
-        <div class="timeline__lbl">OS CRIADA</div>
-        <div class="timeline__meta mono">09:14:06</div>
+        <div class="timeline__lbl">SERVIÇO + PEÇA</div>
+        <div class="timeline__meta mono">do catálogo</div>
       </li>
       <li class="timeline__item">
         <div class="timeline__num mono">03</div>
         <div class="timeline__bar"><i></i></div>
-        <div class="timeline__lbl">TÉCNICO A CAMINHO</div>
-        <div class="timeline__meta mono">✓</div>
+        <div class="timeline__lbl">NO KANBAN</div>
+        <div class="timeline__meta mono">&lt; 30s</div>
       </li>
     </ol>
 
-    <!-- Phone -->
-    <div class="phone-wrap">
-      <div class="phone">
-        <div class="phone__notch"></div>
-        <div class="phone__screen">
-          <div class="phone__hdr">
-            <span class="phone__back">‹</span>
-            <div class="phone__peer">
-              <div class="phone__ava">CL</div>
-              <div>
-                <div class="phone__name">Cliente — Sr. Edvaldo</div>
-                <div class="phone__status">online</div>
-              </div>
-            </div>
-          </div>
-          <div class="phone__chat" id="chat">
-            <div class="chat-date">hoje</div>
-            <div class="bub is-in" data-bub="greet">Bom dia!<span class="bub__t">09:12 <span class="bub__ck">✓✓</span></span></div>
-            <div class="bub is-in" data-bub="intro">meu portao automatico parou de funcionar ontem a noite<span class="bub__t">09:12 <span class="bub__ck">✓✓</span></span></div>
-            <div class="bub is-in" data-bub="endereco">é na rua Padre Cícero, 284, bairro Alvorada<span class="bub__t">09:13 <span class="bub__ck">✓✓</span></span></div>
-            <div class="bub is-in" data-bub="detalhe">ele faz barulho mas nao abre, ta tentando mas volta<span class="bub__t">09:13 <span class="bub__ck">✓✓</span></span></div>
-            <div class="bub is-in" data-bub="urgencia">consegue vir hoje? tenho que sair de carro<span class="bub__t">09:13 <span class="bub__ck">✓✓</span></span></div>
-            <div class="bub is-in" data-bub="foto">*foto do motor*<span class="bub__t">09:14 <span class="bub__ck">✓✓</span></span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Terminal -->
-    <div class="term" id="term">
+    <div class="term" id="term" style="grid-column: span 2;">
       <div class="term__chrome">
         <span class="term__dot"></span><span class="term__dot"></span><span class="term__dot"></span>
-        <span class="term__path mono">dmtech@os · abril/2026 · ~/kanban</span>
+        <span class="term__path mono">dmtech@os · nova · ~/catalogo</span>
       </div>
-      <pre class="term__body" id="termBody" aria-live="polite"><span class="t-dim">$</span> dmtech os --criar --from=whatsapp
+      <pre class="term__body" id="termBody" aria-live="polite"><span class="t-dim">$</span> dmtech os --nova
 
-<span class="t-ok">›</span> Analisando mensagem do cliente...
-<span class="t-ok">›</span> <span class="t-ok">✓</span> Mensagem recebida (<span class="t-num">5</span> linhas + <span class="t-num">1</span> foto)
-<span class="t-ok">›</span> Identificado: <span class="t-num">Sr. Edvaldo</span> · cliente #<span class="t-num">248</span>
-<span class="t-ok">›</span> Detectado: <span class="t-hdr">portão automático</span> · motor basculante
-<span class="t-ok">›</span> Cruzando com histórico e catálogo...
+<span class="t-ok">›</span> <span class="t-hdr">Cliente</span>
+  <span class="t-dim">›</span> digitou "rd" · autocomplete sugere: <span class="t-obra">RD DISTRIBUIDORA (SEPARAÇÃO)</span>
+  <span class="t-ok">✓</span> CPF/CNPJ, telefone e endereço vieram do cadastro
+
+<span class="t-ok">›</span> <span class="t-hdr">Serviço</span>
+  <span class="t-dim">›</span> digitou "motor" · autocomplete sugere: <span class="t-obra">Manutenção de motor de portão deslizante</span>
+  <span class="t-ok">✓</span> preço R$ 150 vem do catálogo <span class="t-dim">(editável aqui)</span>
+
+<span class="t-ok">›</span> <span class="t-hdr">Peça</span>
+  <span class="t-dim">›</span> digitou "trava" · autocomplete sugere: <span class="t-obra">Trava de motor de portão</span>
+  <span class="t-ok">✓</span> saída de estoque automática <span class="t-dim">(1 un)</span>
+
+<span class="t-ok">›</span> <span class="t-hdr">Técnico responsável</span>
+  <span class="t-obra">JOSIMAR</span> <span class="t-dim">(selecionado)</span>
 
 <span class="t-dim">  ───────────────────────────────────────────</span>
-  <span class="t-hdr">OS #04827</span> <span class="t-dim">· criada automaticamente</span>
-<span class="t-dim">  ───────────────────────────────────────────</span>
-  <span class="t-dim">Cliente  </span><span class="t-obra">EDVALDO SANTOS</span>
-  <span class="t-dim">Endereço </span>Rua Padre Cícero, 284 · Alvorada
-  <span class="t-dim">Problema </span>Motor basculante · não abre
-  <span class="t-dim">Serviço  </span><span class="t-hdr">Manut. corretiva portão</span>
-  <span class="t-dim">Peça     </span>Capacitor 20uF <span class="t-dim">(est. 4 un)</span>
-  <span class="t-dim">Previsto </span><span class="t-num">R$ 280,00</span> <span class="t-dim">(mão + peça)</span>
-  <span class="t-dim">Técnico  </span><span class="t-obra">MARCOS</span> <span class="t-dim">(plantão · 3km)</span>
+  <span class="t-hdr">OS #17</span> <span class="t-dim">· criada</span>
+  <span class="t-dim">Total  </span><span class="t-num">R$ 194,00</span>
+  <span class="t-dim">Status </span><span class="t-obra">AGUARDANDO</span> <span class="t-dim">(1ª coluna do kanban)</span>
 <span class="t-dim">  ───────────────────────────────────────────</span>
 
-<span class="t-ok">›</span> Avisando técnico no WhatsApp...
-<span class="t-ok">›</span> <span class="t-ok">✓</span> <span class="t-hdr">OS entrou no kanban</span> <span class="t-dim">(coluna: AGUARDANDO)</span>
-
-<span class="t-ok">›</span> <span class="t-ok">pronto pra executar.</span></pre>
+<span class="t-ok">›</span> <span class="t-ok">tempo total: 28 segundos.</span></pre>
       <div class="term__caret" id="termCaret">▍</div>
     </div>
   </div>
 
-  <!-- Small badges -->
   <div class="kpis">
     <div class="kpi">
-      <div class="kpi__num">&lt; 3<span class="kpi__unit">min</span></div>
-      <div class="kpi__lbl">da mensagem do cliente até a OS no kanban</div>
+      <div class="kpi__num">&lt; 30<span class="kpi__unit">s</span></div>
+      <div class="kpi__lbl">pra criar uma OS do zero</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__num">0<span class="kpi__unit">redigitação</span></div>
+      <div class="kpi__lbl">cliente, serviço e peça já estão cadastrados</div>
     </div>
     <div class="kpi">
       <div class="kpi__num">1<span class="kpi__unit">clique</span></div>
-      <div class="kpi__lbl">técnico aceita a OS e já tá a caminho</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi__num">0<span class="kpi__unit">digitação</span></div>
-      <div class="kpi__lbl">cliente, endereço e problema já vêm preenchidos</div>
+      <div class="kpi__lbl">orçamento aprovado vira OS no kanban</div>
     </div>
   </div>
 
-  <!-- 02b · ANTES / DEPOIS -->
   <div class="ba reveal" data-reveal>
     <div class="ba__col ba__col--before">
       <div class="ba__tag">ANTES</div>
       <ul class="ba__list">
-        <li>cliente liga, atendente anota no caderno</li>
-        <li>recepcionista digita tudo de novo no sistema</li>
-        <li>esquece o endereço ou o telefone certo</li>
-        <li>técnico chega no lugar errado</li>
-        <li>"ah, esqueci de avisar o Marcos"</li>
+        <li>caderno ou bloco de papel</li>
+        <li>recepcionista anota, técnico esquece</li>
+        <li>preço do serviço sai da cabeça</li>
+        <li>peça usada na OS não baixa do estoque</li>
+        <li>fim do mês não bate o caixa</li>
       </ul>
-      <div class="ba__foot">DA MENSAGEM AO TÉCNICO <strong>~ 30 MIN</strong> · RETRABALHO ALTO</div>
+      <div class="ba__foot">INFORMAÇÃO DA OS <strong>NO PAPEL</strong> · SEM HISTÓRICO</div>
     </div>
     <div class="ba__col ba__col--after">
       <div class="ba__tag">DEPOIS</div>
       <ul class="ba__list">
-        <li>cliente manda no WhatsApp direto</li>
-        <li>IA cria a OS em 8 segundos</li>
-        <li>cadastro e histórico cruzados automático</li>
-        <li>técnico de plantão notificado na hora</li>
-        <li>tudo no kanban, visível pra equipe</li>
+        <li>kanban em tempo real no celular do técnico</li>
+        <li>cliente, serviço e peça do catálogo</li>
+        <li>peça usada já abate no estoque</li>
+        <li>fim do dia o caixa fecha sozinho</li>
+        <li>histórico do cliente pra próxima OS</li>
       </ul>
-      <div class="ba__foot">DA MENSAGEM AO TÉCNICO <strong>&lt; 3 MIN</strong> · 0 RETRABALHO</div>
+      <div class="ba__foot">INFORMAÇÃO DA OS <strong>NO KANBAN</strong> · HISTÓRICO COMPLETO</div>
     </div>
   </div>
 
   <div class="sec__bignum reveal" data-reveal>
-    3 MIN <span class="dim">vs</span> 30 MIN<br/>
-    <span class="dim">· 10× mais rápido, cliente percebe ·</span>
+    30 SEGUNDOS <span class="dim">vs</span> 10 MINUTOS NO PAPEL<br/>
+    <span class="dim">· você atende 3× mais com a mesma equipe ·</span>
   </div>
 </section>
 
 <!-- Transição 02→03 -->
 <div class="sec-trans" aria-hidden="true">
   <div class="sec-trans__line"></div>
-  <div class="sec-trans__lbl mono">↓ 02 <span class="dim">·</span> NFS-e PRONTA <span class="dim">·</span> CONTINUE ROLANDO</div>
-</div>
-
-<!-- ============ SEÇÃO 03 · NFS-e ============ -->
-<section class="sec" id="mcmv">
-  <div class="sec__head">
-    <div class="sec__eye">02 <span class="dim">·</span> NFS-e · RESUMO PRONTO</div>
-    <h2 class="sec__title">Nota fiscal de serviço pronta<br/>pra colar no site da prefeitura.</h2>
-    <p class="sec__sub">O sistema gera o resumo NFS-e já no formato certo: tomador, discriminação do serviço, peças, código ISS, total. Você só cola no emissor da sua cidade e emite.</p>
-  </div>
-
-  <div class="pci-sec__layout">
-    <ul class="pci-list" id="pciList">
-      <!-- itens injetados via JS -->
-    </ul>
-
-    <aside class="cef-card">
-      <div class="cef-card__hdr">OS #04827 <strong>· PRONTA PRA FATURAR</strong></div>
-      <div class="cef-kv cef-kv--big">
-        <span class="cef-kv__k">TOTAL DO SERVIÇO</span>
-        <span class="cef-kv__v">R$ 280,00</span>
-      </div>
-      <div class="cef-kv cef-kv--sub">
-        <span class="cef-kv__k">TOMADOR</span>
-        <span class="cef-kv__v">EDVALDO SANTOS</span>
-      </div>
-      <div class="cef-kv cef-kv--saldo">
-        <span class="cef-kv__k">CÓD. ISS</span>
-        <span class="cef-kv__v">14.01 — Manutenção</span>
-      </div>
-      <div class="cef-kv">
-        <span class="cef-kv__k">MUNICÍPIO</span>
-        <span class="cef-kv__v">Jupi — PE</span>
-      </div>
-      <div class="cef-anx">
-        <span><strong>1</strong> SERVIÇO</span>
-        <span><strong>2</strong> PEÇAS</span>
-        <span><strong>1</strong> PDF</span>
-      </div>
-    </aside>
-  </div>
-
-  <div class="sec__bignum reveal" data-reveal>
-    DADOS DO SERVIÇO <span class="dim">·</span> CÓDIGO ISS <span class="dim">·</span> 0 DIGITAÇÃO
-  </div>
-</section>
-
-<!-- Transição 03→04 -->
-<div class="sec-trans" aria-hidden="true">
-  <div class="sec-trans__line"></div>
   <div class="sec-trans__lbl mono">↓ 03 <span class="dim">·</span> P&amp;L POR OS <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 04 · P&L + FLUXO ============ -->
+<!-- ============ SEÇÃO 03 · P&L ============ -->
 <section class="sec" id="pl">
   <div class="sec__head">
     <div class="sec__eye">03 <span class="dim">·</span> P&amp;L POR OS · FLUXO DE CAIXA</div>
     <h2 class="sec__title">Lucro real de cada serviço.<br/>Projeção de 6 meses. Tudo vivo.</h2>
-    <p class="sec__sub">Cada OS vira centro de custo. Você vê receita, custo da peça + mão de obra e margem em tempo real — e a projeção de caixa das próximas semanas pra planejar compra de peça sem estourar o fluxo.</p>
+    <p class="sec__sub">Cada OS vira um centro de custo. Mão de obra, peça, taxa da maquininha, comissão do técnico — tudo abate no lucro daquela OS específica. Dono vê margem em tempo real, não no fim do mês.</p>
   </div>
 
   <div class="pl-wrap reveal" data-reveal>
@@ -357,34 +337,40 @@
       <span>SERVIÇO / CLIENTE</span><span>RECEITA</span><span>CUSTO</span><span>MARGEM</span>
     </div>
     <div class="pl-row pl-row--ok">
-      <div class="pl-row__name">INSTALAÇÃO CFTV · CONDOMÍNIO JARDIM</div>
-      <div>R$ 8.400</div>
-      <div class="pl-row__cost">R$ 4.620</div>
-      <div class="pl-row__marg">45,0%</div>
+      <div class="pl-row__name">NOVA ENTRADA MONOFÁSICA · RD DISTRIBUIDORA</div>
+      <div>R$ 450</div>
+      <div class="pl-row__cost">R$ 186</div>
+      <div class="pl-row__marg">58,7%</div>
     </div>
     <div class="pl-row pl-row--ok">
-      <div class="pl-row__name">MANUT. PORTÃO · SR. EDVALDO</div>
-      <div>R$ 280</div>
-      <div class="pl-row__cost">R$ 72</div>
-      <div class="pl-row__marg">74,3%</div>
+      <div class="pl-row__name">5 TOMADAS + CIRCUITO 20A · DM EMPÓRIO</div>
+      <div>R$ 585</div>
+      <div class="pl-row__cost">R$ 312</div>
+      <div class="pl-row__marg">46,7%</div>
+    </div>
+    <div class="pl-row pl-row--ok">
+      <div class="pl-row__name">CÂMERA + ALARME · 3A AUTO PEÇAS</div>
+      <div>R$ 1.000</div>
+      <div class="pl-row__cost">R$ 620</div>
+      <div class="pl-row__marg">38,0%</div>
     </div>
     <div class="pl-row pl-row--warn">
-      <div class="pl-row__name">ALARME RESIDENCIAL · CASA VERDE</div>
-      <div>R$ 1.850</div>
-      <div class="pl-row__cost">R$ 1.295</div>
-      <div class="pl-row__marg">30,0%</div>
+      <div class="pl-row__name">MANUT. MOTOR PORTÃO · TELE CORTE</div>
+      <div>R$ 129</div>
+      <div class="pl-row__cost">R$ 86</div>
+      <div class="pl-row__marg">33,3%</div>
     </div>
     <div class="pl-row pl-row--bad">
-      <div class="pl-row__name">CERCA ELÉTRICA · LOJA CENTRO</div>
-      <div>R$ 2.400</div>
-      <div class="pl-row__cost">R$ 1.944</div>
-      <div class="pl-row__marg">19,0%</div>
+      <div class="pl-row__name">MANUT. ELÉTRICA · CARLA EDUARDA</div>
+      <div>R$ 60</div>
+      <div class="pl-row__cost">R$ 48</div>
+      <div class="pl-row__marg">20,0%</div>
     </div>
     <div class="pl-total">
       <div class="pl-total__lbl">MARGEM DO MÊS</div>
       <div></div>
       <div></div>
-      <div class="pl-total__val">38,9%</div>
+      <div class="pl-total__val">41,0%</div>
     </div>
   </div>
 
@@ -398,7 +384,6 @@
       </div>
     </div>
     <svg class="cash__svg" id="cashSvg" viewBox="0 0 780 320" preserveAspectRatio="none" aria-hidden="true">
-      <!-- grid -->
       <g>
         <line class="grid-ln" x1="40" y1="40"  x2="760" y2="40"/>
         <line class="grid-ln" x1="40" y1="100" x2="760" y2="100"/>
@@ -406,15 +391,13 @@
         <line class="grid-ln" x1="40" y1="220" x2="760" y2="220"/>
         <line class="grid-ln" x1="40" y1="280" x2="760" y2="280"/>
       </g>
-      <!-- Y labels -->
       <g>
-        <text class="axis-y" x="0"  y="44">R$ 900k</text>
-        <text class="axis-y" x="0"  y="104">R$ 700k</text>
-        <text class="axis-y" x="0"  y="164">R$ 500k</text>
-        <text class="axis-y" x="0"  y="224">R$ 300k</text>
-        <text class="axis-y" x="0"  y="284">R$ 100k</text>
+        <text class="axis-y" x="0"  y="44">R$ 60k</text>
+        <text class="axis-y" x="0"  y="104">R$ 45k</text>
+        <text class="axis-y" x="0"  y="164">R$ 30k</text>
+        <text class="axis-y" x="0"  y="224">R$ 15k</text>
+        <text class="axis-y" x="0"  y="284">R$ 0</text>
       </g>
-      <!-- X labels -->
       <g>
         <text class="axis" x="100" y="308">ABR</text>
         <text class="axis" x="220" y="308">MAI</text>
@@ -423,194 +406,191 @@
         <text class="axis" x="580" y="308">AGO *</text>
         <text class="axis" x="700" y="308">SET *</text>
       </g>
-      <!-- Entradas (real + projected) -->
-      <path class="line-in"  d="M 100,150 L 220,110 L 340,90"/>
-      <path class="line-in proj"  d="M 340,90 L 460,130 L 580,70 L 700,100"/>
-      <!-- Saídas -->
-      <path class="line-out" d="M 100,210 L 220,180 L 340,200"/>
-      <path class="line-out proj" d="M 340,200 L 460,170 L 580,190 L 700,160"/>
-      <!-- Dots -->
+      <path class="line-in"  d="M 100,160 L 220,140 L 340,130"/>
+      <path class="line-in proj"  d="M 340,130 L 460,120 L 580,110 L 700,105"/>
+      <path class="line-out" d="M 100,220 L 220,210 L 340,205"/>
+      <path class="line-out proj" d="M 340,205 L 460,200 L 580,198 L 700,195"/>
       <g>
-        <circle class="dot" cx="100" cy="150" r="4" fill="#16a34a"/>
-        <circle class="dot" cx="220" cy="110" r="4" fill="#16a34a"/>
-        <circle class="dot" cx="340" cy="90"  r="4" fill="#16a34a"/>
-        <circle class="dot" cx="460" cy="130" r="3" fill="#16a34a" opacity=".6"/>
-        <circle class="dot" cx="580" cy="70"  r="3" fill="#16a34a" opacity=".6"/>
-        <circle class="dot" cx="700" cy="100" r="3" fill="#16a34a" opacity=".6"/>
-        <circle class="dot" cx="100" cy="210" r="4" fill="#ea580c"/>
-        <circle class="dot" cx="220" cy="180" r="4" fill="#ea580c"/>
-        <circle class="dot" cx="340" cy="200" r="4" fill="#ea580c"/>
-        <circle class="dot" cx="460" cy="170" r="3" fill="#ea580c" opacity=".6"/>
-        <circle class="dot" cx="580" cy="190" r="3" fill="#ea580c" opacity=".6"/>
-        <circle class="dot" cx="700" cy="160" r="3" fill="#ea580c" opacity=".6"/>
+        <circle class="dot" cx="100" cy="160" r="4" fill="#16a34a"/>
+        <circle class="dot" cx="220" cy="140" r="4" fill="#16a34a"/>
+        <circle class="dot" cx="340" cy="130" r="4" fill="#16a34a"/>
+        <circle class="dot" cx="460" cy="120" r="3" fill="#16a34a" opacity=".6"/>
+        <circle class="dot" cx="580" cy="110" r="3" fill="#16a34a" opacity=".6"/>
+        <circle class="dot" cx="700" cy="105" r="3" fill="#16a34a" opacity=".6"/>
+        <circle class="dot" cx="100" cy="220" r="4" fill="#ea580c"/>
+        <circle class="dot" cx="220" cy="210" r="4" fill="#ea580c"/>
+        <circle class="dot" cx="340" cy="205" r="4" fill="#ea580c"/>
+        <circle class="dot" cx="460" cy="200" r="3" fill="#ea580c" opacity=".6"/>
+        <circle class="dot" cx="580" cy="198" r="3" fill="#ea580c" opacity=".6"/>
+        <circle class="dot" cx="700" cy="195" r="3" fill="#ea580c" opacity=".6"/>
       </g>
     </svg>
   </div>
 
   <div class="sec__bignum reveal" data-reveal>
-    R$ 71.900,00 <span class="dim">DE LUCRO ·</span> 18 OS <span class="dim">·</span> 1 TELA
+    R$ 14.214 <span class="dim">DE LUCRO ·</span> 14 OS <span class="dim">·</span> 1 TELA
+  </div>
+</section>
+
+<!-- Transição 03→04 -->
+<div class="sec-trans" aria-hidden="true">
+  <div class="sec-trans__line"></div>
+  <div class="sec-trans__lbl mono">↓ 04 <span class="dim">·</span> MINHA FILA DO TÉCNICO <span class="dim">·</span> CONTINUE ROLANDO</div>
+</div>
+
+<!-- ============ SEÇÃO 04 · MINHA FILA ============ -->
+<section class="sec" id="mcmv">
+  <div class="sec__head">
+    <div class="sec__eye">04 <span class="dim">·</span> MINHA FILA · APP DO TÉCNICO</div>
+    <h2 class="sec__title">Técnico vê só o que é dele.<br/>Dono vê o pátio inteiro.</h2>
+    <p class="sec__sub">Cada técnico abre o celular e vê apenas as OS atribuídas a ele. Cliente, endereço, problema, peça separada. Ao concluir, marca entregue — e já aparece no caixa pra recepção cobrar.</p>
+  </div>
+
+  <div class="pci-sec__layout">
+    <ul class="pci-list" id="pciList"></ul>
+
+    <aside class="cef-card">
+      <div class="cef-card__hdr">MINHA FILA <strong>· JOSIMAR · HOJE</strong></div>
+      <div class="cef-kv cef-kv--big">
+        <span class="cef-kv__k">OS PENDENTES</span>
+        <span class="cef-kv__v">5</span>
+      </div>
+      <div class="cef-kv cef-kv--sub">
+        <span class="cef-kv__k">JÁ CONCLUÍDAS</span>
+        <span class="cef-kv__v">3</span>
+      </div>
+      <div class="cef-kv cef-kv--saldo">
+        <span class="cef-kv__k">COMISSÃO DO DIA</span>
+        <span class="cef-kv__v">R$ 142,50</span>
+      </div>
+      <div class="cef-kv">
+        <span class="cef-kv__k">PRÓXIMA</span>
+        <span class="cef-kv__v">RD SEPARAÇÃO · câmera</span>
+      </div>
+      <div class="cef-anx">
+        <span><strong>MAPA</strong> endereço</span>
+        <span><strong>WPP</strong> cliente</span>
+        <span><strong>PEÇA</strong> separada</span>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sec__bignum reveal" data-reveal>
+    UMA FILA POR TÉCNICO <span class="dim">·</span> SEM PAPEL <span class="dim">·</span> SEM LIGAÇÃO PRA CONFIRMAR
   </div>
 </section>
 
 <!-- Transição 04→05 -->
 <div class="sec-trans" aria-hidden="true">
   <div class="sec-trans__line"></div>
-  <div class="sec-trans__lbl mono">↓ 04 <span class="dim">·</span> KANBAN DO PÁTIO <span class="dim">·</span> CONTINUE ROLANDO</div>
+  <div class="sec-trans__lbl mono">↓ 05 <span class="dim">·</span> ROTINA DO DIA <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 05 · KANBAN DO PÁTIO ============ -->
-<section class="sec" id="gantt">
+<!-- ============ SEÇÃO 05 · ROTINA ============ -->
+<section class="sec" id="op">
   <div class="sec__head">
-    <div class="sec__eye">04 <span class="dim">·</span> KANBAN · OS EM TEMPO REAL</div>
-    <h2 class="sec__title">Você vê cada OS onde ela está.<br/>Fisicamente.</h2>
-    <p class="sec__sub">Kanban igual ao pátio: aguardando, em execução, pronto, entregue. Arrasta pra mudar fase. O técnico vê só o que é dele. O dono vê o pátio inteiro.</p>
+    <div class="sec__eye">05 <span class="dim">·</span> CATÁLOGO · FINANCEIRO · FOLHA</div>
+    <h2 class="sec__title">O dia da empresa cabe numa tela.</h2>
+    <p class="sec__sub">Três rotinas que antes eram três lugares diferentes (preço na cabeça, caixa no caderno, pagamento no papel). Aqui viraram a mesma base, na mesma OS.</p>
   </div>
 
-  <div class="gantt-wrap">
-    <div class="gantt">
-      <div class="gantt__hdr">
-        <span>KANBAN · 18 OS ATIVAS</span>
-        <span>ABRIL 2026 · tempo real</span>
-      </div>
-      <div class="gantt__scale">
-        <span></span><span>AGUARDANDO</span><span>EM EXECUÇÃO</span><span>PRONTO</span><span>ENTREGUE</span>
-      </div>
-      <div class="gantt__svg-wrap">
-        <ul class="gantt__list" id="ganttList">
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #04827</b><span>portão · Edvaldo</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wait" style="left:0%; width:18%;">AGUARDANDO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #04826</b><span>CFTV · Cond. Jardim</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:22%; width:22%;">EM EXECUÇÃO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #04825</b><span>alarme · Casa Verde</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--wip" style="left:22%; width:22%;">EM EXECUÇÃO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #04824</b><span>cerca elétrica · Loja</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:48%; width:20%;">PRONTO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #04823</b><span>interfone · Edifício</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:48%; width:20%;">PRONTO</div></div>
-          </li>
-          <li class="gantt__row reveal" data-reveal>
-            <div class="gantt__lbl"><b>OS #04822</b><span>câmera IP · Sr. José</span></div>
-            <div class="gantt__bar-wrap"><div class="gantt__bar gantt__bar--done" style="left:72%; width:22%;">ENTREGUE</div></div>
-          </li>
-        </ul>
-      </div>
+  <div class="op-grid">
+    <div class="op-card reveal" data-reveal>
+      <div class="op-card__tag"><b>01</b> · CATÁLOGO</div>
+      <h3 class="op-card__ttl">Serviços, peças e fornecedores.<br/>Num lugar só.</h3>
+      <ul class="op-mini">
+        <li>
+          <span class="op-mini__name">Manut. motor portão deslizante</span>
+          <span class="op-mini__qty">R$ 150</span>
+          <span class="op-mini__obra op-mini__obra--a">SERVIÇO</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Instal. entrada monofásica</span>
+          <span class="op-mini__qty">R$ 450</span>
+          <span class="op-mini__obra op-mini__obra--a">SERVIÇO</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Trava motor portão</span>
+          <span class="op-mini__qty">R$ 38</span>
+          <span class="op-mini__obra op-mini__obra--b">PEÇA</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Fonte 5A</span>
+          <span class="op-mini__qty">R$ 72</span>
+          <span class="op-mini__obra op-mini__obra--b">PEÇA</span>
+        </li>
+      </ul>
+      <p class="op-card__body">Cadastra uma vez, usa pra sempre. OS nova puxa preço do catálogo — e sai do estoque quando for peça.</p>
+      <div class="op-card__foot">6 serviços · 3 peças · autocomplete na OS</div>
     </div>
 
-    <aside class="gantt__alert">
-      <div class="gantt__alert-tag">NOTIFICAÇÃO AUTOMÁTICA</div>
-      <div class="gantt__alert-ttl">OS #04824 tá pronta.<br/>Cliente já foi avisado.</div>
-      <div class="gantt__alert-body">
-        › <strong>Cliente</strong> recebeu WhatsApp: "sua cerca tá pronta"<br/>
-        › <strong>Pagamento</strong> via PIX no link da mensagem<br/>
-        › <strong>Técnico</strong> liberado pra próxima OS
-      </div>
-    </aside>
-  </div>
+    <div class="op-card reveal" data-reveal>
+      <div class="op-card__tag"><b>02</b> · FINANCEIRO</div>
+      <h3 class="op-card__ttl">Entradas e saídas<br/>ligadas à OS.</h3>
+      <ul class="op-mini">
+        <li>
+          <span class="op-mini__name">Recebido · PIX</span>
+          <span class="op-mini__qty">R$ 450</span>
+          <span class="op-mini__obra op-mini__obra--c">#04</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Cartão 3x · taxa 4,2%</span>
+          <span class="op-mini__qty">R$ 1.000</span>
+          <span class="op-mini__obra op-mini__obra--a">#15</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Compra peça</span>
+          <span class="op-mini__qty">R$ 186</span>
+          <span class="op-mini__obra op-mini__obra--c">#04</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Combustível</span>
+          <span class="op-mini__qty">R$ 90</span>
+          <span class="op-mini__obra op-mini__obra--b">frota</span>
+        </li>
+      </ul>
+      <p class="op-card__body">Cadastra as maquininhas uma vez com as taxas. Sistema calcula o que caiu líquido. Fim do dia o caixa fecha sozinho.</p>
+      <div class="op-card__foot">calendário de vencimentos · taxa cartão automática</div>
+    </div>
 
-  <div class="sec__bignum reveal" data-reveal>
-    KANBAN DO PÁTIO <span class="dim">·</span> CLIENTE AVISADO <span class="dim">·</span> TÉCNICO LIBERADO
+    <div class="op-card reveal" data-reveal>
+      <div class="op-card__tag"><b>03</b> · FOLHA / EQUIPE</div>
+      <h3 class="op-card__ttl">Salário + comissão<br/>por técnico.</h3>
+      <ul class="op-mini">
+        <li>
+          <span class="op-mini__name">Josimar · salário</span>
+          <span class="op-mini__qty">R$ 1.800</span>
+          <span class="op-mini__obra op-mini__obra--a">FIXO</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Josimar · comissão</span>
+          <span class="op-mini__qty">R$ 684</span>
+          <span class="op-mini__obra op-mini__obra--b">8 OS</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Técnico 2 · salário</span>
+          <span class="op-mini__qty">R$ 1.500</span>
+          <span class="op-mini__obra op-mini__obra--a">FIXO</span>
+        </li>
+        <li>
+          <span class="op-mini__name">Técnico 2 · comissão</span>
+          <span class="op-mini__qty">R$ 432</span>
+          <span class="op-mini__obra op-mini__obra--b">6 OS</span>
+        </li>
+      </ul>
+      <p class="op-card__body">Comissão calcula por OS entregue. Percentual por técnico. Fim do mês a folha sai pronta, com desconto de adiantamento se teve.</p>
+      <div class="op-card__foot">folha mensal · comissão por OS · PDF pronto</div>
+    </div>
   </div>
 </section>
 
 <!-- Transição 05→06 -->
 <div class="sec-trans" aria-hidden="true">
   <div class="sec-trans__line"></div>
-  <div class="sec-trans__lbl mono">↓ 05 <span class="dim">·</span> ROTINA DO DIA <span class="dim">·</span> CONTINUE ROLANDO</div>
-</div>
-
-<!-- ============ SEÇÃO 06 · ROTINA DIÁRIA ============ -->
-<section class="sec" id="op">
-  <div class="sec__head">
-    <div class="sec__eye">05 <span class="dim">·</span> AGENDA · ESTOQUE · CAIXA</div>
-    <h2 class="sec__title">O dia do prestador cabe numa tela.</h2>
-    <p class="sec__sub">Três rotinas que antes eram três lugares diferentes (agenda no papel, estoque na cabeça, caixa no caderno). Aqui viraram a mesma tela, mesmo banco, mesma OS.</p>
-  </div>
-
-  <div class="op-grid">
-    <div class="op-card reveal" data-reveal>
-      <div class="op-card__tag"><b>01</b> · AGENDA</div>
-      <h3 class="op-card__ttl">Técnico vê só o que é dele.<br/>Dono vê o dia inteiro.</h3>
-      <div class="op-card__media"><div class="op-photo"></div></div>
-      <p class="op-card__body">Cada técnico recebe a agenda do dia no celular. Cliente, endereço, problema, peça sugerida. Ao terminar, marca concluído e já vai pra próxima — sem ligar pra confirmar.</p>
-      <div class="op-card__foot">hoje · Marcos · 5 OS · 3 concluídas · 2 a caminho</div>
-    </div>
-
-    <div class="op-card reveal" data-reveal>
-      <div class="op-card__tag"><b>02</b> · ESTOQUE DE PEÇAS</div>
-      <h3 class="op-card__ttl">Entrada, saída, ajuste.<br/>Por OS.</h3>
-      <ul class="op-mini">
-        <li>
-          <span class="op-mini__name">Capacitor 20uF</span>
-          <span class="op-mini__qty">4 un</span>
-          <span class="op-mini__obra op-mini__obra--c">#4827</span>
-        </li>
-        <li>
-          <span class="op-mini__name">Câmera IP Full HD</span>
-          <span class="op-mini__qty">8 un</span>
-          <span class="op-mini__obra op-mini__obra--a">#4826</span>
-        </li>
-        <li>
-          <span class="op-mini__name">Central alarme 8z</span>
-          <span class="op-mini__qty">2 un</span>
-          <span class="op-mini__obra op-mini__obra--b">#4825</span>
-        </li>
-        <li>
-          <span class="op-mini__name">Cabo coaxial 300m</span>
-          <span class="op-mini__qty">1 rolo</span>
-          <span class="op-mini__obra op-mini__obra--c">#4826</span>
-        </li>
-      </ul>
-      <p class="op-card__body">Cada saída abate na OS certa. Fim do mês, o custo da peça já tá no P&amp;L daquele serviço.</p>
-      <div class="op-card__foot">142 peças cadastradas · 1 almoxarifado · 1 relatório</div>
-    </div>
-
-    <div class="op-card reveal" data-reveal>
-      <div class="op-card__tag"><b>03</b> · CAIXA</div>
-      <h3 class="op-card__ttl">Entradas e saídas<br/>lançam na OS.</h3>
-      <ul class="op-mini">
-        <li>
-          <span class="op-mini__name">Recebido · PIX</span>
-          <span class="op-mini__qty">R$ 280</span>
-          <span class="op-mini__obra op-mini__obra--a">#4827</span>
-        </li>
-        <li>
-          <span class="op-mini__name">Compra peça</span>
-          <span class="op-mini__qty">R$ 186</span>
-          <span class="op-mini__obra op-mini__obra--c">#4826</span>
-        </li>
-        <li>
-          <span class="op-mini__name">Recebido · cartão</span>
-          <span class="op-mini__qty">R$ 1.850</span>
-          <span class="op-mini__obra op-mini__obra--b">#4825</span>
-        </li>
-        <li>
-          <span class="op-mini__name">Combustível</span>
-          <span class="op-mini__qty">R$ 90</span>
-          <span class="op-mini__obra op-mini__obra--a">#4827</span>
-        </li>
-      </ul>
-      <p class="op-card__body">Dinheiro que entra e peça que sai já são vinculadas à OS. Você vê o lucro real de cada serviço no fim do dia.</p>
-      <div class="op-card__foot">138 lançamentos este mês · 0 caderno</div>
-    </div>
-  </div>
-</section>
-
-<!-- Transição 06→07 -->
-<div class="sec-trans" aria-hidden="true">
-  <div class="sec-trans__line"></div>
   <div class="sec-trans__lbl mono">↓ 06 <span class="dim">·</span> QUEM FEZ <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 07 · DEPOIMENTO ============ -->
+<!-- ============ SEÇÃO 06 · ORIGEM ============ -->
 <section class="sec" id="quem">
   <div class="sec__head">
     <div class="sec__eye">06 <span class="dim">·</span> ORIGEM</div>
@@ -618,7 +598,7 @@
   </div>
 
   <figure class="quote reveal" data-reveal>
-    <p class="quote__txt">Nascemos atendendo cliente real de segurança eletrônica e elétrica. Todo mês a gente <em>usa o sistema na própria operação</em>, todo mês melhora. Nenhum prestador trabalha igual ao outro — por isso o DMTech é flexível de verdade.</p>
+    <p class="quote__txt">O DMTech nasceu atendendo cliente real — elétrica residencial, comercial e segurança eletrônica. Todo mês a gente <em>usa o sistema na própria operação</em>. Quando uma coisa atrapalha, a gente ajusta na semana seguinte. Nenhum prestador trabalha igual ao outro — por isso o DMTech é flexível de verdade.</p>
     <figcaption class="quote__attr">
       <strong>DMTECH</strong>
       <span class="sep">/</span>
@@ -629,18 +609,18 @@
   </figure>
 </section>
 
-<!-- Transição 07→08 -->
+<!-- Transição 06→07 -->
 <div class="sec-trans" aria-hidden="true">
   <div class="sec-trans__line"></div>
   <div class="sec-trans__lbl mono">↓ 07 <span class="dim">·</span> PLANOS <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 08 · PLANOS ============ -->
+<!-- ============ SEÇÃO 07 · PLANOS ============ -->
 <section class="sec" id="planos">
   <div class="sec__head">
     <div class="sec__eye">07 <span class="dim">·</span> PLANOS &amp; PREÇOS</div>
     <h2 class="sec__title">Um preço por empresa.<br/>Sem pegadinha.</h2>
-    <p class="sec__sub">Você paga pela empresa toda, não por OS nem por usuário. Começa no Profissional, migra pro Empresarial quando crescer. 7 dias grátis, sem cartão.</p>
+    <p class="sec__sub">Você paga pela empresa, não por OS nem por técnico. Começa no Profissional, migra pro Empresarial quando crescer. 7 dias grátis, sem cartão.</p>
   </div>
 
   <div class="plans">
@@ -652,10 +632,11 @@
         <li>OS ilimitadas</li>
         <li>Clientes ilimitados</li>
         <li>Orçamentos com PDF</li>
-        <li>Catálogo + Estoque</li>
-        <li>Financeiro básico</li>
+        <li>Catálogo de serviços e peças</li>
+        <li>Estoque por OS</li>
         <li>Kanban do pátio</li>
-        <li>Suporte WhatsApp</li>
+        <li>Financeiro básico (caixa + maquininhas)</li>
+        <li>Suporte no WhatsApp</li>
       </ul>
       <a href="#wa-final" class="plan__cta">Falar no WhatsApp →</a>
     </div>
@@ -666,12 +647,12 @@
       <p class="plan__sub">pra equipe com múltiplos técnicos</p>
       <ul class="plan__list">
         <li>Tudo do Profissional</li>
-        <li>Equipe com comissão</li>
-        <li>Folha de pagamento</li>
-        <li>Fornecedores + NF entrada</li>
-        <li>Relatórios gerenciais</li>
+        <li>Folha de pagamento com comissão</li>
+        <li>Fornecedores + NF de entrada</li>
+        <li>Minha fila (app por técnico)</li>
+        <li>TV do pátio (display público)</li>
         <li>Auditoria completa</li>
-        <li>Multi-usuário</li>
+        <li>Multi-usuário com permissões</li>
       </ul>
       <a href="#wa-final" class="plan__cta">Falar no WhatsApp →</a>
     </div>
@@ -679,13 +660,13 @@
   <p class="plans__note">SEM FIDELIDADE <span class="dim">·</span> CANCELA QUANDO QUISER <span class="dim">·</span> 7 DIAS GRÁTIS</p>
 </section>
 
-<!-- Transição 08→09 -->
+<!-- Transição 07→08 -->
 <div class="sec-trans" aria-hidden="true">
   <div class="sec-trans__line"></div>
   <div class="sec-trans__lbl mono">↓ 08 <span class="dim">·</span> PERGUNTAS FREQUENTES <span class="dim">·</span> CONTINUE ROLANDO</div>
 </div>
 
-<!-- ============ SEÇÃO 09 · FAQ ============ -->
+<!-- ============ SEÇÃO 08 · FAQ ============ -->
 <section class="sec" id="faq">
   <div class="sec__head">
     <div class="sec__eye">08 <span class="dim">·</span> FAQ</div>
@@ -695,11 +676,11 @@
   <div class="faq">
     <details>
       <summary><span class="faq__num mono">01</span><span class="faq__q">Serve pra qualquer tipo de prestador de serviço?</span></summary>
-      <div class="faq__a">Serve pra quem atende por OS: segurança eletrônica, elétrica, refrigeração, assistência técnica, manutenção predial, instalação de automação. Se o seu trabalho é "vou lá, resolvo, cobro", o DMTech encaixa.</div>
+      <div class="faq__a">Serve pra quem atende por OS: elétrica, segurança eletrônica, refrigeração, assistência técnica, manutenção predial, instalação de automação, TI. Se o seu trabalho é "vou lá, resolvo, cobro", o DMTech encaixa.</div>
     </details>
     <details>
       <summary><span class="faq__num mono">02</span><span class="faq__q">Preciso instalar alguma coisa?</span></summary>
-      <div class="faq__a">Não. É 100% web. Celular do técnico em campo, notebook do dono no escritório, tablet da recepcionista — mesmo login, mesmo dado, em tempo real. Suporte nativo a light e dark mode.</div>
+      <div class="faq__a">Não. É 100% web. Celular do técnico em campo, notebook do dono no escritório, tablet da recepcionista — mesmo login, mesmo dado, em tempo real. Tem light e dark mode.</div>
     </details>
     <details>
       <summary><span class="faq__num mono">03</span><span class="faq__q">Meus dados ficam onde?</span></summary>
@@ -707,18 +688,18 @@
     </details>
     <details>
       <summary><span class="faq__num mono">04</span><span class="faq__q">Quanto tempo leva pra subir minha empresa?</span></summary>
-      <div class="faq__a">Cerca de 20 minutos. Wizard de onboarding cria a empresa, cadastra primeiro técnico e primeiro cliente, e monta uma OS-demo pra você entender. A gente acompanha no WhatsApp se precisar.</div>
+      <div class="faq__a">Cerca de 20 minutos. Wizard de onboarding cria a empresa, cadastra primeiro técnico, primeiro cliente e monta uma OS-demo pra você entender. A gente acompanha no WhatsApp se travar.</div>
     </details>
     <details>
       <summary><span class="faq__num mono">05</span><span class="faq__q">E se eu quiser parar?</span></summary>
-      <div class="faq__a">Cancela pelo "Minha Assinatura" no próprio sistema. Sem multa, sem fidelidade, sem aviso prévio. A gente gera o export completo dos teus dados em XLSX + PDF e fim. Teu dado é teu.</div>
+      <div class="faq__a">Cancela pelo "Minha Assinatura" dentro do sistema. Sem multa, sem fidelidade, sem aviso prévio. A gente gera o export completo dos teus dados em XLSX + PDF e fim. Teu dado é teu.</div>
     </details>
   </div>
 </section>
 
-<!-- ============ SEÇÃO 10 · CTA FINAL ============ -->
+<!-- ============ SEÇÃO 09 · CTA ============ -->
 <section class="cta" id="wa-final">
-  <h2 class="cta__ttl">Sua próxima OS pode<br/>entrar no kanban em 3 minutos.</h2>
+  <h2 class="cta__ttl">Sua próxima OS pode<br/>entrar no kanban em 30 segundos.</h2>
   <p class="cta__sub">Cria a empresa. Cadastra 1 cliente. Lança 1 OS. Vê se faz sentido.</p>
   <a href="https://wa.me/5587981713987" class="cta__btn">
     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-1 1.1-.2.2-.4.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.6-1.5-1.9-.2-.3 0-.4.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.5-.9-2.1-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4.9 2.8 1.1 3c.1.2 2 3.1 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.3-.6-.4zM12 2.2c-5.4 0-9.8 4.4-9.8 9.8 0 1.7.5 3.4 1.3 4.8L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.4 0 9.8-4.4 9.8-9.8S17.4 2.2 12 2.2z"/></svg>
@@ -758,7 +739,6 @@
   </div>
 </footer>
 
-<!-- Custom cursor -->
 <div class="crosshair" id="crosshair" aria-hidden="true">
   <svg viewBox="0 0 40 40" width="40" height="40">
     <circle cx="20" cy="20" r="14" fill="none" stroke="currentColor" stroke-width="1"/>
