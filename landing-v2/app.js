@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------------- Count-up: big number ---------------- */
   const bignumVal = document.getElementById('bignumVal');
   const pciPct = document.getElementById('pciPct');
-  const target = 446000.00;
+  const bignumEl = document.getElementById('bignum');
+  const target = Number(bignumEl?.dataset?.target || 14214);
+  const pctTarget = 41.0;
   const dur = 2200;
 
   const fmtCurr = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,11 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const p = Math.min(1, (now - t0) / dur);
       const e = 1 - Math.pow(1 - p, 3);
       bignumVal.textContent = fmtCurr(target * e);
-      if (pciPct) pciPct.textContent = fmtPct(26.7 * e);
+      if (pciPct) pciPct.textContent = fmtPct(pctTarget * e);
       if (p < 1) requestAnimationFrame(tick);
       else {
         bignumVal.textContent = fmtCurr(target);
-        if (pciPct) pciPct.textContent = fmtPct(26.7);
+        if (pciPct) pciPct.textContent = fmtPct(pctTarget);
       }
     };
     requestAnimationFrame(tick);
