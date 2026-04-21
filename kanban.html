@@ -11,10 +11,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=04181723"></script>
-  <script src="js/lib.js?v=04181723"></script>
-  <script src="js/auth.js?v=04181723"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04181723">
+  <script src="js/config.js?v=04211522"></script>
+  <script src="js/lib.js?v=04211522"></script>
+  <script src="js/auth.js?v=04211522"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04211522">
   <style>
     /* Board */
     .board-outer {
@@ -729,17 +729,32 @@
       <!-- Pagamento (inline, mostra quando avançar pra Entregue) -->
       <div class="hide-tecnico" id="p-pagamento-bloco">
         <div class="p-section-title">Pagamento</div>
-        <div style="display:flex;border:1px solid var(--border);margin-bottom:8px">
-          <button type="button" id="entr-btn-agora" onclick="setEntrTipo('agora')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:var(--accent);color:#fff">Pago Agora</button>
-          <button type="button" id="entr-btn-fat" onclick="setEntrTipo('faturado')" style="flex:1;padding:9px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;cursor:pointer;background:var(--surface);color:var(--text-muted)">Faturado</button>
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Valor pago agora (R$)</div>
+          <input type="number" id="entr-valor-entrada" class="panel-input" step="0.01" min="0" placeholder="0,00" oninput="calcValorFaturado()">
         </div>
-        <div id="entr-venc-row" style="display:none;margin-bottom:8px">
-          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Data de vencimento</div>
-          <input type="date" id="entr-vencimento" class="panel-input">
-        </div>
-        <div>
+        <div style="margin-bottom:8px">
           <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Forma de pagamento</div>
           <select id="entr-forma" class="panel-select">
+            <option value="pix">PIX</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_debito">Cartão Débito</option>
+            <option value="cartao_credito">Cartão Crédito</option>
+            <option value="boleto">Boleto</option>
+            <option value="transferencia">Transferência</option>
+          </select>
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Valor faturado (R$)</div>
+          <input type="number" id="entr-valor-faturado" class="panel-input" step="0.01" min="0" placeholder="0,00" oninput="calcValorFaturado()">
+        </div>
+        <div id="entr-venc-row" style="display:none;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Vencimento do faturado</div>
+          <input type="date" id="entr-vencimento" class="panel-input">
+        </div>
+        <div id="entr-forma-fat-row" style="display:none">
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px">Forma do valor faturado</div>
+          <select id="entr-forma-fat" class="panel-select">
             <option value="pix">PIX</option>
             <option value="dinheiro">Dinheiro</option>
             <option value="cartao_debito">Cartão Débito</option>
@@ -993,16 +1008,16 @@
       selecionarStatus(osAtual.status);
       atualizarBotoesMover();
 
-      // Pagamento: se já entregue, reflete valores salvos; senão preset para PIX/agora
-      if (osAtual.status === 'entregue' && osAtual.faturado) {
-        setEntrTipo('faturado');
-        document.getElementById('entr-vencimento').value = osAtual.data_vencimento_fat || '';
-        document.getElementById('entr-forma').value = osAtual.forma_pagamento_fat || 'pix';
-      } else {
-        setEntrTipo('agora');
-        document.getElementById('entr-vencimento').value = '';
-        document.getElementById('entr-forma').value = osAtual.forma_pagamento_fat || 'pix';
-      }
+      // Pagamento: preenche campos com valores salvos
+      const _totalOSAtual = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
+      const _valEntradaSalvo = osAtual.valor_entrada != null ? osAtual.valor_entrada : _totalOSAtual;
+      const _valFaturadoSalvo = (osAtual.faturado && osAtual.status === 'entregue') ? Math.max(0, _totalOSAtual - _valEntradaSalvo) : 0;
+      document.getElementById('entr-valor-entrada').value = _valEntradaSalvo > 0 ? _valEntradaSalvo.toFixed(2) : '';
+      document.getElementById('entr-valor-faturado').value = _valFaturadoSalvo > 0 ? _valFaturadoSalvo.toFixed(2) : '';
+      document.getElementById('entr-vencimento').value = osAtual.data_vencimento_fat || '';
+      document.getElementById('entr-forma').value = 'pix';
+      document.getElementById('entr-forma-fat').value = osAtual.forma_pagamento_fat || 'pix';
+      calcValorFaturado();
 
       // Carrega catálogo (uma vez)
       await carregarCatalogo();
@@ -1366,15 +1381,13 @@
       }).join('');
     }
 
-    let _entrTipo = 'agora';
-    function setEntrTipo(tipo) {
-      _entrTipo = tipo;
-      const bA = document.getElementById('entr-btn-agora');
-      const bF = document.getElementById('entr-btn-fat');
-      if (bA) { bA.style.background = tipo === 'agora' ? 'var(--accent)' : 'var(--surface)'; bA.style.color = tipo === 'agora' ? '#fff' : 'var(--text-muted)'; }
-      if (bF) { bF.style.background = tipo === 'faturado' ? '#7c3aed' : 'var(--surface)'; bF.style.color = tipo === 'faturado' ? '#fff' : 'var(--text-muted)'; }
-      const row = document.getElementById('entr-venc-row');
-      if (row) row.style.display = tipo === 'faturado' ? 'block' : 'none';
+    function calcValorFaturado() {
+      const valFat = parseFloat(document.getElementById('entr-valor-faturado')?.value) || 0;
+      const temFaturado = valFat > 0;
+      const vencRow = document.getElementById('entr-venc-row');
+      const formaFatRow = document.getElementById('entr-forma-fat-row');
+      if (vencRow) vencRow.style.display = temFaturado ? 'block' : 'none';
+      if (formaFatRow) formaFatRow.style.display = temFaturado ? 'block' : 'none';
     }
 
     // Novo fluxo linear: ← Voltar | Salvar | Avançar →
@@ -1386,12 +1399,15 @@
       const proximo = COLUNAS[idx + 1].status;
       if (proximo === 'entregue') {
         const forma = document.getElementById('entr-forma')?.value || 'pix';
-        if (_entrTipo === 'faturado') {
+        const formaFat = document.getElementById('entr-forma-fat')?.value || 'pix';
+        const valorEntrada = parseFloat(document.getElementById('entr-valor-entrada')?.value) || 0;
+        const valorFaturado = parseFloat(document.getElementById('entr-valor-faturado')?.value) || 0;
+        if (valorFaturado > 0) {
           const venc = document.getElementById('entr-vencimento')?.value;
-          if (!venc) { dmToast('Informe a data de vencimento para faturar', 'error'); return; }
-          await _executarSalvarStatus('entregue', { forma, faturado: true, vencimento: venc });
+          if (!venc) { dmToast('Informe a data de vencimento para o valor faturado', 'error'); return; }
+          await _executarSalvarStatus('entregue', { forma, formaFat, faturado: true, vencimento: venc, valorEntrada, valorFaturado });
         } else {
-          await _executarSalvarStatus('entregue', { forma, faturado: false });
+          await _executarSalvarStatus('entregue', { forma, faturado: false, valorEntrada });
         }
       } else {
         await _executarSalvarStatus(proximo, null);
@@ -1442,9 +1458,11 @@
 
       const osUpd = { status, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora };
       if (status === 'entregue' && fatDados?.faturado) {
-        osUpd.faturado = true; osUpd.data_vencimento_fat = fatDados.vencimento; osUpd.forma_pagamento_fat = fatDados.forma;
-      } else if (status === 'entregue' || (osAtual.status === 'entregue' && status !== 'entregue')) {
-        osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null;
+        osUpd.faturado = true; osUpd.data_vencimento_fat = fatDados.vencimento; osUpd.forma_pagamento_fat = fatDados.formaFat; osUpd.valor_entrada = fatDados.valorEntrada;
+      } else if (status === 'entregue') {
+        osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null; osUpd.valor_entrada = fatDados?.valorEntrada ?? null;
+      } else if (osAtual.status === 'entregue' && status !== 'entregue') {
+        osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null; osUpd.valor_entrada = null;
       }
       const { error } = await sb.from('ordens_servico').update(osUpd).eq('id', osAtual.id).eq('company_id', APP.company.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }
@@ -1456,19 +1474,25 @@
       const totalOS = itensPanel.reduce((s, i) => s + (i.subtotal || 0), 0);
       if (status === 'entregue' && osAtual.status !== 'entregue') {
         const dataHoje = new Date().toISOString().split('T')[0];
-        const isFaturado = fatDados?.faturado || false;
-        const { error: caixaErr } = await sb.from('caixa').insert({
-          company_id: APP.company.id,
-          tipo: 'entrada',
-          descricao: `OS #${String(osAtual.numero).padStart(3,'0')} — ${osAtual.clients?.name || 'Cliente'}`,
-          valor: totalOS || 0,
-          data_vencimento: isFaturado ? fatDados.vencimento : dataHoje,
-          categoria: 'servico',
-          forma_pagamento: fatDados?.forma || null,
-          pago: !isFaturado,
-          os_id: osAtual.id
-        });
-        if (caixaErr) dmToast('OS entregue mas lançamento no caixa falhou: ' + caixaErr.message, 'error');
+        const descBase = `OS #${String(osAtual.numero).padStart(3,'0')} — ${osAtual.clients?.name || 'Cliente'}`;
+        const valorEntrada = fatDados?.valorEntrada ?? totalOS;
+        const valorFaturado = fatDados?.valorFaturado ?? 0;
+        if (valorEntrada > 0) {
+          const { error: caixaErr } = await sb.from('caixa').insert({
+            company_id: APP.company.id, tipo: 'entrada', descricao: descBase,
+            valor: valorEntrada, data_vencimento: dataHoje, categoria: 'servico',
+            forma_pagamento: fatDados?.forma || null, pago: true, os_id: osAtual.id
+          });
+          if (caixaErr) dmToast('Lançamento de entrada falhou: ' + caixaErr.message, 'error');
+        }
+        if (valorFaturado > 0) {
+          const { error: caixaFatErr } = await sb.from('caixa').insert({
+            company_id: APP.company.id, tipo: 'entrada', descricao: descBase + ' (faturado)',
+            valor: valorFaturado, data_vencimento: fatDados.vencimento, categoria: 'servico',
+            forma_pagamento: fatDados?.formaFat || null, pago: false, os_id: osAtual.id
+          });
+          if (caixaFatErr) dmToast('Lançamento faturado falhou: ' + caixaFatErr.message, 'error');
+        }
       }
       // Estorno: se estava entregue e voltou para outro status (cobre pago e faturado)
       if (osAtual.status === 'entregue' && status !== 'entregue') {
