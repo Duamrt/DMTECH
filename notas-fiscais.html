@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04230439"></script>
-  <script src="js/lib.js?v=04230439"></script>
-  <script src="js/auth.js?v=04230439"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04230439">
+  <script src="js/config.js?v=04230441"></script>
+  <script src="js/lib.js?v=04230441"></script>
+  <script src="js/auth.js?v=04230441"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04230441">
   <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
     .modal-overlay.active { display:flex; }
@@ -465,56 +465,40 @@
     }
 
     function parseNFe(xmlStr) {
-      try {
-        // remove BOM e espaços iniciais que quebram o DOMParser
-        const clean = xmlStr.replace(/^\uFEFF/, '').trimStart();
-        const doc = new DOMParser().parseFromString(clean, 'text/xml');
-        // aborta se o DOMParser reportar erro de parse
-        if (doc.getElementsByTagName('parsererror').length) return null;
-        // getElementsByTagNameNS('*',...) funciona com ou sem namespace explícito
-        const g = (node, tag) => {
-          const el = node?.getElementsByTagName(tag)?.[0] || node?.getElementsByTagNameNS('*', tag)?.[0];
-          return el?.textContent?.trim() || '';
-        };
-
-        const infNFe = doc.getElementsByTagName('infNFe')[0]
-                    || doc.getElementsByTagNameNS('*', 'infNFe')[0];
-        if (!infNFe) return null;
-
-        const ide   = infNFe.getElementsByTagName('ide')[0];
-        const emit  = infNFe.getElementsByTagName('emit')[0];
-        const tot   = infNFe.getElementsByTagName('ICMSTot')[0];
-        const dets  = infNFe.getElementsByTagName('det');
-
-        const nNF     = g(ide, 'nNF');
-        const dhEmiRaw = g(ide, 'dhEmi') || g(ide, 'dEmi') || '';
-        const dhEmi   = dhEmiRaw.slice(0, 10);
-        const cnpjEmit = g(emit, 'CNPJ').replace(/\D/g, '');
-        const nomeEmit = g(emit, 'xNome') || g(emit, 'xFant') || '';
-        const vNF     = parseFloat(g(tot, 'vNF')) || 0;
-
-        const itens = [];
-        for (const det of dets) {
-          const prod = det.getElementsByTagName('prod')[0];
-          const cEAN = g(prod, 'cEAN').replace(/^SEM GTIN$|^0{8,}$/, '');
-          itens.push({
-            xProd:   g(prod, 'xProd'),
-            cProd:   g(prod, 'cProd'),
-            cEAN,
-            uCom:    g(prod, 'uCom'),
-            qCom:    parseFloat(g(prod, 'qCom')) || 0,
-            vUnCom:  parseFloat(g(prod, 'vUnCom')) || 0,
-            vProd:   parseFloat(g(prod, 'vProd')) || 0,
-            produtoId:   null,
-            produtoNome: null,
-            isNovo: true
-          });
-        }
-
-        return { nNF, dhEmi, cnpjEmit, nomeEmit, vNF, itens };
-      } catch (e) {
-        return null;
+      function gt(parent, tag) {
+        if (!parent) return '';
+        const el = parent.getElementsByTagName(tag)[0];
+        return el ? el.textContent.trim() : '';
       }
+      function gn(parent, tag) { return parseFloat(gt(parent, tag)) || 0; }
+
+      const doc = new DOMParser().parseFromString(xmlStr, 'text/xml');
+      if (doc.querySelector('parsererror')) { console.error('NF-e parseerror:', doc.querySelector('parsererror').textContent); return null; }
+
+      const infNFe = doc.getElementsByTagName('infNFe')[0];
+      if (!infNFe) { console.error('NF-e: tag infNFe não encontrada'); return null; }
+
+      const ide  = infNFe.getElementsByTagName('ide')[0];
+      const emit = infNFe.getElementsByTagName('emit')[0];
+      const tot  = infNFe.getElementsByTagName('ICMSTot')[0];
+      const dets = infNFe.getElementsByTagName('det');
+
+      const nNF      = gt(ide, 'nNF');
+      const dhEmi    = (gt(ide, 'dhEmi') || gt(ide, 'dEmi')).slice(0, 10);
+      const cnpjEmit = gt(emit, 'CNPJ').replace(/\D/g, '');
+      const nomeEmit = gt(emit, 'xNome') || gt(emit, 'xFant') || '';
+      const vNF      = gn(tot, 'vNF');
+
+      const itens = Array.from(dets).map(det => {
+        const prod = det.getElementsByTagName('prod')[0];
+        const cEAN = gt(prod, 'cEAN').replace(/^SEM GTIN$|^0{8,}$/, '');
+        return { xProd: gt(prod, 'xProd'), cProd: gt(prod, 'cProd'), cEAN,
+                 uCom: gt(prod, 'uCom'), qCom: gn(prod, 'qCom'),
+                 vUnCom: gn(prod, 'vUnCom'), vProd: gn(prod, 'vProd'),
+                 produtoId: null, produtoNome: null, isNovo: true };
+      });
+
+      return { nNF, dhEmi, cnpjEmit, nomeEmit, vNF, itens };
     }
 
     async function matchFornecedor(cnpj, nome) {
