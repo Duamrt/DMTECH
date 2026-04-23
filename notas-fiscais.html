@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04230445"></script>
-  <script src="js/lib.js?v=04230445"></script>
-  <script src="js/auth.js?v=04230445"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04230445">
+  <script src="js/config.js?v=04230450"></script>
+  <script src="js/lib.js?v=04230450"></script>
+  <script src="js/auth.js?v=04230450"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04230450">
   <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
     .modal-overlay.active { display:flex; }
@@ -438,6 +438,14 @@
         input.value = '';
         const parsed = parseNFe(e.target.result);
         if (!parsed) { dmToast('XML inválido ou não reconhecido como NF-e', 'error'); return; }
+
+        // valida destinatário: bloqueia se CNPJ/CPF da empresa estiver cadastrado e não bater
+        const companyDoc = (APP.company?.cnpj || '').replace(/\D/g, '');
+        if (companyDoc && parsed.destDoc && parsed.destDoc !== companyDoc) {
+          dmToast(`NF-e destinada a outro CNPJ/CPF (${parsed.destDoc}). Verifique as configurações da empresa.`, 'error');
+          return;
+        }
+
         parsed.fornMatch = await matchFornecedor(parsed.cnpjEmit, parsed.nomeEmit);
 
         // ── Bloqueia duplicata ANTES de qualquer coisa ──
@@ -483,6 +491,7 @@
 
       const ide  = infNFe.getElementsByTagName('ide')[0];
       const emit = infNFe.getElementsByTagName('emit')[0];
+      const dest = infNFe.getElementsByTagName('dest')[0];
       const tot  = infNFe.getElementsByTagName('ICMSTot')[0];
       const dets = infNFe.getElementsByTagName('det');
 
@@ -491,6 +500,8 @@
       const cnpjEmit = gt(emit, 'CNPJ').replace(/\D/g, '');
       const nomeEmit = gt(emit, 'xNome') || gt(emit, 'xFant') || '';
       const vNF      = gn(tot, 'vNF');
+      // destinatário: pode ser CNPJ (empresa) ou CPF (pessoa física)
+      const destDoc  = (gt(dest, 'CNPJ') || gt(dest, 'CPF')).replace(/\D/g, '');
 
       const itens = Array.from(dets).map(det => {
         const prod = det.getElementsByTagName('prod')[0];
@@ -501,7 +512,7 @@
                  produtoId: null, produtoNome: null, isNovo: true };
       });
 
-      return { nNF, dhEmi, cnpjEmit, nomeEmit, vNF, itens };
+      return { nNF, dhEmi, cnpjEmit, nomeEmit, vNF, itens, destDoc };
     }
 
     async function matchFornecedor(cnpj, nome) {
