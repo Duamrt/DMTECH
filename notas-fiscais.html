@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=04220603"></script>
-  <script src="js/lib.js?v=04220603"></script>
-  <script src="js/auth.js?v=04220603"></script>
-  <link rel="stylesheet" href="css/styles.css?v=04220603">
+  <script src="js/config.js?v=04230439"></script>
+  <script src="js/lib.js?v=04230439"></script>
+  <script src="js/auth.js?v=04230439"></script>
+  <link rel="stylesheet" href="css/styles.css?v=04230439">
   <style>
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; align-items:center; justify-content:center; }
     .modal-overlay.active { display:flex; }
@@ -466,10 +466,19 @@
 
     function parseNFe(xmlStr) {
       try {
-        const doc = new DOMParser().parseFromString(xmlStr, 'text/xml');
-        const g   = (node, tag) => node?.getElementsByTagName(tag)?.[0]?.textContent?.trim() || '';
+        // remove BOM e espaços iniciais que quebram o DOMParser
+        const clean = xmlStr.replace(/^\uFEFF/, '').trimStart();
+        const doc = new DOMParser().parseFromString(clean, 'text/xml');
+        // aborta se o DOMParser reportar erro de parse
+        if (doc.getElementsByTagName('parsererror').length) return null;
+        // getElementsByTagNameNS('*',...) funciona com ou sem namespace explícito
+        const g = (node, tag) => {
+          const el = node?.getElementsByTagName(tag)?.[0] || node?.getElementsByTagNameNS('*', tag)?.[0];
+          return el?.textContent?.trim() || '';
+        };
 
-        const infNFe = doc.getElementsByTagName('infNFe')[0];
+        const infNFe = doc.getElementsByTagName('infNFe')[0]
+                    || doc.getElementsByTagNameNS('*', 'infNFe')[0];
         if (!infNFe) return null;
 
         const ide   = infNFe.getElementsByTagName('ide')[0];
