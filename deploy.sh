@@ -15,6 +15,12 @@ find . -name "*.html" -not -path "./.git/*" -exec sed -i "s/?v=[0-9]*/?v=$VER_SH
 
 git add -A
 git commit -m "deploy $VERSION"
-git push origin main
+git push origin dev
+
+# Sync main = dev (Gitflow: dev é a fonte da verdade)
+git checkout main
+git reset --hard dev
+git push --force-with-lease origin main
+git checkout dev
 
 echo "✅ No ar: $VERSION"
