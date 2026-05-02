@@ -8,9 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="js/posthog.js"></script>
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05020538"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05020538">
+  <script src="js/config.js?v=05020602"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05020602">
   <style>
     body {
       display: flex;
@@ -142,6 +143,12 @@
         <input class="form-input" type="password" id="senha2" placeholder="Repita a senha" autocomplete="new-password">
       </div>
 
+      <div class="h-captcha" id="hcaptcha-widget"
+        data-sitekey="3cb22974-cf24-4a4c-be74-f502b194bac6"
+        data-theme="dark"
+        style="margin-bottom:16px;border-radius:8px;overflow:hidden">
+      </div>
+
       <button class="btn btn-primary" id="btn-criar" onclick="criarConta()">Criar conta grátis</button>
     </div>
 
@@ -170,7 +177,9 @@
     console.log('%c DMTechApp ' + VERSION + ' ', 'background:#0d0d0d;color:#f97316;font-weight:bold;padding:2px 8px');
     document.getElementById('versao-rodape').textContent = VERSION;
 
-    if (localStorage.getItem('dmtech-theme') === 'light') document.body.classList.add('light');
+    const isLight = localStorage.getItem('dmtech-theme') === 'light';
+    if (isLight) document.body.classList.add('light');
+    document.getElementById('hcaptcha-widget').setAttribute('data-theme', isLight ? 'light' : 'dark');
 
     // Se já logado, vai pro dashboard
     sb.auth.getSession().then(({ data: { session } }) => {
@@ -197,17 +206,25 @@
       if (senha.length < 6) { mostrarErro('A senha deve ter pelo menos 6 caracteres.'); return; }
       if (senha !== senha2) { mostrarErro('As senhas não coincidem.'); return; }
 
+      const captchaToken = hcaptcha.getResponse();
+      if (!captchaToken) { mostrarErro('Confirme que você não é um robô.'); return; }
+
       const btn = document.getElementById('btn-criar');
       btn.disabled    = true;
       btn.textContent = 'Criando conta...';
 
       // 1. Criar usuário no auth
-      const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
+      const { data: authData, error: authErr } = await sb.auth.signUp({
+        email,
+        password: senha,
+        options: { captchaToken }
+      });
 
       if (authErr) {
         mostrarErro(traduzirErro(authErr.message));
         btn.disabled    = false;
         btn.textContent = 'Criar conta grátis';
+        hcaptcha.reset();
         return;
       }
 
@@ -223,6 +240,7 @@
           mostrarErro('Conta criada, mas houve erro ao configurar empresa: ' + rpcErr.message);
           btn.disabled    = false;
           btn.textContent = 'Criar conta grátis';
+          hcaptcha.reset();
           return;
         }
 
