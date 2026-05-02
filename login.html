@@ -7,10 +7,11 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05020602"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05020602">
+  <script src="js/config.js?v=05020623"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05020623">
   <style>
     body {
       display: flex;
@@ -81,6 +82,7 @@
         <label class="form-label">Senha</label>
         <input class="form-input" type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
       </div>
+      <div id="hcaptcha-login"></div>
       <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
     </div>
     <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--text-muted)">
@@ -105,6 +107,18 @@
       window.location.href = p?.company_id === 'aaaa0001-0000-0000-0000-000000000001' ? 'admin.html' : 'dashboard.html';
     });
 
+    var _loginCaptchaId = null;
+    (function waitHcaptcha() {
+      if (window.hcaptcha) {
+        _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
+          sitekey: '3cb22974-cf24-4a4c-be74-f502b194bac6',
+          size: 'invisible'
+        });
+      } else {
+        setTimeout(waitHcaptcha, 100);
+      }
+    })();
+
     async function fazerLogin() {
       const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value;
@@ -117,7 +131,18 @@
       btn.disabled    = true;
       btn.textContent = 'Entrando...';
 
-      const { data: authData, error } = await sb.auth.signInWithPassword({ email, password: senha });
+      var captchaToken = null;
+      if (_loginCaptchaId !== null) {
+        try {
+          var result = await hcaptcha.execute(_loginCaptchaId, { async: true });
+          captchaToken = result.response;
+          hcaptcha.reset(_loginCaptchaId);
+        } catch(_) {}
+      }
+
+      const opts = { email, password: senha };
+      if (captchaToken) opts.options = { captchaToken };
+      const { data: authData, error } = await sb.auth.signInWithPassword(opts);
 
       if (error) {
         mostrarErro('E-mail ou senha incorretos.');

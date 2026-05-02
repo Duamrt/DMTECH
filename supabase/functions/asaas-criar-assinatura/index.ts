@@ -3,31 +3,33 @@ const ASAAS_BASE = Deno.env.get("ASAAS_BASE_URL") ?? "https://sandbox.asaas.com/
 const ASAAS_KEY = Deno.env.get("ASAAS_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
-const corsHeaders = { "Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS" };
-function json(b:unknown,s=200){return new Response(JSON.stringify(b),{status:s,headers:{...corsHeaders,"content-type":"application/json"}});}
+const ALLOWED_ORIGINS=["https://dmtechapp.com.br","https://www.dmtechapp.com.br","http://localhost:3000","http://localhost:5555"];
+function corsHeaders(req:Request){const o=req.headers.get("origin")??"";const a=ALLOWED_ORIGINS.includes(o)?o:ALLOWED_ORIGINS[0];return{"Access-Control-Allow-Origin":a,"Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"};}
+function json(b:unknown,s=200,cors:Record<string,string>={}){return new Response(JSON.stringify(b),{status:s,headers:{...cors,"content-type":"application/json"}});}
 async function asaas(p:string,init:RequestInit={}){const r=await fetch(`${ASAAS_BASE}${p}`,{...init,headers:{...(init.headers||{}),"access_token":ASAAS_KEY,"content-type":"application/json","User-Agent":"DMTech/1.0"}});const t=await r.text();const d=t?JSON.parse(t):{};if(!r.ok)throw new Error(`Asaas ${r.status}: ${t}`);return d;}
 Deno.serve(async(req)=>{
-  if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
-  if(req.method!=="POST")return json({error:"method_not_allowed"},405);
+  const CORS=corsHeaders(req);
+  if(req.method==="OPTIONS")return new Response("ok",{headers:CORS});
+  if(req.method!=="POST")return json({error:"method_not_allowed"},405,CORS);
   const jwt=(req.headers.get("authorization")??"").replace("Bearer ","");
-  if(!jwt)return json({error:"unauthorized"},401);
+  if(!jwt)return json({error:"unauthorized"},401,CORS);
   const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
   const {data:u}=await sb.auth.getUser(jwt);
-  if(!u?.user)return json({error:"unauthorized"},401);
+  if(!u?.user)return json({error:"unauthorized"},401,CORS);
   const b=await req.json().catch(()=>({}));
   const {company_id,plano,valor,ciclo="MONTHLY",forma_pagamento="UNDEFINED"}=b;
-  if(!company_id||!plano||!valor)return json({error:"missing_fields"},400);
+  if(!company_id||!plano||!valor)return json({error:"missing_fields"},400,CORS);
   const {data:perfil}=await sb.from("profiles").select("company_id, role").eq("id",u.user.id).single();
   const isAdmin=perfil?.company_id==="aaaa0001-0000-0000-0000-000000000001"&&perfil?.role==="dono";
-  if(!isAdmin&&perfil?.company_id!==company_id)return json({error:"forbidden"},403);
+  if(!isAdmin&&perfil?.company_id!==company_id)return json({error:"forbidden"},403,CORS);
   const {data:co,error:ce}=await sb.from("companies").select("id,name,cnpj,email,phone,whatsapp,asaas_customer_id").eq("id",company_id).single();
-  if(ce||!co)return json({error:"company_not_found"},404);
+  if(ce||!co)return json({error:"company_not_found"},404,CORS);
   try{
     const {data:exi}=await sb.from("assinaturas").select("*").eq("company_id",company_id).in("status",["pendente","ativa","atrasada","suspensa"]).order("created_at",{ascending:false}).limit(1).maybeSingle();
     if(exi&&exi.plano===plano){
       let iu:string|null=null;
       try{const ps=await asaas(`/payments?subscription=${exi.asaas_subscription_id}&status=PENDING&limit=1`);if(ps?.data?.[0])iu=ps.data[0].invoiceUrl??ps.data[0].bankSlipUrl??null;}catch(_){}
-      return json({ok:true,assinatura:exi,subscription_id:exi.asaas_subscription_id,invoice_url:iu,duplicado:true});
+      return json({ok:true,assinatura:exi,subscription_id:exi.asaas_subscription_id,invoice_url:iu,duplicado:true},200,CORS);
     }
     let cid=co.asaas_customer_id;
     if(!cid){
@@ -43,6 +45,6 @@ Deno.serve(async(req)=>{
     // Não ativa company aqui. Webhook PAYMENT_RECEIVED/CONFIRMED faz isso.
     let invoiceUrl:string|null=null;
     try{const ps=await asaas(`/payments?subscription=${sub.id}&limit=1`);if(ps?.data?.[0])invoiceUrl=ps.data[0].invoiceUrl??ps.data[0].bankSlipUrl??null;}catch(_){}
-    return json({ok:true,assinatura:a,subscription_id:sub.id,invoice_url:invoiceUrl});
-  }catch(e){console.error("[dmtech-asaas-criar]",e);return json({error:"asaas_error",message:String(e instanceof Error?e.message:e)},500);}
+    return json({ok:true,assinatura:a,subscription_id:sub.id,invoice_url:invoiceUrl},200,CORS);
+  }catch(e){console.error("[dmtech-asaas-criar]",e);return json({error:"asaas_error",message:String(e instanceof Error?e.message:e)},500,CORS);}
 });
