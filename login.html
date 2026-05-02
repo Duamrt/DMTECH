@@ -7,11 +7,11 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+  <script src="https://js.hcaptcha.com/1/api.js?render=explicit&onload=onHcaptchaLoad" async defer></script>
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05020623"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05020623">
+  <script src="js/config.js?v=05020628"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05020628">
   <style>
     body {
       display: flex;
@@ -108,16 +108,12 @@
     });
 
     var _loginCaptchaId = null;
-    (function waitHcaptcha() {
-      if (window.hcaptcha) {
-        _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
-          sitekey: '3cb22974-cf24-4a4c-be74-f502b194bac6',
-          size: 'invisible'
-        });
-      } else {
-        setTimeout(waitHcaptcha, 100);
-      }
-    })();
+    function onHcaptchaLoad() {
+      _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
+        sitekey: '3cb22974-cf24-4a4c-be74-f502b194bac6',
+        size: 'invisible'
+      });
+    }
 
     async function fazerLogin() {
       const email = document.getElementById('email').value.trim();
