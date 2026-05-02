@@ -10,8 +10,8 @@
   <script src="https://js.hcaptcha.com/1/api.js?render=explicit&onload=onHcaptchaLoad" async defer></script>
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05020628"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05020628">
+  <script src="js/config.js?v=05020642"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05020642">
   <style>
     body {
       display: flex;
@@ -83,7 +83,7 @@
         <input class="form-input" type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
       </div>
       <div id="hcaptcha-login"></div>
-      <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()">Entrar</button>
+      <button class="btn btn-primary" id="btn-login" onclick="fazerLogin()" disabled>Carregando…</button>
     </div>
     <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--text-muted)">
       Não tem conta? <a href="signup.html" style="color:var(--accent);text-decoration:none;font-weight:700">Criar agora →</a>
@@ -113,6 +113,17 @@
         sitekey: '3cb22974-cf24-4a4c-be74-f502b194bac6',
         size: 'invisible'
       });
+      const btn = document.getElementById('btn-login');
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
+
+    async function waitCaptcha(maxMs) {
+      const start = Date.now();
+      while (_loginCaptchaId === null && Date.now() - start < maxMs) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+      return _loginCaptchaId !== null;
     }
 
     async function fazerLogin() {
@@ -127,21 +138,36 @@
       btn.disabled    = true;
       btn.textContent = 'Entrando...';
 
-      var captchaToken = null;
-      if (_loginCaptchaId !== null) {
-        try {
-          var result = await hcaptcha.execute(_loginCaptchaId, { async: true });
-          captchaToken = result.response;
-          hcaptcha.reset(_loginCaptchaId);
-        } catch(_) {}
+      const captchaReady = await waitCaptcha(5000);
+      if (!captchaReady) {
+        mostrarErro('Não foi possível carregar a verificação. Recarregue a página.');
+        btn.disabled = false; btn.textContent = 'Entrar';
+        return;
       }
 
-      const opts = { email, password: senha };
-      if (captchaToken) opts.options = { captchaToken };
-      const { data: authData, error } = await sb.auth.signInWithPassword(opts);
+      var captchaToken = null;
+      try {
+        var result = await hcaptcha.execute(_loginCaptchaId, { async: true });
+        captchaToken = result.response;
+        hcaptcha.reset(_loginCaptchaId);
+      } catch(e) { console.error('hcaptcha.execute falhou', e); }
+
+      if (!captchaToken) {
+        mostrarErro('Verificação anti-bot falhou. Tente novamente.');
+        btn.disabled = false; btn.textContent = 'Entrar';
+        return;
+      }
+
+      const { data: authData, error } = await sb.auth.signInWithPassword({
+        email, password: senha, options: { captchaToken }
+      });
 
       if (error) {
-        mostrarErro('E-mail ou senha incorretos.');
+        console.error('signInWithPassword error', error);
+        const msg = (error.message || '').toLowerCase().includes('captcha')
+          ? 'Verificação anti-bot rejeitada. Recarregue a página.'
+          : 'E-mail ou senha incorretos.';
+        mostrarErro(msg);
         btn.disabled    = false;
         btn.textContent = 'Entrar';
         return;
