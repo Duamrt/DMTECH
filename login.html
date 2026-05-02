@@ -10,8 +10,8 @@
   <script src="https://js.hcaptcha.com/1/api.js?render=explicit&onload=onHcaptchaLoad" async defer></script>
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05020707"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05020707">
+  <script src="js/config.js?v=05020717"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05020717">
   <style>
     body {
       display: flex;
@@ -110,7 +110,7 @@
     var _loginCaptchaId = null;
     function onHcaptchaLoad() {
       _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
-        sitekey: 'acecc7be-c662-4664-8998-700656f40996',
+        sitekey: '399a1136-6f52-4454-a4a0-d4de42eef8e0',
         size: 'invisible'
       });
       const btn = document.getElementById('btn-login');
