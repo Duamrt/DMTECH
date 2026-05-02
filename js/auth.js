@@ -17,6 +17,16 @@ async function getProfile() {
   if (!profile) return null;
   APP.profile = profile;
   APP.company = profile.companies;
+
+  if (window.posthog) {
+    posthog.identify(user.id, {
+      email: user.email,
+      name: profile.name || null,
+      company_id: profile.company_id || null,
+      company_name: profile.companies?.name || null
+    });
+  }
+
   return profile;
 }
 
