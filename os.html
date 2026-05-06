@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05060823"></script>
-  <script src="js/lib.js?v=05060823"></script>
-  <script src="js/auth.js?v=05060823"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05060823">
+  <script src="js/config.js?v=05061205"></script>
+  <script src="js/lib.js?v=05061205"></script>
+  <script src="js/auth.js?v=05061205"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061205">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -276,7 +276,10 @@
         </div>
         <div class="form-group">
           <label class="form-label">Link de Referência</label>
-          <input class="form-input" type="url" id="os-link-externo" placeholder="Drive, foto, projeto...">
+          <div style="display:flex;gap:6px;align-items:stretch">
+            <input class="form-input" type="url" id="os-link-externo" placeholder="Drive, foto, projeto..." style="flex:1;min-width:0">
+            <button type="button" id="os-link-externo-btn" onclick="abrirLinkExterno('os-link-externo')" title="Abrir link em nova aba" style="display:none;padding:0 12px;background:var(--accent,#3B82F6);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap">↗ Abrir</button>
+          </div>
         </div>
       </div>
 
@@ -465,6 +468,7 @@
       document.getElementById('os-mo-custo-hora').value = APP.company?.calc_params?.custo_hora_calculado || APP.company?.valor_hora || 0;
       document.getElementById('os-garantia').value = '';
       document.getElementById('os-link-externo').value = '';
+      _updateLinkBtn('os-link-externo', 'os-link-externo-btn');
       document.getElementById('btn-excluir').style.display = 'none';
       document.getElementById('os-add-row').style.display = 'grid';
       renderItens();
@@ -488,6 +492,7 @@
       document.getElementById('os-mo-custo-hora').value = os.mo_custo_hora || APP.company?.calc_params?.custo_hora_calculado || APP.company?.valor_hora || 0;
       document.getElementById('os-garantia').value = os.garantia || '';
       document.getElementById('os-link-externo').value = os.link_externo || '';
+      _updateLinkBtn('os-link-externo', 'os-link-externo-btn');
       document.getElementById('btn-excluir').style.display = 'block';
       document.getElementById('os-add-row').style.display = 'grid';
 
@@ -669,6 +674,26 @@
       if (!v) return '<span style="color:var(--text-dim)">—</span>';
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
+
+    // ===== Link externo: botão "↗ Abrir" =====
+    function _updateLinkBtn(inputId, btnId){
+      const inp = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      if (!inp || !btn) return;
+      const v = (inp.value || '').trim();
+      btn.style.display = v ? '' : 'none';
+    }
+    function abrirLinkExterno(inputId){
+      const v = (document.getElementById(inputId).value || '').trim();
+      if (!v) return;
+      let url = v;
+      if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) url = 'https://' + url;
+      try { new URL(url); } catch(e){ alert('Link inválido: ' + v); return; }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    document.addEventListener('input', function(e){
+      if (e.target && e.target.id === 'os-link-externo') _updateLinkBtn('os-link-externo', 'os-link-externo-btn');
+    });
   </script>
   <script>
     if ('serviceWorker' in navigator) {

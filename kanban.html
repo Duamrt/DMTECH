@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05060823"></script>
-  <script src="js/lib.js?v=05060823"></script>
-  <script src="js/auth.js?v=05060823"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05060823">
+  <script src="js/config.js?v=05061205"></script>
+  <script src="js/lib.js?v=05061205"></script>
+  <script src="js/auth.js?v=05061205"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061205">
   <style>
     /* Board */
     .board-outer {
@@ -815,7 +815,10 @@
 
       <div>
         <div class="p-section-title">Link de Referência</div>
-        <input class="panel-input" type="url" id="p-link-externo" placeholder="Drive, foto, projeto...">
+        <div style="display:flex;gap:6px;align-items:stretch">
+          <input class="panel-input" type="url" id="p-link-externo" placeholder="Drive, foto, projeto..." style="flex:1;min-width:0">
+          <button type="button" id="p-link-externo-btn" onclick="abrirLinkExterno('p-link-externo')" title="Abrir link em nova aba" style="display:none;padding:0 12px;background:var(--accent,#3B82F6);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap">↗ Abrir</button>
+        </div>
       </div>
 
       <div>
@@ -978,6 +981,7 @@
       document.getElementById('p-ressalva').value       = osAtual.ressalva || '';
       document.getElementById('p-garantia').value      = osAtual.garantia || '';
       document.getElementById('p-link-externo').value  = osAtual.link_externo || '';
+      _updateLinkBtn('p-link-externo', 'p-link-externo-btn');
       document.getElementById('p-mo-est').value        = osAtual.mo_horas_estimadas || '';
       document.getElementById('p-mo-reais').value      = osAtual.mo_horas_reais || '';
       document.getElementById('p-mo-custo-hora').value = osAtual.mo_custo_hora || APP.company?.calc_params?.custo_hora_calculado || APP.company?.valor_hora || 0;
@@ -2026,6 +2030,26 @@ ${empresa}`;
       const osParam = new URLSearchParams(window.location.search).get('os');
       if (osParam) await abrirPanel(osParam);
     })();
+
+    // ===== Link externo: botão "↗ Abrir" =====
+    function _updateLinkBtn(inputId, btnId){
+      const inp = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      if (!inp || !btn) return;
+      const v = (inp.value || '').trim();
+      btn.style.display = v ? '' : 'none';
+    }
+    function abrirLinkExterno(inputId){
+      const v = (document.getElementById(inputId).value || '').trim();
+      if (!v) return;
+      let url = v;
+      if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url)) url = 'https://' + url;
+      try { new URL(url); } catch(e){ alert('Link inválido: ' + v); return; }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+    document.addEventListener('input', function(e){
+      if (e.target && e.target.id === 'p-link-externo') _updateLinkBtn('p-link-externo', 'p-link-externo-btn');
+    });
   </script>
   <script>
     if ('serviceWorker' in navigator) {
