@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05061308"></script>
-  <script src="js/lib.js?v=05061308"></script>
-  <script src="js/auth.js?v=05061308"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061308">
+  <script src="js/config.js?v=05061316"></script>
+  <script src="js/lib.js?v=05061316"></script>
+  <script src="js/auth.js?v=05061316"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061316">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -298,7 +298,8 @@
           <button class="btn btn-primary" id="btn-receber" onclick="marcarRecebido()" style="background:#10b981;border-color:#10b981">✓ Marcar como Recebido</button>
         </div>
         <div id="os-fat-recebido-info" style="display:none;font-size:12px;color:#4ade80;margin-top:6px"></div>
-        <div id="os-fat-desfazer" style="display:none;margin-top:8px">
+        <div id="os-fat-desfazer" style="display:none;gap:12px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn btn-ghost" onclick="editarDataRecebimento()" style="font-size:11px;color:var(--accent)">✎ Editar data</button>
           <button class="btn btn-ghost" onclick="desfazerRecebimento()" style="font-size:11px;color:var(--text-muted)">↶ Desfazer recebimento</button>
         </div>
       </div>
@@ -561,7 +562,7 @@
         acoes.style.display = 'none';
         info.style.display = 'block';
         info.innerHTML = `✓ Pagamento recebido em <b>${new Date(os.data_pagamento_fat + 'T00:00:00').toLocaleDateString('pt-BR')}</b>`;
-        desf.style.display = 'block';
+        desf.style.display = 'flex';
       } else {
         acoes.style.display = 'flex';
         info.style.display = 'none';
@@ -569,6 +570,17 @@
         const hojeStr = new Date().toISOString().split('T')[0];
         document.getElementById('os-fat-data-receb').value = hojeStr;
       }
+    }
+
+    function editarDataRecebimento() {
+      const os = todasOs.find(o => o.id === document.getElementById('os-id').value);
+      if (!os) return;
+      document.getElementById('os-fat-acoes').style.display = 'flex';
+      document.getElementById('os-fat-recebido-info').style.display = 'none';
+      document.getElementById('os-fat-desfazer').style.display = 'none';
+      document.getElementById('os-fat-data-receb').value = os.data_pagamento_fat || '';
+      document.getElementById('btn-receber').textContent = '✓ Salvar data';
+      document.getElementById('os-fat-data-receb').focus();
     }
 
     async function marcarRecebido() {

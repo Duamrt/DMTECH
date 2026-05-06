@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05061308"></script>
-  <script src="js/lib.js?v=05061308"></script>
-  <script src="js/auth.js?v=05061308"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061308">
+  <script src="js/config.js?v=05061316"></script>
+  <script src="js/lib.js?v=05061316"></script>
+  <script src="js/auth.js?v=05061316"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061316">
   <style>
     /* Board */
     .board-outer {
@@ -757,7 +757,8 @@
             <input type="date" id="p-receb-data" class="panel-input" style="flex:1;min-width:120px">
             <button type="button" onclick="marcarRecebidoKanban()" class="panel-input" style="background:#10b981;color:#fff;border:none;font-weight:700;cursor:pointer;padding:8px 12px;font-size:12px;white-space:nowrap">✓ Recebido</button>
           </div>
-          <div id="p-receb-desfazer" style="display:none;margin-top:6px">
+          <div id="p-receb-desfazer" style="display:none;margin-top:6px;gap:12px;flex-wrap:wrap">
+            <button type="button" onclick="editarDataRecebimentoKanban()" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;text-decoration:underline">✎ Editar data</button>
             <button type="button" onclick="desfazerRecebimentoKanban()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline">↶ Desfazer recebimento</button>
           </div>
         </div>
@@ -1421,12 +1422,20 @@
       const desf  = document.getElementById('p-receb-desfazer');
       if (recebido) {
         acoes.style.display = 'none';
-        desf.style.display = 'block';
+        desf.style.display = 'flex';
       } else {
         acoes.style.display = 'flex';
         desf.style.display = 'none';
         document.getElementById('p-receb-data').value = new Date().toISOString().split('T')[0];
       }
+    }
+
+    function editarDataRecebimentoKanban() {
+      if (!osAtual) return;
+      document.getElementById('p-receb-acoes').style.display = 'flex';
+      document.getElementById('p-receb-desfazer').style.display = 'none';
+      document.getElementById('p-receb-data').value = osAtual.data_pagamento_fat || '';
+      document.getElementById('p-receb-data').focus();
     }
 
     async function marcarRecebidoKanban() {
