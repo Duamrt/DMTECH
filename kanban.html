@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05061306"></script>
-  <script src="js/lib.js?v=05061306"></script>
-  <script src="js/auth.js?v=05061306"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061306">
+  <script src="js/config.js?v=05061308"></script>
+  <script src="js/lib.js?v=05061308"></script>
+  <script src="js/auth.js?v=05061308"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061308">
   <style>
     /* Board */
     .board-outer {
@@ -749,6 +749,18 @@
             <option value="transferencia">Transferência</option>
           </select>
         </div>
+
+        <!-- Recebimento (OS faturada já entregue) -->
+        <div id="p-receb-bloco" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+          <div id="p-receb-status" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px"></div>
+          <div id="p-receb-acoes" style="display:none;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="date" id="p-receb-data" class="panel-input" style="flex:1;min-width:120px">
+            <button type="button" onclick="marcarRecebidoKanban()" class="panel-input" style="background:#10b981;color:#fff;border:none;font-weight:700;cursor:pointer;padding:8px 12px;font-size:12px;white-space:nowrap">✓ Recebido</button>
+          </div>
+          <div id="p-receb-desfazer" style="display:none;margin-top:6px">
+            <button type="button" onclick="desfazerRecebimentoKanban()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline">↶ Desfazer recebimento</button>
+          </div>
+        </div>
       </div>
 
       <!-- Itens -->
@@ -1008,6 +1020,7 @@
         document.getElementById('entr-vencimento').value = '';
         document.getElementById('entr-forma').value = osAtual.forma_pagamento_fat || 'pix';
       }
+      _renderRecebBlocoKanban();
 
       // Carrega catálogo (uma vez)
       await carregarCatalogo();
@@ -1380,6 +1393,87 @@
       if (bF) { bF.style.background = tipo === 'faturado' ? '#7c3aed' : 'var(--surface)'; bF.style.color = tipo === 'faturado' ? '#fff' : 'var(--text-muted)'; }
       const row = document.getElementById('entr-venc-row');
       if (row) row.style.display = tipo === 'faturado' ? 'block' : 'none';
+    }
+
+    function _renderRecebBlocoKanban() {
+      const bloco = document.getElementById('p-receb-bloco');
+      if (!bloco || !osAtual) return;
+      const mostrar = osAtual.status === 'entregue' && osAtual.faturado === true;
+      bloco.style.display = mostrar ? 'block' : 'none';
+      if (!mostrar) return;
+
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const recebido = !!osAtual.data_pagamento_fat;
+      const vencObj = osAtual.data_vencimento_fat ? new Date(osAtual.data_vencimento_fat + 'T00:00:00') : null;
+      const vencido = !recebido && vencObj && vencObj < hoje;
+
+      const statusEl = document.getElementById('p-receb-status');
+      if (recebido) {
+        const dRec = new Date(osAtual.data_pagamento_fat + 'T00:00:00').toLocaleDateString('pt-BR');
+        statusEl.innerHTML = `<span style="font-size:11px;color:var(--text-muted)">Pagamento</span><span style="font-size:11px;font-weight:800;padding:3px 8px;background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)">✓ RECEBIDO em ${dRec}</span>`;
+      } else if (vencido) {
+        statusEl.innerHTML = `<span style="font-size:11px;color:var(--text-muted)">Pagamento</span><span style="font-size:11px;font-weight:800;padding:3px 8px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)">🔔 VENCIDO</span>`;
+      } else {
+        statusEl.innerHTML = `<span style="font-size:11px;color:var(--text-muted)">Pagamento</span><span style="font-size:11px;font-weight:800;padding:3px 8px;background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.25)">PENDENTE</span>`;
+      }
+
+      const acoes = document.getElementById('p-receb-acoes');
+      const desf  = document.getElementById('p-receb-desfazer');
+      if (recebido) {
+        acoes.style.display = 'none';
+        desf.style.display = 'block';
+      } else {
+        acoes.style.display = 'flex';
+        desf.style.display = 'none';
+        document.getElementById('p-receb-data').value = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    async function marcarRecebidoKanban() {
+      if (!osAtual) return;
+      const data = document.getElementById('p-receb-data').value;
+      if (!data) { dmToast('Informe a data do recebimento', 'error'); return; }
+
+      const { error: e1 } = await sb.from('ordens_servico')
+        .update({ data_pagamento_fat: data })
+        .eq('id', osAtual.id).eq('company_id', APP.company.id);
+      if (e1) { dmToast('Erro: ' + e1.message, 'error'); return; }
+
+      await sb.from('caixa').update({ pago: true })
+        .eq('os_id', osAtual.id).eq('company_id', APP.company.id).eq('tipo', 'entrada');
+
+      await auditLog('update', 'os', osAtual.id, `OS #${String(osAtual.numero).padStart(3,'0')} — Recebido`, { data_pagamento_fat: data });
+
+      osAtual.data_pagamento_fat = data;
+      const idx = todasOS.findIndex(o => o.id === osAtual.id);
+      if (idx >= 0) todasOS[idx].data_pagamento_fat = data;
+
+      dmToast('Pagamento registrado!');
+      _renderRecebBlocoKanban();
+      renderBoard();
+    }
+
+    async function desfazerRecebimentoKanban() {
+      if (!osAtual) return;
+      dmConfirm('Desfazer o recebimento desta OS?', async () => {
+        const { error: e1 } = await sb.from('ordens_servico')
+          .update({ data_pagamento_fat: null })
+          .eq('id', osAtual.id).eq('company_id', APP.company.id);
+        if (e1) { dmToast('Erro: ' + e1.message, 'error'); return; }
+
+        await sb.from('caixa').update({ pago: false })
+          .eq('os_id', osAtual.id).eq('company_id', APP.company.id).eq('tipo', 'entrada');
+
+        await auditLog('update', 'os', osAtual.id, `OS #${String(osAtual.numero).padStart(3,'0')} — Recebimento desfeito`, { data_pagamento_fat: null });
+
+        osAtual.data_pagamento_fat = null;
+        const idx = todasOS.findIndex(o => o.id === osAtual.id);
+        if (idx >= 0) todasOS[idx].data_pagamento_fat = null;
+
+        dmToast('Recebimento desfeito');
+        _renderRecebBlocoKanban();
+        renderBoard();
+      }, 'Desfazer', true);
     }
 
     // Novo fluxo linear: ← Voltar | Salvar | Avançar →
