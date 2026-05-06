@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05061205"></script>
-  <script src="js/lib.js?v=05061205"></script>
-  <script src="js/auth.js?v=05061205"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061205">
+  <script src="js/config.js?v=05061306"></script>
+  <script src="js/lib.js?v=05061306"></script>
+  <script src="js/auth.js?v=05061306"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061306">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -283,6 +283,26 @@
         </div>
       </div>
 
+      <!-- Bloco Faturamento (só aparece em OS faturada) -->
+      <div id="os-fat-box" style="display:none;border:1px solid var(--border);background:var(--surface-2);padding:12px;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:3px">Faturamento</div>
+            <div id="os-fat-resumo" style="font-size:13px;color:var(--text)"></div>
+          </div>
+          <div id="os-fat-status"></div>
+        </div>
+        <div id="os-fat-acoes" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:11px;color:var(--text-muted)">Recebido em</label>
+          <input class="form-input" type="date" id="os-fat-data-receb" style="width:160px">
+          <button class="btn btn-primary" id="btn-receber" onclick="marcarRecebido()" style="background:#10b981;border-color:#10b981">✓ Marcar como Recebido</button>
+        </div>
+        <div id="os-fat-recebido-info" style="display:none;font-size:12px;color:#4ade80;margin-top:6px"></div>
+        <div id="os-fat-desfazer" style="display:none;margin-top:8px">
+          <button class="btn btn-ghost" onclick="desfazerRecebimento()" style="font-size:11px;color:var(--text-muted)">↶ Desfazer recebimento</button>
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
         <button class="btn btn-danger" id="btn-excluir" onclick="excluir()" style="display:none">Excluir</button>
@@ -370,7 +390,7 @@
 
     async function carregarOs() {
       const { data } = await sb.from('ordens_servico')
-        .select('*, is_demo, garantia, link_externo, faturado, data_vencimento_fat, forma_pagamento_fat, clients(name), orcamentos(numero)')
+        .select('*, is_demo, garantia, link_externo, faturado, data_vencimento_fat, data_pagamento_fat, forma_pagamento_fat, clients(name), orcamentos(numero)')
         .eq('company_id', APP.company.id)
         .order('numero', { ascending: false })
         .limit(1000);
@@ -383,6 +403,7 @@
       const hoje = new Date(); hoje.setHours(0,0,0,0);
       const vencidas = todasOs.filter(o => {
         if (!o.faturado || !o.data_vencimento_fat) return false;
+        if (o.data_pagamento_fat) return false;
         return new Date(o.data_vencimento_fat + 'T00:00:00') < hoje;
       });
       const badge = document.getElementById('badge-fat');
@@ -430,8 +451,13 @@
         const fatTag = o.faturado ? (() => {
           const vd = o.data_vencimento_fat;
           const vencObj = vd ? new Date(vd + 'T00:00:00') : null;
-          const vencido = vencObj && vencObj < hoje;
+          const recebido = !!o.data_pagamento_fat;
+          const vencido = !recebido && vencObj && vencObj < hoje;
           const label = vd ? vencObj.toLocaleDateString('pt-BR') : '';
+          if (recebido) {
+            const dRec = new Date(o.data_pagamento_fat + 'T00:00:00').toLocaleDateString('pt-BR');
+            return `<span style="font-size:10px;font-weight:800;padding:1px 6px;margin-left:5px;background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)">✓ RECEBIDO ${dRec}</span>`;
+          }
           return `<span style="font-size:10px;font-weight:800;padding:1px 6px;margin-left:5px;background:${vencido ? 'rgba(239,68,68,.15)' : 'rgba(124,58,237,.12)'};color:${vencido ? '#f87171' : '#a78bfa'};border:1px solid ${vencido ? 'rgba(239,68,68,.3)' : 'rgba(124,58,237,.25)'};">${vencido ? '🔔 VENCIDO' : 'FAT'} ${label}</span>`;
         })() : '';
         return `<tr>
@@ -471,6 +497,7 @@
       _updateLinkBtn('os-link-externo', 'os-link-externo-btn');
       document.getElementById('btn-excluir').style.display = 'none';
       document.getElementById('os-add-row').style.display = 'grid';
+      document.getElementById('os-fat-box').style.display = 'none';
       renderItens();
       document.getElementById('modal-overlay').classList.add('active');
     }
@@ -502,7 +529,104 @@
         quantidade: parseFloat(i.quantidade), preco_unit: parseFloat(i.preco_unit), subtotal: parseFloat(i.subtotal)
       }));
       renderItens();
+      _renderFatBox(os);
       document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function _renderFatBox(os) {
+      const box = document.getElementById('os-fat-box');
+      if (!os.faturado) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      const venc = os.data_vencimento_fat ? new Date(os.data_vencimento_fat + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const forma = ({ pix:'PIX', dinheiro:'Dinheiro', credito:'Cartão Crédito', debito:'Cartão Débito', boleto:'Boleto', transferencia:'Transferência' }[os.forma_pagamento_fat] || os.forma_pagamento_fat || '—');
+      document.getElementById('os-fat-resumo').innerHTML = `Vencimento: <b>${venc}</b> · Forma: <b>${forma}</b> · Valor: <b style="color:var(--accent)">${fmtMoeda(os.total)}</b>`;
+
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const recebido = !!os.data_pagamento_fat;
+      const vencObj = os.data_vencimento_fat ? new Date(os.data_vencimento_fat + 'T00:00:00') : null;
+      const vencido = !recebido && vencObj && vencObj < hoje;
+      const statusEl = document.getElementById('os-fat-status');
+      if (recebido) {
+        statusEl.innerHTML = `<span style="font-size:11px;font-weight:800;padding:3px 8px;background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)">✓ RECEBIDO</span>`;
+      } else if (vencido) {
+        statusEl.innerHTML = `<span style="font-size:11px;font-weight:800;padding:3px 8px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)">🔔 VENCIDO</span>`;
+      } else {
+        statusEl.innerHTML = `<span style="font-size:11px;font-weight:800;padding:3px 8px;background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.25)">PENDENTE</span>`;
+      }
+
+      const acoes = document.getElementById('os-fat-acoes');
+      const info  = document.getElementById('os-fat-recebido-info');
+      const desf  = document.getElementById('os-fat-desfazer');
+      if (recebido) {
+        acoes.style.display = 'none';
+        info.style.display = 'block';
+        info.innerHTML = `✓ Pagamento recebido em <b>${new Date(os.data_pagamento_fat + 'T00:00:00').toLocaleDateString('pt-BR')}</b>`;
+        desf.style.display = 'block';
+      } else {
+        acoes.style.display = 'flex';
+        info.style.display = 'none';
+        desf.style.display = 'none';
+        const hojeStr = new Date().toISOString().split('T')[0];
+        document.getElementById('os-fat-data-receb').value = hojeStr;
+      }
+    }
+
+    async function marcarRecebido() {
+      const osId = document.getElementById('os-id').value;
+      if (!osId) return;
+      const data = document.getElementById('os-fat-data-receb').value;
+      if (!data) { dmToast('Informe a data do recebimento', 'error'); return; }
+
+      const btn = document.getElementById('btn-receber');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      const { error: e1 } = await sb.from('ordens_servico')
+        .update({ data_pagamento_fat: data })
+        .eq('id', osId).eq('company_id', APP.company.id);
+      if (e1) {
+        dmToast('Erro: ' + e1.message, 'error');
+        btn.disabled = false; btn.textContent = '✓ Marcar como Recebido';
+        return;
+      }
+
+      const { error: e2 } = await sb.from('caixa')
+        .update({ pago: true })
+        .eq('os_id', osId).eq('company_id', APP.company.id).eq('tipo', 'entrada');
+      if (e2) {
+        dmToast('OS atualizada, mas caixa falhou: ' + e2.message, 'error');
+      }
+
+      const os = todasOs.find(o => o.id === osId);
+      const num = os ? String(os.numero).padStart(3,'0') : '';
+      await auditLog('update', 'os', osId, `OS #${num} — Recebido`, { data_pagamento_fat: data });
+
+      dmToast('Pagamento registrado!');
+      btn.disabled = false; btn.textContent = '✓ Marcar como Recebido';
+      fecharModal();
+      await carregarOs();
+    }
+
+    async function desfazerRecebimento() {
+      const osId = document.getElementById('os-id').value;
+      if (!osId) return;
+      dmConfirm('Desfazer o recebimento desta OS?', async () => {
+        const { error: e1 } = await sb.from('ordens_servico')
+          .update({ data_pagamento_fat: null })
+          .eq('id', osId).eq('company_id', APP.company.id);
+        if (e1) { dmToast('Erro: ' + e1.message, 'error'); return; }
+
+        await sb.from('caixa')
+          .update({ pago: false })
+          .eq('os_id', osId).eq('company_id', APP.company.id).eq('tipo', 'entrada');
+
+        const os = todasOs.find(o => o.id === osId);
+        const num = os ? String(os.numero).padStart(3,'0') : '';
+        await auditLog('update', 'os', osId, `OS #${num} — Recebimento desfeito`, { data_pagamento_fat: null });
+
+        dmToast('Recebimento desfeito');
+        fecharModal();
+        await carregarOs();
+      }, 'Desfazer', true);
     }
 
     function fecharModal() {

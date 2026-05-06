@@ -1,4 +1,4 @@
-const VERSION = 'v05061205';
+const VERSION = 'v05061306';
 const CACHE = 'dmtech-' + VERSION;
 
 self.addEventListener('install', e => {

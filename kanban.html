@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05061205"></script>
-  <script src="js/lib.js?v=05061205"></script>
-  <script src="js/auth.js?v=05061205"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061205">
+  <script src="js/config.js?v=05061306"></script>
+  <script src="js/lib.js?v=05061306"></script>
+  <script src="js/auth.js?v=05061306"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061306">
   <style>
     /* Board */
     .board-outer {
@@ -1447,9 +1447,9 @@
 
       const osUpd = { status, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora };
       if (status === 'entregue' && fatDados?.faturado) {
-        osUpd.faturado = true; osUpd.data_vencimento_fat = fatDados.vencimento; osUpd.forma_pagamento_fat = fatDados.forma;
+        osUpd.faturado = true; osUpd.data_vencimento_fat = fatDados.vencimento; osUpd.forma_pagamento_fat = fatDados.forma; osUpd.data_pagamento_fat = null;
       } else if (status === 'entregue' || (osAtual.status === 'entregue' && status !== 'entregue')) {
-        osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null;
+        osUpd.faturado = false; osUpd.data_vencimento_fat = null; osUpd.forma_pagamento_fat = null; osUpd.data_pagamento_fat = null;
       }
       const { error } = await sb.from('ordens_servico').update(osUpd).eq('id', osAtual.id).eq('company_id', APP.company.id);
       if (error) { dmToast('Erro ao salvar: ' + error.message, 'error'); return; }

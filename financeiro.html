@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <script src="js/posthog.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=05061205"></script>
-  <script src="js/lib.js?v=05061205"></script>
-  <script src="js/auth.js?v=05061205"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061205">
+  <script src="js/config.js?v=05061306"></script>
+  <script src="js/lib.js?v=05061306"></script>
+  <script src="js/auth.js?v=05061306"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05061306">
   <style>
     /* ── Tabs ── */
     .tabs { display:flex; gap:0; border-bottom:2px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
@@ -1000,8 +1000,16 @@
     }
 
     async function marcarPago(id) {
+      const { data: row } = await sb.from('caixa').select('os_id, tipo').eq('id', id).eq('company_id', APP.company.id).maybeSingle();
       const { error } = await sb.from('caixa').update({ pago: true }).eq('id', id).eq('company_id', APP.company.id);
       if (error) { dmToast('Erro: '+error.message,'error'); return; }
+      if (row && row.os_id && row.tipo === 'entrada') {
+        const hoje = new Date().toISOString().split('T')[0];
+        await sb.from('ordens_servico')
+          .update({ data_pagamento_fat: hoje })
+          .eq('id', row.os_id).eq('company_id', APP.company.id)
+          .eq('faturado', true).is('data_pagamento_fat', null);
+      }
       await auditLog('update', 'caixa', id, 'Marcar como pago', { pago: true });
       dmToast('Marcado como pago');
       await carregar();
