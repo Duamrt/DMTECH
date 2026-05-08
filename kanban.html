@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05061316"></script>
-  <script src="js/lib.js?v=05061316"></script>
-  <script src="js/auth.js?v=05061316"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05061316">
+  <script src="js/config.js?v=05081218"></script>
+  <script src="js/lib.js?v=05081218"></script>
+  <script src="js/auth.js?v=05081218"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05081218">
   <style>
     /* Board */
     .board-outer {
@@ -1988,9 +1988,11 @@ ${empresa}`;
       const totalS   = servicos.reduce((s,i) => s+(i.subtotal||0), 0);
       const totalP   = produtos.reduce((s,i) => s+(i.subtotal||0), 0);
       const { bloco: blocoTotais, totalGeral } = _pdfTotais(totalS, totalP);
-      const notas     = document.getElementById('p-notes').value || os.notes || '';
-      const garantia  = document.getElementById('p-garantia').value || os.garantia || '';
-      const linkExt   = document.getElementById('p-link-externo').value || os.link_externo || '';
+      const notas      = document.getElementById('p-notes').value || os.notes || '';
+      const descTecnico= document.getElementById('p-desc-tecnico').value || os.desc_tecnico || '';
+      const ressalva   = document.getElementById('p-ressalva').value || os.ressalva || '';
+      const garantia   = document.getElementById('p-garantia').value || os.garantia || '';
+      const linkExt    = document.getElementById('p-link-externo').value || os.link_externo || '';
 
       // QR PIX
       let blocoPix = null;
@@ -2013,6 +2015,8 @@ ${empresa}`;
       const blocoFinal = [];
       if (blocoPix) blocoFinal.push({ columns: [{ ...blocoTotais, width: '*', margin:[0,0,0,6] }, blocoPix], margin:[0,0,0,6] });
       else blocoFinal.push(blocoTotais);
+      if (descTecnico) blocoFinal.push({ text: [{ text: 'Descrição do Serviço: ', style: 'obs', bold: true }, { text: descTecnico, style: 'obs' }], margin: [0,0,0,6] });
+      if (ressalva)    blocoFinal.push({ text: [{ text: 'Ressalva: ', style: 'obs', bold: true }, { text: ressalva, style: 'obs' }], margin: [0,0,0,6] });
       if (notas) blocoFinal.push({ text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,6] });
       if (garantia) blocoFinal.push({ text: 'Garantia: ' + garantia, style: 'obs', bold: true, margin: [0,0,0,6] });
       if (linkExt) blocoFinal.push({ text: [{ text: 'Referência: ', style: 'obs', bold: true }, { text: linkExt, color: '#2563eb', decoration: 'underline', link: linkExt, fontSize: 9 }], margin: [0,0,0,20] });
