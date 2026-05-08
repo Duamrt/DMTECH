@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05081218"></script>
-  <script src="js/lib.js?v=05081218"></script>
-  <script src="js/auth.js?v=05081218"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05081218">
+  <script src="js/config.js?v=05081230"></script>
+  <script src="js/lib.js?v=05081230"></script>
+  <script src="js/auth.js?v=05081230"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05081230">
   <style>
     /* Board */
     .board-outer {
@@ -1919,7 +1919,7 @@ ${empresa}`;
 
     function _pixEMV(chave, nome, cidade, valor, txid) {
       const tlv = (id, v) => id + String(v.length).padStart(2,'0') + v;
-      const norm = s => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const norm = s => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9 ]/g,'').trim() || 'EMPRESA';
       const mai  = tlv('00','br.gov.bcb.pix') + tlv('01', chave);
       let emv = tlv('00','01') + tlv('26',mai) + tlv('52','0000') + tlv('53','986')
               + tlv('54', valor.toFixed(2)) + tlv('58','BR')
@@ -1999,7 +1999,15 @@ ${empresa}`;
       try {
         const emp = APP.company || {};
         if (emp.pix_key && totalGeral > 0 && typeof QRCode !== 'undefined') {
-          const emv = _pixEMV(emp.pix_key, emp.pix_nome||emp.name||'EMPRESA', emp.cidade||'CIDADE', totalGeral, 'OS'+(os.numero||0));
+          let chave = emp.pix_key.trim();
+          const tipo = emp.pix_tipo || '';
+          if (tipo === 'telefone') {
+            const digits = chave.replace(/\D/g, '');
+            chave = '+55' + (digits.startsWith('55') ? digits.slice(2) : digits);
+          } else if (tipo === 'cpf' || tipo === 'cnpj') {
+            chave = chave.replace(/\D/g, '');
+          }
+          const emv = _pixEMV(chave, emp.pix_nome||emp.name||'EMPRESA', emp.cidade||'CIDADE', totalGeral, 'OS'+(os.numero||0));
           const qrImg = await _qrPixBase64(emv);
           if (qrImg) blocoPix = {
             stack: [
