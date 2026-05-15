@@ -14,6 +14,12 @@ sed -i "s/const VERSION = 'v[0-9]*'/const VERSION = '$VERSION'/" sw.js
 find . -name "*.html" -not -path "./.git/*" -exec sed -i "s/?v=[0-9]*/?v=$VER_SHORT/g" {} \;
 
 git add -A
+
+# Pre-deploy check — varre diff staged contra secrets/SQL destrutivo/RLS aberta
+if [ "${SKIP_CHECK:-0}" -ne 1 ] && [ -f "$HOME/.claude/scripts/pre-deploy-check.sh" ]; then
+  bash "$HOME/.claude/scripts/pre-deploy-check.sh" || exit 1
+fi
+
 git commit -m "deploy $VERSION"
 git push origin dev
 

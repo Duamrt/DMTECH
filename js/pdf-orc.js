@@ -23,6 +23,25 @@ const PDF_ORC = {
     return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR');
   },
 
+  _montarBadgeAtendimento(tipo) {
+    const isEmerg = tipo === 'emergencial';
+    const fill   = isEmerg ? '#ea580c' : '#f5f5f5';
+    const stroke = isEmerg ? '#c2410c' : '#cccccc';
+    const color  = isEmerg ? '#ffffff' : '#666666';
+    const text   = isEmerg ? '⚠  ATENDIMENTO EMERGENCIAL' : 'ATENDIMENTO AGENDADO';
+    return {
+      table: {
+        widths: ['*'],
+        body: [[{ text, fontSize: isEmerg ? 12 : 10, bold: true, color, fillColor: fill, alignment: 'center', margin: [0, 6, 0, 6] }]]
+      },
+      layout: {
+        hLineWidth: () => 0.5, vLineWidth: () => 0.5,
+        hLineColor: () => stroke, vLineColor: () => stroke
+      },
+      margin: [0, 0, 0, 12]
+    };
+  },
+
   _montarHeader(cfg, numero, data, responsavel) {
     const empresa = cfg.empresa_nome || APP.company?.name || 'Empresa';
 
@@ -277,6 +296,7 @@ const PDF_ORC = {
       styles: this._styles(),
       content: [
         ...this._montarHeader(cfg, orc.numero, orc.created_at, responsavel),
+        this._montarBadgeAtendimento(orc.tipo_atendimento),
         ...this._montarCliente(orc.clients),
         ...this._montarItens(itens || []),
         ...validadeBlock,
@@ -372,6 +392,7 @@ const PDF_ORC = {
           margin: [0, 0, 0, 8]
         },
         { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#f97316' }], margin: [0, 0, 0, 12] },
+        this._montarBadgeAtendimento(orc.tipo_atendimento),
         // Cliente
         { text: 'Cliente: ' + (orc.clients?.name || '—'), fontSize: 11, bold: false, color: '#333', margin: [0, 0, 0, 12] },
         // Itens sem preço

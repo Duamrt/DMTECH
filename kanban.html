@@ -12,10 +12,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="js/config.js?v=05081230"></script>
-  <script src="js/lib.js?v=05081230"></script>
-  <script src="js/auth.js?v=05081230"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05081230">
+  <script src="js/config.js?v=05150856"></script>
+  <script src="js/lib.js?v=05150856"></script>
+  <script src="js/auth.js?v=05150856"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05150856">
   <style>
     /* Board */
     .board-outer {
@@ -719,6 +719,21 @@
         <span id="p-status-badge" class="status-badge">—</span>
       </div>
 
+      <!-- Tipo de Atendimento -->
+      <div>
+        <div class="p-section-title">Tipo de Atendimento</div>
+        <div style="display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+          <button type="button" id="tipo-atend-agendado" onclick="setTipoAtendimento('agendado')"
+            style="flex:1;padding:10px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:var(--accent);color:#fff">
+            📅 Agendado
+          </button>
+          <button type="button" id="tipo-atend-emergencial" onclick="setTipoAtendimento('emergencial')"
+            style="flex:1;padding:10px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;cursor:pointer;background:var(--surface);color:var(--text-muted)">
+            ⚠️ Emergencial
+          </button>
+        </div>
+      </div>
+
       <!-- Responsável -->
       <div>
         <div class="p-section-title">Responsável</div>
@@ -995,6 +1010,7 @@
       document.getElementById('p-garantia').value      = osAtual.garantia || '';
       document.getElementById('p-link-externo').value  = osAtual.link_externo || '';
       _updateLinkBtn('p-link-externo', 'p-link-externo-btn');
+      setTipoAtendimento(osAtual.tipo_atendimento || 'agendado');
       document.getElementById('p-mo-est').value        = osAtual.mo_horas_estimadas || '';
       document.getElementById('p-mo-reais').value      = osAtual.mo_horas_reais || '';
       document.getElementById('p-mo-custo-hora').value = osAtual.mo_custo_hora || APP.company?.calc_params?.custo_hora_calculado || APP.company?.valor_hora || 0;
@@ -1385,6 +1401,22 @@
       }).join('');
     }
 
+    let _tipoAtendimentoAtual = 'agendado';
+    function setTipoAtendimento(tipo) {
+      if (tipo !== 'agendado' && tipo !== 'emergencial') tipo = 'agendado';
+      _tipoAtendimentoAtual = tipo;
+      const bA = document.getElementById('tipo-atend-agendado');
+      const bE = document.getElementById('tipo-atend-emergencial');
+      if (bA) {
+        bA.style.background = tipo === 'agendado' ? 'var(--accent)' : 'var(--surface)';
+        bA.style.color      = tipo === 'agendado' ? '#fff' : 'var(--text-muted)';
+      }
+      if (bE) {
+        bE.style.background = tipo === 'emergencial' ? '#ea580c' : 'var(--surface)';
+        bE.style.color      = tipo === 'emergencial' ? '#fff' : 'var(--text-muted)';
+      }
+    }
+
     let _entrTipo = 'agora';
     function setEntrTipo(tipo) {
       _entrTipo = tipo;
@@ -1537,6 +1569,7 @@
       const moHorasEst   = parseFloat(document.getElementById('p-mo-est').value) || null;
       const moHorasReais = parseFloat(document.getElementById('p-mo-reais').value) || null;
       const moCustoHora  = parseFloat(document.getElementById('p-mo-custo-hora').value) || null;
+      const tipoAtendimento = _tipoAtendimentoAtual || 'agendado';
 
       // started_at: lê campo ou auto-preenche ao mudar para em_andamento
       let startedAt = document.getElementById('p-started-at').value || null;
@@ -1548,7 +1581,7 @@
         startedAt = osAtual.started_at || null;
       }
 
-      const osUpd = { status, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora };
+      const osUpd = { status, notes, desc_tecnico: descTecnico, ressalva, responsavel_id: responsavelId, started_at: startedAt, garantia, link_externo: linkExterno, mo_horas_estimadas: moHorasEst, mo_horas_reais: moHorasReais, mo_custo_hora: moCustoHora, tipo_atendimento: tipoAtendimento };
       if (status === 'entregue' && fatDados?.faturado) {
         osUpd.faturado = true; osUpd.data_vencimento_fat = fatDados.vencimento; osUpd.forma_pagamento_fat = fatDados.forma; osUpd.data_pagamento_fat = null;
       } else if (status === 'entregue' || (osAtual.status === 'entregue' && status !== 'entregue')) {
@@ -1764,6 +1797,25 @@ ${empresa}`;
       return result;
     }
 
+    function _pdfBadgeAtendimento(tipo) {
+      const isEmerg = tipo === 'emergencial';
+      const fill   = isEmerg ? '#ea580c' : '#f5f5f5';
+      const stroke = isEmerg ? '#c2410c' : '#cccccc';
+      const color  = isEmerg ? '#ffffff' : '#666666';
+      const text   = isEmerg ? '⚠  ATENDIMENTO EMERGENCIAL' : 'ATENDIMENTO AGENDADO';
+      return {
+        table: {
+          widths: ['*'],
+          body: [[{ text, fontSize: isEmerg ? 12 : 10, bold: true, color, fillColor: fill, alignment: 'center', margin: [0, 6, 0, 6] }]]
+        },
+        layout: {
+          hLineWidth: () => 0.5, vLineWidth: () => 0.5,
+          hLineColor: () => stroke, vLineColor: () => stroke
+        },
+        margin: [0, 0, 0, 10]
+      };
+    }
+
     function _pdfInfoOS(os) {
       const c = os.clients || {};
       const STATUS = { aberta:'Aberta', em_andamento:'Em Andamento', aguardando_peca:'Aguard. Liberação', pronta:'Pronta', entregue:'Entregue' };
@@ -1968,6 +2020,7 @@ ${empresa}`;
         content: [
           ..._pdfHeader(),
           _pdfInfoOS(os),
+          _pdfBadgeAtendimento(os.tipo_atendimento),
           _pdfTabelaServicos(servicos, totalS),
           _pdfTabelaProdutos(produtos, totalP),
           blocoTotais,
@@ -2036,6 +2089,7 @@ ${empresa}`;
         content: [
           ..._pdfHeader('RECIBO DE SERVIÇO'),
           _pdfInfoOS(os),
+          _pdfBadgeAtendimento(os.tipo_atendimento),
           _pdfTabelaServicos(servicos, totalS),
           _pdfTabelaProdutos(produtos, totalP),
           ...blocoFinal
@@ -2089,6 +2143,7 @@ ${empresa}`;
         content: [
           ..._pdfHeader('ORDEM DE SERVIÇO — TÉCNICO'),
           _pdfInfoOS(os),
+          _pdfBadgeAtendimento(os.tipo_atendimento),
           tabelaServicos,
           tabelaProdutos,
           notas ? { text: 'Obs: ' + notas, style: 'obs', margin: [0,0,0,20] } : { text: '' }

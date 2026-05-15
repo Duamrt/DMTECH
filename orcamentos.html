@@ -11,11 +11,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
-  <script src="js/config.js?v=05081230"></script>
-  <script src="js/lib.js?v=05081230"></script>
-  <script src="js/auth.js?v=05081230"></script>
-  <script src="js/pdf-orc.js?v=05081230"></script>
-  <link rel="stylesheet" href="css/styles.css?v=05081230">
+  <script src="js/config.js?v=05150856"></script>
+  <script src="js/lib.js?v=05150856"></script>
+  <script src="js/auth.js?v=05150856"></script>
+  <script src="js/pdf-orc.js?v=05150856"></script>
+  <link rel="stylesheet" href="css/styles.css?v=05150856">
   <style>
     .filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
     .filter-btn {
@@ -233,7 +233,19 @@
           <label class="form-label">Validade do orçamento</label>
           <input class="form-input" type="date" id="orc-validade">
         </div>
-        <div class="form-group"></div>
+        <div class="form-group">
+          <label class="form-label">Tipo de atendimento</label>
+          <div style="display:flex;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+            <button type="button" id="orc-tipo-agendado" onclick="setOrcTipoAtendimento('agendado')"
+              style="flex:1;padding:8px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;border-right:1px solid var(--border);cursor:pointer;background:var(--accent);color:#fff">
+              📅 Agendado
+            </button>
+            <button type="button" id="orc-tipo-emergencial" onclick="setOrcTipoAtendimento('emergencial')"
+              style="flex:1;padding:8px;font-size:12px;font-weight:700;font-family:Manrope,sans-serif;border:none;cursor:pointer;background:var(--surface);color:var(--text-muted)">
+              ⚠️ Emergencial
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -446,6 +458,23 @@
       return { rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', reprovado:'Reprovado' }[s] || s;
     }
 
+    // ── Tipo de atendimento ──
+    let _orcTipoAtendimento = 'agendado';
+    function setOrcTipoAtendimento(tipo) {
+      if (tipo !== 'agendado' && tipo !== 'emergencial') tipo = 'agendado';
+      _orcTipoAtendimento = tipo;
+      const bA = document.getElementById('orc-tipo-agendado');
+      const bE = document.getElementById('orc-tipo-emergencial');
+      if (bA) {
+        bA.style.background = tipo === 'agendado' ? 'var(--accent)' : 'var(--surface)';
+        bA.style.color      = tipo === 'agendado' ? '#fff' : 'var(--text-muted)';
+      }
+      if (bE) {
+        bE.style.background = tipo === 'emergencial' ? '#ea580c' : 'var(--surface)';
+        bE.style.color      = tipo === 'emergencial' ? '#fff' : 'var(--text-muted)';
+      }
+    }
+
     // ── Modal ──
     function abrirModal() {
       itensAtual = [];
@@ -459,6 +488,7 @@
       // Validade padrão: 15 dias
       const d = new Date(); d.setDate(d.getDate() + 15);
       document.getElementById('orc-validade').value = d.toISOString().split('T')[0];
+      setOrcTipoAtendimento('agendado');
       document.getElementById('btn-excluir').style.display = 'none';
       document.getElementById('btns-pdf').style.display = 'none';
       document.getElementById('orc-status').disabled = false;
@@ -476,6 +506,7 @@
       document.getElementById('orc-status').value = orc.status;
       document.getElementById('orc-notes').value = orc.notes || '';
       document.getElementById('orc-validade').value = orc.validade || '';
+      setOrcTipoAtendimento(orc.tipo_atendimento || 'agendado');
       document.getElementById('btn-excluir').style.display = 'block';
       document.getElementById('btns-pdf').style.display = 'flex';
       document.getElementById('orc-status').disabled = false;
@@ -687,14 +718,16 @@
 
       let orcId = id;
 
+      const tipoAtendimento = _orcTipoAtendimento || 'agendado';
+
       if (id) {
-        await sb.from('orcamentos').update({ client_id: clientId, status, notes, total, validade }).eq('id', id);
+        await sb.from('orcamentos').update({ client_id: clientId, status, notes, total, validade, tipo_atendimento: tipoAtendimento }).eq('id', id);
         await sb.from('orcamento_items').delete().eq('orcamento_id', id);
       } else {
         const { data: maxN } = await sb.from('orcamentos').select('numero').eq('company_id', APP.company.id).order('numero', { ascending: false }).limit(1);
         const numero = maxN?.length ? maxN[0].numero + 1 : 1;
         const { data: novoOrc } = await sb.from('orcamentos').insert({
-          company_id: APP.company.id, client_id: clientId, status, notes, total, numero, validade
+          company_id: APP.company.id, client_id: clientId, status, notes, total, numero, validade, tipo_atendimento: tipoAtendimento
         }).select().single();
         orcId = novoOrc?.id;
       }
@@ -721,7 +754,8 @@
         const total = (items || []).reduce((s, i) => s + parseFloat(i.subtotal), 0);
         const { data: novaOs } = await sb.from('ordens_servico').insert({
           company_id: APP.company.id, client_id: orc?.client_id || null,
-          orcamento_id: id, numero: proximoOs, status: 'aberta', notes: orc?.notes || null, total
+          orcamento_id: id, numero: proximoOs, status: 'aberta', notes: orc?.notes || null, total,
+          tipo_atendimento: orc?.tipo_atendimento || 'agendado'
         }).select().single();
         if (items?.length && novaOs) {
           await sb.from('os_items').insert(items.map(i => ({
@@ -749,7 +783,8 @@
           const total = (items || []).reduce((s, i) => s + parseFloat(i.subtotal), 0);
           const { data: novaOs } = await sb.from('ordens_servico').insert({
             company_id: APP.company.id, client_id: orc?.client_id || null,
-            orcamento_id: orcId, numero: proximoOs, status: 'aberta', notes: orc?.notes || null, total
+            orcamento_id: orcId, numero: proximoOs, status: 'aberta', notes: orc?.notes || null, total,
+            tipo_atendimento: orc?.tipo_atendimento || 'agendado'
           }).select().single();
           if (items?.length && novaOs) {
             await sb.from('os_items').insert(items.map(i => ({
